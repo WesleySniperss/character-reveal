@@ -8,11 +8,14 @@
     "verified": "13",
     "maximum": "13"
   },
-  "authors": [{ "name": "Custom" }],
+  "authors": [{ "name": "WesleySniperss" }],
   "scripts": [
     "scripts/main.js"
   ],
   "styles": [
     "styles/reveal.css"
-  ]
+  ],
+  "manifest": "https://raw.githubusercontent.com/WesleySniperss/character-reveal/main/module.json",
+  "download": "https://github.com/WesleySniperss/character-reveal/archive/refs/heads/main.zip",
+  "url": "https://github.com/WesleySniperss/character-reveal"
 }

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -o 'GREATDMVLAD[^\\\\\\\\n\"]*\\\\|github\\\\.com/GREAT[^\\\\\\\\n\"]*' \"C:/Users/Jonkm/.claude/projects/c--Users-Jonkm-AppData-Local-FoundryVTT-Data-modules-character-reveal/8dccb64d-c8c7-44b2-96dc-ec68c5f56b7f.jsonl\")",
+      "Bash(grep -o 'github\\\\.com/GREATDMVLAD[^\\\\\\\\n\"]*\\\\|raw\\\\.githubusercontent\\\\.com/GREATDMVLAD[^\\\\\\\\n\"]*' \"C:/Users/Jonkm/.claude/projects/C--Users-Jonkm-AppData-Local-FoundryVTT-Data-modules/c1e0f093-ad50-4493-807a-9f125844baae.jsonl\")",
+      "Bash(grep -ro 'github\\\\.com/GREATDMVLAD[^\\\\\\\\\\\\\"[:space:]]*\\\\|raw\\\\.githubusercontent\\\\.com/GREATDMVLAD[^\\\\\\\\\\\\\"[:space:]]*' \"C:/Users/Jonkm/.claude/projects/\")",
+      "Bash(grep -l \"module.json\\\\|manifest\\\\|download\" \"C:/Users/Jonkm/.claude/projects/C--Users-Jonkm-AppData-Local-FoundryVTT-Data-modules/\"*.jsonl)",
+      "Bash(grep -o 'raw\\\\.githubusercontent\\\\.com/[^\\\\\\\\\\\\\"[:space:]]*' \"C:/Users/Jonkm/.claude/projects/c--Users-Jonkm-AppData-Local-FoundryVTT-Data-modules-epic-rolls-ua/f118aea5-ff91-468c-b541-eeea8d6298d9.jsonl\")",
+      "Bash(grep -ro 'raw\\\\.githubusercontent\\\\.com/WesleySniperss[^\\\\\\\\\\\\\"[:space:]]*' \"C:/Users/Jonkm/.claude/projects/\")"
+    ]
+  }
+}
