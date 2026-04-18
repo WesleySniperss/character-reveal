@@ -186,7 +186,8 @@ class CRDialog extends Application {
       actorAlignment: actor.system?.details?.alignment || '',
     };
 
-    // Broadcast to other clients then show locally
+    // Resolve sound on GM side, then broadcast with src included
+    payload.soundSrc = await crResolveSoundSrc(style);
     game.socket.emit(`module.${CR_ID}`, payload);
     crShowOverlay(payload);
     this.close();
@@ -238,26 +239,23 @@ function crGetRace(actor) {
 function crIsMuted() { return localStorage.getItem('cr-muted') === '1'; }
 function crSetMuted(v) { localStorage.setItem('cr-muted', v ? '1' : '0'); }
 
-async function crPlaySoundFromFolder(style) {
-  if (crIsMuted()) return;
+async function crResolveSoundSrc(style) {
   const folder   = `modules/${CR_ID}/sounds/`;
   const audioExt = new Set(['mp3', 'ogg', 'wav', 'flac', 'webm', 'm4a', 'aac']);
-
-  let src = null;
   try {
     const result = await FilePicker.browse('data', folder);
     const files  = result.files.filter(f => audioExt.has(f.split('.').pop().toLowerCase()));
-    // Prefer a file whose basename matches the current style (e.g. minimal.mp3)
     const match  = files.find(f => f.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase() === style);
-    src = match || files[0] || null;
+    return match || files[0] || null;
   } catch (e) {
     console.warn(`${CR_ID} | Cannot browse sounds folder:`, e);
-    return;
+    return null;
   }
+}
 
-  if (!src) { console.log(`${CR_ID} | No audio file found in sounds/`); return; }
+function crPlaySound(src) {
+  if (!src || crIsMuted()) return;
   console.log(`${CR_ID} | Playing: ${src}`);
-
   try {
     AudioHelper.play({ src, volume: 0.8, autoplay: true, loop: false }, false);
   } catch (e) {
@@ -268,7 +266,7 @@ async function crPlaySoundFromFolder(style) {
 }
 
 function crShowOverlay(data) {
-  crPlaySoundFromFolder(data.style);
+  crPlaySound(data.soundSrc || null);
 
   document.getElementById('cr-overlay')?.remove();
 
