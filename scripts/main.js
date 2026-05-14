@@ -14,6 +14,11 @@ const CR_STYLES = [
   { id: 'darksouls',   label: 'Dark Souls',  icon: 'fa-skull' },
   { id: 'manuscript',  label: 'Manuscript',  icon: 'fa-book-open' },
   { id: 'spotlight',   label: 'Spotlight',   icon: 'fa-star' },
+  { id: 'anime',       label: 'Anime',       icon: 'fa-bolt' },
+  { id: 'leone',        label: 'Leone',        icon: 'fa-eye' },
+  { id: 'mtg',          label: 'MTG Card',     icon: 'fa-address-card' },
+  { id: 'vtm-ventrue',  label: 'VTM Ventrue',  icon: 'fa-crown' },
+  { id: 'vtm-malkavian',label: 'VTM Malkavian',icon: 'fa-brain' },
 ];
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
@@ -29,6 +34,9 @@ Hooks.once('init', () => {
   reg('showClass',  true,  Boolean);
   reg('customText', '');
   reg('soundFile',  '');
+  reg('mtgRules',   '');
+  reg('mtgFlavor',  '');
+  reg('playSound',  true, Boolean);
 });
 
 // ─── VTools button ─────────────────────────────────────────────────────────────
@@ -122,7 +130,23 @@ class CRDialog extends Application {
                value="${g('customText')}"
                placeholder="e.g. «The legend returns»">
 
+        <div class="cr-mtg-fields"${cur === 'mtg' ? '' : ' style="display:none"'}>
+          <div class="cr-field-label">MTG — Abilities <em>(rules text)</em></div>
+          <textarea name="cr-mtgRules" class="cr-input cr-textarea" rows="3"
+                    placeholder="First Strike. Indestructible.">${g('mtgRules')}</textarea>
+          <div class="cr-field-label">MTG — Flavor text <em>(italic quote)</em></div>
+          <input type="text" name="cr-mtgFlavor" class="cr-input"
+                 value="${g('mtgFlavor')}"
+                 placeholder="«The legend returns.»">
+        </div>
+
         <div class="cr-field-label">Sound</div>
+        <div class="cr-toggles">
+          <label class="cr-toggle">
+            <input type="checkbox" name="cr-playSound" ${g('playSound') ? 'checked' : ''}>
+            <span>Play sound</span>
+          </label>
+        </div>
         <div class="cr-sound-hint">Drop audio files into <code>modules/character-reveal/sounds/</code>.<br>Name them after the style (e.g. <code>minimal.mp3</code>, <code>darksouls.ogg</code>) for per-style sounds, or use any name as a fallback for all styles.</div>
 
         <div class="cr-footer">
@@ -148,6 +172,7 @@ class CRDialog extends Application {
       html.find('.cr-pill').removeClass('cr-pill--active');
       $(this).addClass('cr-pill--active');
       $(this).find('input').prop('checked', true);
+      html.find('.cr-mtg-fields').toggle($(this).find('input').val() === 'mtg');
     });
 
     html.find('.cr-btn--cancel').on('click', () => this.close());
@@ -160,13 +185,18 @@ class CRDialog extends Application {
     const showName   = root.find('[name="cr-showName"]').is(':checked');
     const showClass  = root.find('[name="cr-showClass"]').is(':checked');
     const customText = root.find('[name="cr-customText"]').val().trim();
-    console.log(`${CR_ID} | _doReveal values:`, { style, showName, showClass, customText });
+    const mtgRules   = root.find('[name="cr-mtgRules"]').val()?.trim() || '';
+    const mtgFlavor  = root.find('[name="cr-mtgFlavor"]').val()?.trim() || '';
+    const playSound  = root.find('[name="cr-playSound"]').is(':checked');
 
     await Promise.all([
       game.settings.set(CR_ID, 'style',      style),
       game.settings.set(CR_ID, 'showName',   showName),
       game.settings.set(CR_ID, 'showClass',  showClass),
       game.settings.set(CR_ID, 'customText', customText),
+      game.settings.set(CR_ID, 'mtgRules',   mtgRules),
+      game.settings.set(CR_ID, 'mtgFlavor',  mtgFlavor),
+      game.settings.set(CR_ID, 'playSound',  playSound),
     ]);
 
     const actor = this.actor;
@@ -184,10 +214,13 @@ class CRDialog extends Application {
       actorRace:      crGetRace(actor),
       actorCR:        actor.system?.details?.cr ?? '',
       actorAlignment: actor.system?.details?.alignment || '',
+      actorLevel:     actor.system?.details?.level || null,
+      actorHpMax:     actor.system?.attributes?.hp?.max || null,
+      mtgRules,
+      mtgFlavor,
     };
 
-    // Resolve sound on GM side, then broadcast with src included
-    payload.soundSrc = await crResolveSoundSrc(style);
+    payload.soundSrc = playSound ? await crResolveSoundSrc(style) : null;
     game.socket.emit(`module.${CR_ID}`, payload);
     crShowOverlay(payload);
     this.close();
@@ -336,6 +369,11 @@ function crBuildHTML(data) {
     case 'darksouls':   return crHtmlDarkSouls(img, name, cls, custom);
     case 'manuscript':  return crHtmlManuscript(img, name, cls, custom);
     case 'spotlight':   return crHtmlSpotlight(img, name, cls, custom);
+    case 'anime':       return crHtmlAnime(img, name, cls, custom);
+    case 'leone':         return crHtmlLeone(img, name, cls, custom);
+    case 'mtg':           return crHtmlMtg(img, name, cls, data);
+    case 'vtm-ventrue':   return crHtmlVtmVentrue(img, name, cls, custom);
+    case 'vtm-malkavian': return crHtmlVtmMalkavian(img, name, cls, custom, actorImg);
     default:            return crHtmlMinimal(img, name, cls, custom, actorImg);
   }
 }
@@ -491,6 +529,203 @@ function crHtmlSpotlight(img, name, cls, custom) {
         ${cls    ? `<span class="cr-th-subtitle">${cls}</span>`    : ''}
         ${custom ? `<span class="cr-th-desc">${custom}</span>`     : ''}
       </div>
+    </div>
+  `;
+}
+
+// ─── Style: Anime ──────────────────────────────────────────────────────────────
+function crHtmlAnime(img, name, cls, custom) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  return `
+    <div class="cr-an-bg"></div>
+    <div class="cr-an-lines"></div>
+    <div class="cr-an-flash"></div>
+    <div class="cr-an-ring">${img}</div>
+    <div class="cr-an-bottom">
+      <div class="cr-an-name-row">
+        <span class="cr-an-chevron">▶▶</span>
+        ${name ? `<span class="cr-an-name">${name}</span>` : ''}
+        <span class="cr-an-chevron">◀◀</span>
+      </div>
+      ${sub ? `<div class="cr-an-sub">${sub}</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Style: Leone ──────────────────────────────────────────────────────────────
+function crHtmlLeone(img, name, cls, custom) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  return `
+    <div class="cr-lo-portrait">${img}</div>
+    <div class="cr-lo-grain"></div>
+    <div class="cr-lo-vignette"></div>
+    <div class="cr-lo-bar-top"></div>
+    <div class="cr-lo-bar-bot"></div>
+    <div class="cr-lo-dustline"></div>
+    <div class="cr-lo-text">
+      <div class="cr-lo-rule"></div>
+      ${name ? `<div class="cr-lo-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-lo-sub">— ${sub} —</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Style: MTG Card ───────────────────────────────────────────────────────────
+
+function crMtgRoll() {
+  const COLORS = ['r','g','w','u','b'];
+  const pick   = () => COLORS[Math.floor(Math.random() * COLORS.length)];
+  const rnd    = n  => Math.floor(Math.random() * n);
+
+  const numColored = rnd(3) + 1;
+  const generic    = rnd(5);
+  const colored    = Array.from({ length: numColored }, pick);
+
+  let pipsHtml = generic > 0
+    ? `<span class=”cr-mtg-pip cr-mtg-pip-n”>${generic}</span>`
+    : '';
+  for (const c of colored)
+    pipsHtml += `<span class=”cr-mtg-pip cr-mtg-pip-${c}”>${c.toUpperCase()}</span>`;
+
+  const RARITY  = ['●','◆','◆','★'];
+  const RARCLS  = ['cr-mtg-rar-c','cr-mtg-rar-u','cr-mtg-rar-r','cr-mtg-rar-m'];
+  const ri      = rnd(4);
+  const setCode = Array.from({ length: 3 }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[rnd(26)]).join('');
+  const collNum = String(rnd(280) + 1).padStart(3, '0');
+
+  return {
+    pipsHtml,
+    rarity:    RARITY[ri],
+    rarityCls: RARCLS[ri],
+    setCode,
+    collNum,
+    power:     rnd(8) + 1,
+    toughness: rnd(8) + 1,
+  };
+}
+
+function crHtmlMtg(img, name, cls, data) {
+  const { mtgRules, mtgFlavor, actorImg } = data;
+
+  const typeLine   = cls
+    ? `Legendary Creature — ${cls.replace(/ · /g, ' ')}`
+    : 'Legendary Creature';
+  const rulesHtml  = mtgRules  || '<b>First Strike.</b> Indestructible.';
+  const flavorHtml = mtgFlavor || '';
+  const r          = crMtgRoll();
+
+  return `
+    <div class=”cr-mtg-bg”></div>
+    <div class=”cr-mtg-bg-art”><img src=”${actorImg}” alt=””></div>
+    <div class=”cr-mtg-scene”>
+      <div class=”cr-mtg-flipper”>
+        <div class=”cr-mtg-back”></div>
+        <div class=”cr-mtg-front”>
+          <div class=”cr-mtg-body”>
+            <div class=”cr-mtg-namebar”>
+              <span class=”cr-mtg-cardname”>${name || '???'}</span>
+              <div class=”cr-mtg-manacost”>${r.pipsHtml}</div>
+            </div>
+            <div class=”cr-mtg-artwin”>${img}</div>
+            <div class=”cr-mtg-typeline”>
+              <span class=”cr-mtg-typetext”>${typeLine}</span>
+              <span class=”cr-mtg-rarity ${r.rarityCls}”>${r.rarity}</span>
+            </div>
+            <div class=”cr-mtg-textbox”>
+              <div class=”cr-mtg-rules”>${rulesHtml}</div>
+              ${flavorHtml ? `<div class=”cr-mtg-flavor”>”${flavorHtml}”</div>` : ''}
+            </div>
+            <div class=”cr-mtg-footer”>
+              <span class=”cr-mtg-info”>${r.setCode} · ${r.collNum}/${rnd(280)+1} · ${new Date().getFullYear()}</span>
+              <span class=”cr-mtg-pt”>${r.power} / ${r.toughness}</span>
+            </div>
+          </div>
+          <div class=”cr-mtg-foil”></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function rnd(n) { return Math.floor(Math.random() * n); }
+
+// ─── Style: VTM Ventrue ────────────────────────────────────────────────────────
+function crHtmlVtmVentrue(img, name, cls, custom) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  return `
+    <div class="cr-vtv-bg"></div>
+    <div class="cr-vtv-portrait">${img}</div>
+    <div class="cr-vtv-vignette"></div>
+    <div class="cr-vtv-frame">
+      <div class="cr-vtv-line cr-vtv-line--top"></div>
+      <div class="cr-vtv-line cr-vtv-line--left"></div>
+      <div class="cr-vtv-line cr-vtv-line--right"></div>
+      <div class="cr-vtv-line cr-vtv-line--bot"></div>
+      <div class="cr-vtv-corner cr-vtv-corner--tl"></div>
+      <div class="cr-vtv-corner cr-vtv-corner--tr"></div>
+      <div class="cr-vtv-corner cr-vtv-corner--bl"></div>
+      <div class="cr-vtv-corner cr-vtv-corner--br"></div>
+    </div>
+    <div class="cr-vtv-text">
+      <div class="cr-vtv-clan">✦ &nbsp; V E N T R U E &nbsp; ✦</div>
+      ${name ? `<div class="cr-vtv-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-vtv-sub">${sub}</div>`   : ''}
+    </div>
+  `;
+}
+
+// ─── Style: VTM Malkavian ──────────────────────────────────────────────────────
+const CR_VTM_WHISPERS = [
+  'you see it too', '...mirrors', 'we are many', 'broken glass',
+  '...listen', 'all of us', 'the truth hurts', '...shattered',
+  'they know', '...run', 'not alone', 'inside your head',
+  'wake up', '...forgetting', 'beautiful madness', 'cracks in everything',
+  'we watch', '...silence', 'no escape', 'it always was'
+];
+
+const CR_VTM_SHARDS = [
+  { clip:'polygon(0% 0%, 42% 0%, 42% 48%, 25% 8%)',                            drift:'a', jolt:1, dur:18, jd:0.5, pos:'35% 25%' },
+  { clip:'polygon(0% 0%, 25% 8%, 42% 48%, 0% 35%)',                            drift:'b', jolt:2, dur:22, jd:0.7, pos:'20% 35%' },
+  { clip:'polygon(0% 35%, 42% 48%, 8% 88%, 0% 88%)',                           drift:'c', jolt:3, dur:19, jd:0.9, pos:'15% 60%' },
+  { clip:'polygon(0% 88%, 8% 88%, 42% 48%, 38% 100%, 0% 100%)',                drift:'d', jolt:4, dur:24, jd:0.6, pos:'25% 82%' },
+  { clip:'polygon(38% 100%, 42% 48%, 72% 95%, 68% 100%)',                      drift:'a', jolt:5, dur:20, jd:0.4, pos:'50% 86%' },
+  { clip:'polygon(42% 48%, 88% 62%, 100% 62%, 100% 100%, 68% 100%, 72% 95%)',  drift:'b', jolt:6, dur:16, jd:0.8, pos:'72% 80%' },
+  { clip:'polygon(42% 48%, 60% 5%, 72% 28%, 100% 18%, 100% 62%, 88% 62%)',     drift:'c', jolt:7, dur:21, jd:0.3, pos:'80% 45%' },
+  { clip:'polygon(42% 0%, 60% 0%, 72% 28%, 60% 5%, 42% 48%)',                  drift:'d', jolt:8, dur:17, jd:1.0, pos:'55% 20%' },
+  { clip:'polygon(60% 0%, 100% 0%, 100% 18%, 72% 28%)',                        drift:'a', jolt:9, dur:23, jd:0.2, pos:'82% 12%' },
+];
+
+function crHtmlVtmMalkavian(img, name, cls, custom, actorImg) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const whispers = CR_VTM_WHISPERS
+    .sort(() => Math.random() - .5).slice(0, 20)
+    .map((w, i) => `<span class="cr-vtm-whisper cr-vtm-whisper--${i + 1}">${w}</span>`)
+    .join('');
+
+  const CRACK_SVG = `<svg class="cr-vtm-shard-crack" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-linecap="butt"><path d="M 42,48 L 25,8 L 0,0" stroke="rgba(220,235,255,.82)" stroke-width="0.40"/><path d="M 25,8 L 14,0" stroke="rgba(220,235,255,.38)" stroke-width="0.18"/><path d="M 42,48 L 0,35" stroke="rgba(220,235,255,.75)" stroke-width="0.37"/><path d="M 42,48 L 8,88 L 0,88" stroke="rgba(220,235,255,.72)" stroke-width="0.34"/><path d="M 42,48 L 38,100" stroke="rgba(220,235,255,.68)" stroke-width="0.32"/><path d="M 42,48 L 72,95 L 68,100" stroke="rgba(220,235,255,.72)" stroke-width="0.34"/><path d="M 42,48 L 88,62 L 100,62" stroke="rgba(220,235,255,.68)" stroke-width="0.32"/><path d="M 42,48 L 60,5 L 72,28 L 100,18" stroke="rgba(220,235,255,.75)" stroke-width="0.37"/><path d="M 60,0 L 72,28" stroke="rgba(220,235,255,.44)" stroke-width="0.20"/><path d="M 42,48 L 42,0" stroke="rgba(220,235,255,.70)" stroke-width="0.34"/><path d="M 42,48 L 50,42 L 58,35" stroke="rgba(220,235,255,.42)" stroke-width="0.19"/><path d="M 42,48 L 36,42 L 28,36" stroke="rgba(220,235,255,.38)" stroke-width="0.17"/><path d="M 42,48 L 46,56 L 52,66" stroke="rgba(220,235,255,.38)" stroke-width="0.17"/><path d="M 42,48 L 35,54 L 28,62" stroke="rgba(220,235,255,.36)" stroke-width="0.16"/><path d="M 42,48 L 46,46" stroke="rgba(220,235,255,.58)" stroke-width="0.25"/><path d="M 42,48 L 38,46" stroke="rgba(220,235,255,.55)" stroke-width="0.24"/><path d="M 42,48 L 44,51" stroke="rgba(220,235,255,.53)" stroke-width="0.23"/><path d="M 42,48 L 40,51" stroke="rgba(220,235,255,.50)" stroke-width="0.22"/><path d="M 44,47 L 48,45" stroke="rgba(220,235,255,.46)" stroke-width="0.20"/><path d="M 40,49 L 36,51" stroke="rgba(220,235,255,.44)" stroke-width="0.19"/></g></svg>`;
+
+  const shards = CR_VTM_SHARDS.map(s => `
+    <div class="cr-vtm-shard" style="clip-path:${s.clip}">
+      <div class="cr-vtm-sd" style="animation-name:cr-vtm-drift-${s.drift};animation-duration:${s.dur}s;animation-delay:${-(s.dur * 0.3).toFixed(1)}s">
+        <img src="${actorImg}" alt="" class="cr-vtm-shard-img cr-vtm-jolt-${s.jolt}" style="object-position:${s.pos};animation-delay:${s.jd}s">
+        ${CRACK_SVG}
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="cr-vtm-bg"></div>
+    ${shards}
+    <div class="cr-vtm-noise"></div>
+    <div class="cr-vtm-vignette"></div>
+    <div class="cr-vtm-whispers">${whispers}</div>
+    <div class="cr-vtm-text">
+      <div class="cr-vtm-name-wrap">
+        <span class="cr-vtm-name-r" aria-hidden="true">${name}</span>
+        <span class="cr-vtm-name">${name}</span>
+        <span class="cr-vtm-name-b" aria-hidden="true">${name}</span>
+      </div>
+      ${sub ? `<div class="cr-vtm-sub">${sub}</div>` : ''}
     </div>
   `;
 }
