@@ -675,6 +675,7 @@ function crHtmlVtmVentrue(img, name, cls, custom, showClan, clan) {
   const clanLabel = showClan ? (clan || 'VENTRUE') : null;
   return `
     <div class="cr-vtv-bg"></div>
+    <div class="cr-vtv-pattern"></div>
     <div class="cr-vtv-portrait">${img}</div>
     <div class="cr-vtv-vignette"></div>
     <div class="cr-vtv-frame">

@@ -1355,8 +1355,17 @@
   background: radial-gradient(ellipse 80% 70% at 50% 40%, #060d20 0%, #020509 100%);
 }
 
+.cr-vtv-pattern {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M22,0 L44,22 L22,44 L0,22 Z' fill='none' stroke='%23c8a035' stroke-width='0.6'/%3E%3Ccircle cx='22' cy='22' r='2' fill='%23c8a035'/%3E%3Ccircle cx='0' cy='0' r='1.5' fill='%23c8a035'/%3E%3Ccircle cx='44' cy='0' r='1.5' fill='%23c8a035'/%3E%3Ccircle cx='0' cy='44' r='1.5' fill='%23c8a035'/%3E%3Ccircle cx='44' cy='44' r='1.5' fill='%23c8a035'/%3E%3C/svg%3E");
+  background-size: 44px 44px;
+  animation: cr-fade-in 2.5s ease 0.5s both;
+}
+
 .cr-vtv-portrait {
-  position: absolute; inset: 0;
+  position: absolute; top: 5%; bottom: 28%; left: 7%; right: 7%;
+  overflow: hidden; z-index: 1;
 }
 .cr-vtv-portrait .cr-portrait-img {
   width: 100%; height: 100%; object-fit: cover;
@@ -1413,20 +1422,50 @@
   to   { transform: scaleX(1); opacity: 1; }
 }
 
+/* Inner echo lines (double frame) */
+.cr-vtv-line--top::after, .cr-vtv-line--bot::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(122,90,16,.4) 5%, rgba(200,160,53,.4) 20%, rgba(200,160,53,.5) 50%, rgba(200,160,53,.4) 80%, rgba(122,90,16,.4) 95%, transparent 100%);
+}
+.cr-vtv-line--top::after { top: 6px; }
+.cr-vtv-line--bot::after { top: -7px; }
+.cr-vtv-line--left::after, .cr-vtv-line--right::after {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(122,90,16,.4) 8%, rgba(200,160,53,.4) 25%, rgba(200,160,53,.5) 50%, rgba(200,160,53,.4) 75%, rgba(122,90,16,.4) 92%, transparent);
+}
+.cr-vtv-line--left::after  { left: 6px; }
+.cr-vtv-line--right::after { left: -7px; }
+
 .cr-vtv-corner {
-  position: absolute; width: 28px; height: 28px;
+  position: absolute; width: 42px; height: 42px;
   border-color: #c8a035; border-style: solid; border-width: 0;
   animation: cr-fade-in .5s ease .8s both;
 }
 .cr-vtv-corner::before {
-  content: '◆';
-  position: absolute; font-size: 5px; color: #c8a035;
-  top: 50%; left: 50%; transform: translate(-50%,-50%);
+  content: '';
+  position: absolute; width: 24px; height: 24px;
+  border-color: rgba(200,160,53,.4); border-style: solid; border-width: 0;
 }
-.cr-vtv-corner--tl { top: calc(4% - 14px);  left: calc(6% - 14px);  border-top-width: 1px; border-left-width: 1px; }
-.cr-vtv-corner--tr { top: calc(4% - 14px);  right: calc(6% - 14px); border-top-width: 1px; border-right-width: 1px; }
-.cr-vtv-corner--bl { bottom: calc(27% - 14px); left: calc(6% - 14px);  border-bottom-width: 1px; border-left-width: 1px; }
-.cr-vtv-corner--br { bottom: calc(27% - 14px); right: calc(6% - 14px); border-bottom-width: 1px; border-right-width: 1px; }
+.cr-vtv-corner::after {
+  content: '◆';
+  position: absolute; font-size: 9px; color: #e8c050; line-height: 1;
+  text-shadow: 0 0 8px rgba(200,160,53,.7);
+}
+.cr-vtv-corner--tl { top: calc(4% - 21px); left: calc(6% - 21px); border-top-width: 1.5px; border-left-width: 1.5px; }
+.cr-vtv-corner--tl::before { top: 9px; left: 9px; border-top-width: 1px; border-left-width: 1px; }
+.cr-vtv-corner--tl::after  { top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+.cr-vtv-corner--tr { top: calc(4% - 21px); right: calc(6% - 21px); border-top-width: 1.5px; border-right-width: 1.5px; }
+.cr-vtv-corner--tr::before { top: 9px; right: 9px; border-top-width: 1px; border-right-width: 1px; }
+.cr-vtv-corner--tr::after  { top: 50%; right: 50%; transform: translate(50%,-50%); }
+
+.cr-vtv-corner--bl { bottom: calc(27% - 21px); left: calc(6% - 21px); border-bottom-width: 1.5px; border-left-width: 1.5px; }
+.cr-vtv-corner--bl::before { bottom: 9px; left: 9px; border-bottom-width: 1px; border-left-width: 1px; }
+.cr-vtv-corner--bl::after  { bottom: 50%; left: 50%; transform: translate(-50%,50%); }
+
+.cr-vtv-corner--br { bottom: calc(27% - 21px); right: calc(6% - 21px); border-bottom-width: 1.5px; border-right-width: 1.5px; }
+.cr-vtv-corner--br::before { bottom: 9px; right: 9px; border-bottom-width: 1px; border-right-width: 1px; }
+.cr-vtv-corner--br::after  { bottom: 50%; right: 50%; transform: translate(50%,50%); }
 
 /* Text */
 .cr-vtv-text {
