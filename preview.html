@@ -419,7 +419,7 @@ html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
 
 /* ── VTM Malkavian ── */
 .cr-vtm-shard-crack { position:absolute;left:9.68%;top:9.68%;width:80.65%;height:80.65%;pointer-events:none;z-index:2;opacity:0;animation:cr-vtm-crack-in .3s ease .65s both; }
-#cr-overlay[data-style="vtm-malkavian"] { background:#08040f;cursor:default;overflow:hidden; }
+#cr-overlay[data-style="vtm-malkavian"] { background:#08040f;cursor:default;overflow:hidden;perspective:1200px; }
 .cr-vtm-bg { position:absolute;inset:0;background:radial-gradient(ellipse 70% 65% at 50% 45%,#140820,#08040e 60%,#040208); }
 .cr-vtm-noise { position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.12;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.15'/%3E%3C/svg%3E");animation:cr-vtm-noise-shift .1s steps(3) infinite; }
 @keyframes cr-vtm-noise-shift { 0%{background-position:0 0;}33%{background-position:-6% -4%;}66%{background-position:4% 6%;} }
@@ -460,6 +460,7 @@ html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
 .cr-vtm-name { position:relative;font-family:'Cinzel',serif;font-weight:900;font-size:clamp(1.8rem,4.5vw,4rem);color:#e8e0f4;letter-spacing:.18em;-webkit-text-stroke:.5px rgba(160,80,220,.4);text-shadow:0 0 20px rgba(150,70,220,.55),0 0 50px rgba(100,0,180,.28),0 2px 8px rgba(0,0,0,1);white-space:nowrap;animation:cr-vtm-name-in .5s steps(3) 1s both; }
 @keyframes cr-vtm-name-in { 0%{opacity:0;transform:translateX(-18px) skewX(-12deg);}33%{opacity:1;transform:translateX(4px);}66%{transform:translateX(-2px);}100%{opacity:1;transform:translateX(0);} }
 .cr-vtm-sub { font-family:'IM Fell English',serif;font-style:italic;font-size:clamp(.7rem,1.1vw,.95rem);color:rgba(170,100,240,.42);letter-spacing:.18em;animation:cr-fade-in .6s ease 1.8s both; }
+.cr-vtm-clan { font-family:'Cinzel',serif;font-size:clamp(.5rem,.85vw,.75rem);letter-spacing:.55em;color:rgba(190,130,255,.55);animation:cr-fade-in .6s ease 2.1s both; }
 </style>
 </head>
 <body>
@@ -614,15 +615,15 @@ const VTM_WHISPERS = [
   'we watch','...silence','no escape','it always was'
 ];
 const VTM_SHARDS = [
-  { clip:'polygon(0% 0%, 42% 0%, 42% 48%, 25% 8%)',                            drift:'a', jolt:1, dur:18, jd:0.5, pos:'35% 25%' },
-  { clip:'polygon(0% 0%, 25% 8%, 42% 48%, 0% 35%)',                            drift:'b', jolt:2, dur:22, jd:0.7, pos:'20% 35%' },
-  { clip:'polygon(0% 35%, 42% 48%, 8% 88%, 0% 88%)',                           drift:'c', jolt:3, dur:19, jd:0.9, pos:'15% 60%' },
-  { clip:'polygon(0% 88%, 8% 88%, 42% 48%, 38% 100%, 0% 100%)',                drift:'d', jolt:4, dur:24, jd:0.6, pos:'25% 82%' },
-  { clip:'polygon(38% 100%, 42% 48%, 72% 95%, 68% 100%)',                      drift:'a', jolt:5, dur:20, jd:0.4, pos:'50% 86%' },
-  { clip:'polygon(42% 48%, 88% 62%, 100% 62%, 100% 100%, 68% 100%, 72% 95%)',  drift:'b', jolt:6, dur:16, jd:0.8, pos:'72% 80%' },
-  { clip:'polygon(42% 48%, 60% 5%, 72% 28%, 100% 18%, 100% 62%, 88% 62%)',     drift:'c', jolt:7, dur:21, jd:0.3, pos:'80% 45%' },
-  { clip:'polygon(42% 0%, 60% 0%, 72% 28%, 60% 5%, 42% 48%)',                  drift:'d', jolt:8, dur:17, jd:1.0, pos:'55% 20%' },
-  { clip:'polygon(60% 0%, 100% 0%, 100% 18%, 72% 28%)',                        drift:'a', jolt:9, dur:23, jd:0.2, pos:'82% 12%' },
+  { clip:'polygon(0% 0%, 42% 0%, 42% 48%, 25% 8%)',                            drift:'a', jolt:1, dur:18, jd:0.5, pos:'35% 25%', rot:'c' },
+  { clip:'polygon(0% 0%, 25% 8%, 42% 48%, 0% 35%)',                            drift:'b', jolt:2, dur:22, jd:0.7, pos:'20% 35%', rot:'a' },
+  { clip:'polygon(0% 35%, 42% 48%, 8% 88%, 0% 88%)',                           drift:'c', jolt:3, dur:19, jd:0.9, pos:'15% 60%', rot:'d' },
+  { clip:'polygon(0% 88%, 8% 88%, 42% 48%, 38% 100%, 0% 100%)',                drift:'d', jolt:4, dur:24, jd:0.6, pos:'25% 82%', rot:'b' },
+  { clip:'polygon(38% 100%, 42% 48%, 72% 95%, 68% 100%)',                      drift:'a', jolt:5, dur:20, jd:0.4, pos:'50% 86%', rot:'d' },
+  { clip:'polygon(42% 48%, 88% 62%, 100% 62%, 100% 100%, 68% 100%, 72% 95%)',  drift:'b', jolt:6, dur:16, jd:0.8, pos:'72% 80%', rot:'a' },
+  { clip:'polygon(42% 48%, 60% 5%, 72% 28%, 100% 18%, 100% 62%, 88% 62%)',     drift:'c', jolt:7, dur:21, jd:0.3, pos:'80% 45%', rot:'b' },
+  { clip:'polygon(42% 0%, 60% 0%, 72% 28%, 60% 5%, 42% 48%)',                  drift:'d', jolt:8, dur:17, jd:1.0, pos:'55% 20%', rot:'c' },
+  { clip:'polygon(60% 0%, 100% 0%, 100% 18%, 72% 28%)',                        drift:'a', jolt:9, dur:23, jd:0.2, pos:'82% 12%', rot:'d' },
 ];
 
 function vtmMalkavian() {
@@ -633,7 +634,7 @@ function vtmMalkavian() {
   const CRACK_SVG = `<svg class="cr-vtm-shard-crack" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke-linecap="butt"><path d="M 42,48 L 25,8 L 0,0" stroke="rgba(220,235,255,.82)" stroke-width="0.40"/><path d="M 25,8 L 14,0" stroke="rgba(220,235,255,.38)" stroke-width="0.18"/><path d="M 42,48 L 0,35" stroke="rgba(220,235,255,.75)" stroke-width="0.37"/><path d="M 42,48 L 8,88 L 0,88" stroke="rgba(220,235,255,.72)" stroke-width="0.34"/><path d="M 42,48 L 38,100" stroke="rgba(220,235,255,.68)" stroke-width="0.32"/><path d="M 42,48 L 72,95 L 68,100" stroke="rgba(220,235,255,.72)" stroke-width="0.34"/><path d="M 42,48 L 88,62 L 100,62" stroke="rgba(220,235,255,.68)" stroke-width="0.32"/><path d="M 42,48 L 60,5 L 72,28 L 100,18" stroke="rgba(220,235,255,.75)" stroke-width="0.37"/><path d="M 60,0 L 72,28" stroke="rgba(220,235,255,.44)" stroke-width="0.20"/><path d="M 42,48 L 42,0" stroke="rgba(220,235,255,.70)" stroke-width="0.34"/><path d="M 42,48 L 50,42 L 58,35" stroke="rgba(220,235,255,.42)" stroke-width="0.19"/><path d="M 42,48 L 36,42 L 28,36" stroke="rgba(220,235,255,.38)" stroke-width="0.17"/><path d="M 42,48 L 46,56 L 52,66" stroke="rgba(220,235,255,.38)" stroke-width="0.17"/><path d="M 42,48 L 35,54 L 28,62" stroke="rgba(220,235,255,.36)" stroke-width="0.16"/><path d="M 42,48 L 46,46" stroke="rgba(220,235,255,.58)" stroke-width="0.25"/><path d="M 42,48 L 38,46" stroke="rgba(220,235,255,.55)" stroke-width="0.24"/><path d="M 42,48 L 44,51" stroke="rgba(220,235,255,.53)" stroke-width="0.23"/><path d="M 42,48 L 40,51" stroke="rgba(220,235,255,.50)" stroke-width="0.22"/><path d="M 44,47 L 48,45" stroke="rgba(220,235,255,.46)" stroke-width="0.20"/><path d="M 40,49 L 36,51" stroke="rgba(220,235,255,.44)" stroke-width="0.19"/></g></svg>`;
 
   const shards = VTM_SHARDS.map(s => `
-    <div class="cr-vtm-shard" style="clip-path:${s.clip}">
+    <div class="cr-vtm-shard" style="clip-path:${s.clip};animation-name:cr-vtm-rot3d-${s.rot};animation-duration:${(s.dur * 0.6).toFixed(1)}s;animation-delay:${-(s.dur * 0.15).toFixed(1)}s;animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-direction:alternate">
       <div class="cr-vtm-sd" style="animation-name:cr-vtm-drift-${s.drift};animation-duration:${s.dur}s;animation-delay:${-(s.dur * 0.3).toFixed(1)}s">
         <img src="${IMG}" alt="" class="cr-vtm-shard-img cr-vtm-jolt-${s.jolt}" style="object-position:${s.pos};animation-delay:${s.jd}s">
         ${CRACK_SVG}
@@ -654,6 +655,7 @@ function vtmMalkavian() {
         <span class="cr-vtm-name-b" aria-hidden="true">${NAME}</span>
       </div>
       <div class="cr-vtm-sub">${CLS}</div>
+      <div class="cr-vtm-clan">✦ &nbsp; M A L K A V I A N &nbsp; ✦</div>
     </div>`;
 }
 
