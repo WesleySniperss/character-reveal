@@ -731,8 +731,8 @@ function crHtmlVtmMalkavian(img, name, cls, custom, actorImg, showClan, clan) {
     <div class="cr-vtm-shard" style="clip-path:${s.clip};animation-name:cr-vtm-rot3d-${s.rot};animation-duration:${(s.dur * 0.6).toFixed(1)}s;animation-delay:${-(s.dur * 0.15).toFixed(1)}s;animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-direction:alternate">
       <div class="cr-vtm-sd" style="animation-name:cr-vtm-drift-${s.drift};animation-duration:${s.dur}s;animation-delay:${-(s.dur * 0.3).toFixed(1)}s">
         <img src="${actorImg}" alt="" class="cr-vtm-shard-img cr-vtm-jolt-${s.jolt}" style="object-position:${s.pos};animation-delay:${s.jd}s">
-        ${CRACK_SVG}
       </div>
+      ${CRACK_SVG}
     </div>
   `).join('');
 
