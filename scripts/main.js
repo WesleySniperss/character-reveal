@@ -592,7 +592,24 @@ function crHtmlVtmVentrue(img, name, cls, custom, showClan, clan) {
       <div class="cr-vtv-corner cr-vtv-corner--br"></div>
     </div>
     <div class="cr-vtv-frame-overlay"></div>
-    <div class="cr-vtv-flare"></div>
+    <svg class="cr-vtv-shimmer" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="cr-sv-glow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="1.1"/>
+        </filter>
+      </defs>
+      <rect x="6.5" y="4.5" width="87" height="68"
+            fill="none" stroke="rgba(255,235,110,0.6)" stroke-width="3"
+            filter="url(#cr-sv-glow)"
+            stroke-dasharray="14 296" stroke-linecap="round" stroke-dashoffset="0">
+        <animate attributeName="stroke-dashoffset" from="0" to="-310" dur="10s" begin="2s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="6.5" y="4.5" width="87" height="68"
+            fill="none" stroke="rgba(255,252,200,0.95)" stroke-width="0.45"
+            stroke-dasharray="8 302" stroke-linecap="round" stroke-dashoffset="0">
+        <animate attributeName="stroke-dashoffset" from="0" to="-310" dur="10s" begin="2s" repeatCount="indefinite"/>
+      </rect>
+    </svg>
     <div class="cr-vtv-text">
       ${clanLabel ? `<div class="cr-vtv-clan">✦ &nbsp; ${clanLabel.toUpperCase().split('').join(' ')} &nbsp; ✦</div>` : ''}
       ${name ? `<div class="cr-vtv-name">${name}</div>` : ''}

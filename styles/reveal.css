@@ -1195,49 +1195,12 @@
   animation: cr-fade-in 1.2s ease both, cr-vtv-bg-kenburns 22s ease-out both;
 }
 
-/* Gold shimmer along the frame border */
-.cr-vtv-flare {
+/* Gold shimmer travelling along the frame border */
+.cr-vtv-shimmer {
   position: absolute; inset: 0; z-index: 5; pointer-events: none;
-  overflow: hidden;
-}
-/* Thin gold sweep along the top border */
-.cr-vtv-flare::before {
-  content: '';
-  position: absolute;
-  top: 4%; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg,
-    transparent 47%,
-    rgba(255,230,100,.0) 48.5%,
-    rgba(255,248,180,.95) 50%,
-    rgba(255,230,100,.0) 51.5%,
-    transparent 53%
-  );
-  filter: blur(1px);
-  transform: translateX(-120%);
-  animation: cr-vtv-frame-shimmer 16s ease-in-out 2s infinite;
-}
-/* Soft gold glow at the contact point */
-.cr-vtv-flare::after {
-  content: '';
-  position: absolute;
-  top: 3%; left: 0;
-  width: 80px; height: 24px;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(ellipse, rgba(255,248,180,.55) 0%, transparent 70%);
-  filter: blur(3px);
-  animation: cr-vtv-frame-glow 16s ease-in-out 2s infinite;
-}
-@keyframes cr-vtv-frame-shimmer {
-  0%    { transform: translateX(-120%); opacity: 0; }
-  4%    { opacity: 1; }
-  96%   { opacity: 1; }
-  100%  { transform: translateX(220%); opacity: 0; }
-}
-@keyframes cr-vtv-frame-glow {
-  0%    { left: -5%; opacity: 0; }
-  4%    { opacity: 1; }
-  96%   { opacity: .7; }
-  100%  { left: 105%; opacity: 0; }
+  width: 100%; height: 100%;
+  opacity: 0;
+  animation: cr-fade-in 1.2s ease 2s both;
 }
 /* Lines hidden — frame is part of the background image */
 .cr-vtv-line { display: none; position: absolute; overflow: hidden; }
