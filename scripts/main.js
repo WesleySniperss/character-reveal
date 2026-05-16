@@ -606,16 +606,16 @@ function crHtmlVtmVentrue(img, name, cls, custom, showClan, clan) {
           <feGaussianBlur stdDeviation="1.1"/>
         </filter>
       </defs>
-      <rect x="6.5" y="4.5" width="87" height="68"
-            fill="none" stroke="rgba(255,235,110,0.6)" stroke-width="3"
+      <rect x="15" y="5" width="70" height="90"
+            fill="none" stroke="rgba(255,232,100,0.55)" stroke-width="3.5"
             filter="url(#cr-sv-glow)"
-            stroke-dasharray="14 296" stroke-linecap="round" stroke-dashoffset="0">
-        <animate attributeName="stroke-dashoffset" from="0" to="-310" dur="10s" begin="2s" repeatCount="indefinite"/>
+            stroke-dasharray="14 306" stroke-linecap="round" stroke-dashoffset="0">
+        <animate attributeName="stroke-dashoffset" from="0" to="-320" dur="12s" begin="2.5s" repeatCount="indefinite"/>
       </rect>
-      <rect x="6.5" y="4.5" width="87" height="68"
-            fill="none" stroke="rgba(255,252,200,0.95)" stroke-width="0.45"
-            stroke-dasharray="8 302" stroke-linecap="round" stroke-dashoffset="0">
-        <animate attributeName="stroke-dashoffset" from="0" to="-310" dur="10s" begin="2s" repeatCount="indefinite"/>
+      <rect x="15" y="5" width="70" height="90"
+            fill="none" stroke="rgba(255,252,195,0.95)" stroke-width="0.5"
+            stroke-dasharray="8 312" stroke-linecap="round" stroke-dashoffset="0">
+        <animate attributeName="stroke-dashoffset" from="0" to="-320" dur="12s" begin="2.5s" repeatCount="indefinite"/>
       </rect>
     </svg>
     <div class="cr-vtv-text">

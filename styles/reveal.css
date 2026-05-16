@@ -1139,8 +1139,10 @@
 
 .cr-vtv-bg {
   position: absolute; inset: 0;
-  background: url("../assets/IMG_0953.PNG") center/cover no-repeat;
-  animation: cr-fade-in 1.2s ease both, cr-vtv-bg-kenburns 22s ease-out both;
+  /* warm gold core → dark edges — multiply blend on frame reads gold as visible */
+  background:
+    radial-gradient(ellipse 72% 62% at 50% 40%, #c0991e 0%, #7a5c0e 28%, #2e2106 56%, #0d0a04 100%);
+  animation: cr-fade-in 1s ease both;
 }
 @keyframes cr-vtv-bg-kenburns {
   from { transform: scale(1.045); }
@@ -1157,17 +1159,17 @@
 }
 
 .cr-vtv-portrait {
-  position: absolute; top: 5%; bottom: 5%; left: 6%; right: 6%;
+  position: absolute; inset: 0;
   overflow: hidden; z-index: 1;
 }
 .cr-vtv-portrait .cr-portrait-img {
   width: 100%; height: 100%; object-fit: cover;
-  object-position: center 20%;
-  filter: saturate(.75) brightness(.90) contrast(1.05);
-  animation: cr-vtv-kenburns 14s ease-out both;
+  object-position: center 18%;
+  filter: saturate(.8) brightness(.88) contrast(1.06);
+  animation: cr-vtv-kenburns 16s ease-out both;
 }
 @keyframes cr-vtv-kenburns {
-  from { transform: scale(1.08); }
+  from { transform: scale(1.05); }
   to   { transform: scale(1); }
 }
 
@@ -1181,13 +1183,19 @@
   position: absolute; inset: 0; z-index: 3; pointer-events: none;
 }
 
-/* Frame overlay — PNG з прозорим центром, поверх портрету */
+/* Frame overlay — рамка статична, матеріалізується з золотого спалаху */
 .cr-vtv-frame-overlay {
   position: absolute; inset: 0; z-index: 4; pointer-events: none;
-  background: url("../assets/IMG_0953removed.png") center/cover no-repeat;
+  background: url("../assets/IMG_09531.png") center/cover no-repeat;
   mix-blend-mode: multiply;
-  filter: brightness(2.2);
-  animation: cr-fade-in 1.2s ease both, cr-vtv-bg-kenburns 22s ease-out both;
+  filter: brightness(1.0);
+  animation: cr-vtv-frame-appear 2.2s ease .4s both;
+}
+@keyframes cr-vtv-frame-appear {
+  0%   { opacity: 0; filter: brightness(14); }
+  18%  { opacity: 1; filter: brightness(9); }
+  55%  { filter: brightness(3); }
+  100% { filter: brightness(1.0); }
 }
 
 /* Gold shimmer travelling along the frame border */
