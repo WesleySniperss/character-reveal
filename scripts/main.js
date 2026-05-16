@@ -16,8 +16,12 @@ const CR_STYLES = [
   { id: 'spotlight',   label: 'Spotlight',   icon: 'fa-star' },
   { id: 'anime',       label: 'Anime',       icon: 'fa-bolt' },
   { id: 'leone',        label: 'Leone',        icon: 'fa-eye' },
-  { id: 'vtm-ventrue',  label: 'VTM Ventrue',  icon: 'fa-crown' },
-  { id: 'vtm-malkavian',label: 'VTM Malkavian',icon: 'fa-brain' },
+  { id: 'vtm-ventrue',   label: 'VTM Ventrue',   icon: 'fa-crown' },
+  { id: 'vtm-malkavian', label: 'VTM Malkavian', icon: 'fa-brain' },
+  { id: 'vtm-toreador',  label: 'VTM Toreador',  icon: 'fa-palette' },
+  { id: 'vtm-nosferatu', label: 'VTM Nosferatu', icon: 'fa-eye-slash' },
+  { id: 'vtm-gangrel',   label: 'VTM Gangrel',   icon: 'fa-paw' },
+  { id: 'vtm-brujah',    label: 'VTM Brujah',    icon: 'fa-fist-raised' },
 ];
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
@@ -373,6 +377,10 @@ function crBuildHTML(data) {
     case 'leone':         return crHtmlLeone(img, name, cls, custom);
     case 'vtm-ventrue':   return crHtmlVtmVentrue(img, name, cls, custom, showClan, actorClan);
     case 'vtm-malkavian': return crHtmlVtmMalkavian(img, name, cls, custom, actorImg, showClan, actorClan);
+    case 'vtm-toreador':  return crHtmlVtmToreador(img, name, cls, custom, showClan, actorClan);
+    case 'vtm-nosferatu': return crHtmlVtmNosferatu(img, name, cls, custom, showClan, actorClan);
+    case 'vtm-gangrel':   return crHtmlVtmGangrel(img, name, cls, custom, showClan, actorClan);
+    case 'vtm-brujah':    return crHtmlVtmBrujah(img, name, cls, custom, showClan, actorClan);
     default:            return crHtmlMinimal(img, name, cls, custom, actorImg);
   }
 }
@@ -679,6 +687,90 @@ function crHtmlVtmMalkavian(img, name, cls, custom, actorImg, showClan, clan) {
       </div>
       ${sub ? `<div class="cr-vtm-sub">${sub}</div>` : ''}
       ${clanLabel ? `<div class="cr-vtm-clan">✦ &nbsp; ${clanLabel.toUpperCase().split('').join(' ')} &nbsp; ✦</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Style: VTM Toreador ───────────────────────────────────────────────────────
+function crHtmlVtmToreador(img, name, cls, custom, showClan, clan) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const clanLabel = showClan ? (clan || 'TOREADOR') : null;
+  const petals = Array.from({length: 12}, () => `<div class="cr-tor-petal"></div>`).join('');
+  return `
+    <div class="cr-tor-bg"></div>
+    <div class="cr-tor-canvas">${img}</div>
+    <div class="cr-tor-glow"></div>
+    <div class="cr-tor-vignette"></div>
+    <div class="cr-tor-petals">${petals}</div>
+    <div class="cr-tor-text">
+      ${clanLabel ? `<div class="cr-tor-clan">✦ ${clanLabel.toUpperCase().split('').join(' ')} ✦</div>` : ''}
+      ${name ? `<div class="cr-tor-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-tor-sub">${sub}</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Style: VTM Nosferatu ──────────────────────────────────────────────────────
+function crHtmlVtmNosferatu(img, name, cls, custom, showClan, clan) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const clanLabel = showClan ? (clan || 'NOSFERATU') : null;
+  return `
+    <div class="cr-nos-bg">${img}</div>
+    <div class="cr-nos-darkness"></div>
+    <div class="cr-nos-glow"></div>
+    <div class="cr-nos-vignette"></div>
+    <div class="cr-nos-text">
+      ${clanLabel ? `<div class="cr-nos-clan">⌇ ${clanLabel.toUpperCase()} ⌇</div>` : ''}
+      ${name ? `<div class="cr-nos-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-nos-sub">${sub}</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Style: VTM Gangrel ────────────────────────────────────────────────────────
+function crHtmlVtmGangrel(img, name, cls, custom, showClan, clan) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const clanLabel = showClan ? (clan || 'GANGREL') : null;
+  return `
+    <div class="cr-gan-bg"></div>
+    <div class="cr-gan-portrait">${img}</div>
+    <div class="cr-gan-moon"></div>
+    <div class="cr-gan-mist"></div>
+    <svg class="cr-gan-scratches" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <line x1="0" y1="28" x2="62" y2="52" class="cr-gan-claw cr-gan-claw--1"/>
+      <line x1="4"  y1="33" x2="67" y2="57" class="cr-gan-claw cr-gan-claw--2"/>
+      <line x1="9"  y1="39" x2="70" y2="63" class="cr-gan-claw cr-gan-claw--3"/>
+    </svg>
+    <div class="cr-gan-vignette"></div>
+    <div class="cr-gan-text">
+      ${clanLabel ? `<div class="cr-gan-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
+      ${name ? `<div class="cr-gan-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-gan-sub">${sub}</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Style: VTM Brujah ────────────────────────────────────────────────────────
+function crHtmlVtmBrujah(img, name, cls, custom, showClan, clan) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const clanLabel = showClan ? (clan || 'BRUJAH') : null;
+  const sparks = Array.from({length: 8}, (_, i) => {
+    const angle = (i / 8) * 360 - 70;
+    const dist  = 90 + (i % 3) * 45;
+    const dx = Math.round(Math.cos(angle * Math.PI / 180) * dist);
+    const dy = Math.round(Math.sin(angle * Math.PI / 180) * dist);
+    return `<div class="cr-brj-spark" style="--i:${i};--dx:${dx}px;--dy:${dy}px"></div>`;
+  }).join('');
+  return `
+    <div class="cr-brj-bg"></div>
+    <div class="cr-brj-portrait">${img}</div>
+    <div class="cr-brj-rings"></div>
+    <div class="cr-brj-sparks">${sparks}</div>
+    <div class="cr-brj-vignette"></div>
+    <div class="cr-brj-text">
+      ${clanLabel ? `<div class="cr-brj-clan">${clanLabel.toUpperCase()}</div>` : ''}
+      ${name ? `<div class="cr-brj-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-brj-sub">${sub}</div>` : ''}
     </div>
   `;
 }
