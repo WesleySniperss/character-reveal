@@ -754,18 +754,48 @@ function crHtmlVtmGangrel(img, name, cls, custom, showClan, clan) {
 function crHtmlVtmBrujah(img, name, cls, custom, showClan, clan) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
   const clanLabel = showClan ? (clan || 'BRUJAH') : null;
-  const sparks = Array.from({length: 8}, (_, i) => {
-    const angle = (i / 8) * 360 - 70;
-    const dist  = 90 + (i % 3) * 45;
-    const dx = Math.round(Math.cos(angle * Math.PI / 180) * dist);
-    const dy = Math.round(Math.sin(angle * Math.PI / 180) * dist);
-    return `<div class="cr-brj-spark" style="--i:${i};--dx:${dx}px;--dy:${dy}px"></div>`;
+
+  // Cracks radiating from impact point (50, 42) — main cracks + branches
+  const CRACKS = [
+    [50,42,  6, 8], [50,42, 94, 6], [50,42, 98,52],
+    [50,42, 80,96], [50,42, 18,95], [50,42,  2,45],
+    [50,42, 48, 0], [50,42, 92,78],
+    // branch cracks from midpoints
+    [28,25, 12,40], [72,24, 84,44], [74,47, 88,62],
+    [34,68, 20,80],
+  ];
+  const mkLine = (cls2, i) => {
+    const [x1,y1,x2,y2] = CRACKS[i];
+    const len = Math.ceil(Math.hypot(x2-x1, y2-y1)) + 2;
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="cr-brj-cl ${cls2} cr-brj-cl--${i+1}" stroke-dasharray="${len}" stroke-dashoffset="${len}"/>`;
+  };
+  const crackGlow = CRACKS.map((_,i) => mkLine('cr-brj-clg', i)).join('');
+  const crackCore = CRACKS.map((_,i) => mkLine('cr-brj-clc', i)).join('');
+
+  // Ember particles rising from bottom
+  const embers = Array.from({length: 16}, (_, i) => {
+    const x   = (4 + i * 5.8).toFixed(1);
+    const dx  = ((i % 3) - 1) * 22;
+    const del = (i * 0.28).toFixed(2);
+    const dur = (2.0 + (i % 5) * 0.35).toFixed(2);
+    const sz  = i % 3 === 0 ? 4 : i % 3 === 1 ? 3 : 2;
+    return `<div class="cr-brj-ember" style="--x:${x}%;--dx:${dx}px;--delay:${del}s;--dur:${dur}s;--sz:${sz}px"></div>`;
   }).join('');
+
   return `
     <div class="cr-brj-bg"></div>
     <div class="cr-brj-portrait">${img}</div>
-    <div class="cr-brj-rings"></div>
-    <div class="cr-brj-sparks">${sparks}</div>
+    <svg class="cr-brj-cracks" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="cr-brj-glow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="1.4"/>
+        </filter>
+      </defs>
+      <g class="cr-brj-glow-layer">${crackGlow}</g>
+      <g class="cr-brj-core-layer">${crackCore}</g>
+      <circle cx="50" cy="42" r="2.8" class="cr-brj-impact"/>
+    </svg>
+    <div class="cr-brj-embers">${embers}</div>
     <div class="cr-brj-vignette"></div>
     <div class="cr-brj-text">
       ${clanLabel ? `<div class="cr-brj-clan">${clanLabel.toUpperCase()}</div>` : ''}
