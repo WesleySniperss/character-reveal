@@ -1,4 +1,4 @@
-// ═══════════════════════════════════════════════════════════════
+﻿// ═══════════════════════════════════════════════════════════════
 // CHARACTER REVEAL — main.js
 // Foundry VTT v13 · no import/export (classic script)
 // ═══════════════════════════════════════════════════════════════
@@ -16,7 +16,6 @@ const CR_STYLES = [
   { id: 'spotlight',   label: 'Spotlight',   icon: 'fa-star' },
   { id: 'anime',       label: 'Anime',       icon: 'fa-bolt' },
   { id: 'leone',        label: 'Leone',        icon: 'fa-eye' },
-  { id: 'mtg',          label: 'MTG Card',     icon: 'fa-address-card' },
   { id: 'vtm-ventrue',  label: 'VTM Ventrue',  icon: 'fa-crown' },
   { id: 'vtm-malkavian',label: 'VTM Malkavian',icon: 'fa-brain' },
 ];
@@ -35,8 +34,6 @@ Hooks.once('init', () => {
   reg('showClan',   true,  Boolean);
   reg('customText', '');
   reg('soundFile',  '');
-  reg('mtgRules',   '');
-  reg('mtgFlavor',  '');
   reg('playSound',  true, Boolean);
 });
 
@@ -135,16 +132,6 @@ class CRDialog extends Application {
                value="${g('customText')}"
                placeholder="e.g. «The legend returns»">
 
-        <div class="cr-mtg-fields"${cur === 'mtg' ? '' : ' style="display:none"'}>
-          <div class="cr-field-label">MTG — Abilities <em>(rules text)</em></div>
-          <textarea name="cr-mtgRules" class="cr-input cr-textarea" rows="3"
-                    placeholder="First Strike. Indestructible.">${g('mtgRules')}</textarea>
-          <div class="cr-field-label">MTG — Flavor text <em>(italic quote)</em></div>
-          <input type="text" name="cr-mtgFlavor" class="cr-input"
-                 value="${g('mtgFlavor')}"
-                 placeholder="«The legend returns.»">
-        </div>
-
         <div class="cr-field-label">Sound</div>
         <div class="cr-toggles">
           <label class="cr-toggle">
@@ -178,7 +165,6 @@ class CRDialog extends Application {
       $(this).addClass('cr-pill--active');
       $(this).find('input').prop('checked', true);
       const sv = $(this).find('input').val();
-      html.find('.cr-mtg-fields').toggle(sv === 'mtg');
       html.find('.cr-toggle--class').toggle(!sv.startsWith('vtm'));
       html.find('.cr-toggle--clan').toggle(sv.startsWith('vtm'));
     });
@@ -194,8 +180,6 @@ class CRDialog extends Application {
     const showClass  = root.find('[name="cr-showClass"]').is(':checked');
     const showClan   = root.find('[name="cr-showClan"]').is(':checked');
     const customText = root.find('[name="cr-customText"]').val().trim();
-    const mtgRules   = root.find('[name="cr-mtgRules"]').val()?.trim() || '';
-    const mtgFlavor  = root.find('[name="cr-mtgFlavor"]').val()?.trim() || '';
     const playSound  = root.find('[name="cr-playSound"]').is(':checked');
 
     await Promise.all([
@@ -204,8 +188,6 @@ class CRDialog extends Application {
       game.settings.set(CR_ID, 'showClass',  showClass),
       game.settings.set(CR_ID, 'showClan',   showClan),
       game.settings.set(CR_ID, 'customText', customText),
-      game.settings.set(CR_ID, 'mtgRules',   mtgRules),
-      game.settings.set(CR_ID, 'mtgFlavor',  mtgFlavor),
       game.settings.set(CR_ID, 'playSound',  playSound),
     ]);
 
@@ -228,8 +210,6 @@ class CRDialog extends Application {
       actorLevel:     actor.system?.details?.level || null,
       actorHpMax:     actor.system?.attributes?.hp?.max || null,
       actorClan:      crGetClan(actor),
-      mtgRules,
-      mtgFlavor,
     };
 
     payload.soundSrc = playSound ? await crResolveSoundSrc(style) : null;
@@ -391,7 +371,6 @@ function crBuildHTML(data) {
     case 'spotlight':   return crHtmlSpotlight(img, name, cls, custom);
     case 'anime':       return crHtmlAnime(img, name, cls, custom);
     case 'leone':         return crHtmlLeone(img, name, cls, custom);
-    case 'mtg':           return crHtmlMtg(img, name, cls, data);
     case 'vtm-ventrue':   return crHtmlVtmVentrue(img, name, cls, custom, showClan, actorClan);
     case 'vtm-malkavian': return crHtmlVtmMalkavian(img, name, cls, custom, actorImg, showClan, actorClan);
     default:            return crHtmlMinimal(img, name, cls, custom, actorImg);
@@ -586,83 +565,6 @@ function crHtmlLeone(img, name, cls, custom) {
       <div class="cr-lo-rule"></div>
       ${name ? `<div class="cr-lo-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-lo-sub">— ${sub} —</div>` : ''}
-    </div>
-  `;
-}
-
-// ─── Style: MTG Card ───────────────────────────────────────────────────────────
-
-function crMtgRoll() {
-  const COLORS = ['r','g','w','u','b'];
-  const pick   = () => COLORS[Math.floor(Math.random() * COLORS.length)];
-  const rnd    = n  => Math.floor(Math.random() * n);
-
-  const numColored = rnd(3) + 1;
-  const generic    = rnd(5);
-  const colored    = Array.from({ length: numColored }, pick);
-
-  let pipsHtml = generic > 0
-    ? `<span class=”cr-mtg-pip cr-mtg-pip-n”>${generic}</span>`
-    : '';
-  for (const c of colored)
-    pipsHtml += `<span class=”cr-mtg-pip cr-mtg-pip-${c}”>${c.toUpperCase()}</span>`;
-
-  const RARITY  = ['●','◆','◆','★'];
-  const RARCLS  = ['cr-mtg-rar-c','cr-mtg-rar-u','cr-mtg-rar-r','cr-mtg-rar-m'];
-  const ri      = rnd(4);
-  const setCode = Array.from({ length: 3 }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[rnd(26)]).join('');
-  const collNum = String(rnd(280) + 1).padStart(3, '0');
-
-  return {
-    pipsHtml,
-    rarity:    RARITY[ri],
-    rarityCls: RARCLS[ri],
-    setCode,
-    collNum,
-    power:     rnd(8) + 1,
-    toughness: rnd(8) + 1,
-  };
-}
-
-function crHtmlMtg(img, name, cls, data) {
-  const { mtgRules, mtgFlavor, actorImg } = data;
-
-  const typeLine   = cls
-    ? `Legendary Creature — ${cls.replace(/ · /g, ' ')}`
-    : 'Legendary Creature';
-  const rulesHtml  = mtgRules  || '<b>First Strike.</b> Indestructible.';
-  const flavorHtml = mtgFlavor || '';
-  const r          = crMtgRoll();
-
-  return `
-    <div class=”cr-mtg-bg”></div>
-    <div class=”cr-mtg-bg-art”><img src=”${actorImg}” alt=””></div>
-    <div class=”cr-mtg-scene”>
-      <div class=”cr-mtg-flipper”>
-        <div class=”cr-mtg-back”></div>
-        <div class=”cr-mtg-front”>
-          <div class=”cr-mtg-body”>
-            <div class=”cr-mtg-namebar”>
-              <span class=”cr-mtg-cardname”>${name || '???'}</span>
-              <div class=”cr-mtg-manacost”>${r.pipsHtml}</div>
-            </div>
-            <div class=”cr-mtg-artwin”>${img}</div>
-            <div class=”cr-mtg-typeline”>
-              <span class=”cr-mtg-typetext”>${typeLine}</span>
-              <span class=”cr-mtg-rarity ${r.rarityCls}”>${r.rarity}</span>
-            </div>
-            <div class=”cr-mtg-textbox”>
-              <div class=”cr-mtg-rules”>${rulesHtml}</div>
-              ${flavorHtml ? `<div class=”cr-mtg-flavor”>”${flavorHtml}”</div>` : ''}
-            </div>
-            <div class=”cr-mtg-footer”>
-              <span class=”cr-mtg-info”>${r.setCode} · ${r.collNum}/${rnd(280)+1} · ${new Date().getFullYear()}</span>
-              <span class=”cr-mtg-pt”>${r.power} / ${r.toughness}</span>
-            </div>
-          </div>
-          <div class=”cr-mtg-foil”></div>
-        </div>
-      </div>
     </div>
   `;
 }
