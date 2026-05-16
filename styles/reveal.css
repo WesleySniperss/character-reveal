@@ -1535,7 +1535,7 @@
   font-size: clamp(.6rem, .95vw, .82rem);
   color: rgba(210,180,255,.65);
   letter-spacing: .2em; white-space: nowrap;
-  animation: cr-vtm-whisper-drift ease-in-out both;
+  animation: cr-vtm-whisper-drift ease-in-out infinite;
 }
 .cr-vtm-whisper--1  { top: 20%;     left: 7%;   animation-duration: 4s;   animation-delay: .9s; }
 .cr-vtm-whisper--2  { top: 32%;     right: 9%;  animation-duration: 5.5s; animation-delay: 1.3s; }

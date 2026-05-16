@@ -634,7 +634,7 @@ function crHtmlVtmMalkavian(img, name, cls, custom, actorImg, showClan, clan) {
   const CRACK_SVG_SHARD = `<svg class="cr-vtm-shard-crack-static" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">${CRACK_PATHS}</svg>`;
 
   const shards = CR_VTM_SHARDS.map(s => `
-    <div class="cr-vtm-shard cr-vtm-spread-${s.jolt}" style="clip-path:${s.clip};animation-name:cr-vtm-rot3d-${s.rot};animation-duration:${(s.dur * 0.9).toFixed(1)}s;animation-delay:1.8s;animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-direction:alternate;animation-fill-mode:both">
+    <div class="cr-vtm-shard" style="clip-path:${s.clip};animation-name:cr-vtm-rot3d-${s.rot},cr-vtm-spread-${s.jolt};animation-duration:${(s.dur * 0.9).toFixed(1)}s,${(s.dur * 1.4).toFixed(1)}s;animation-delay:1.8s,1.8s;animation-timing-function:ease-in-out,ease-in-out;animation-iteration-count:infinite,infinite;animation-direction:alternate,alternate;animation-fill-mode:both,both">
       <div class="cr-vtm-sd" style="animation-name:cr-vtm-drift-${s.drift};animation-duration:${(s.dur * 1.6).toFixed(1)}s;animation-delay:1.8s">
         <img src="${actorImg}" alt="" class="cr-vtm-shard-img">
       </div>
