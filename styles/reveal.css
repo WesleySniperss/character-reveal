@@ -1352,25 +1352,31 @@
 
 .cr-vtv-bg {
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 80% 70% at 50% 40%, #060d20 0%, #020509 100%);
+  background: url("../assets/IMG_0953.PNG") center/cover no-repeat;
+  animation: cr-fade-in 1.2s ease both, cr-vtv-bg-kenburns 22s ease-out both;
+}
+@keyframes cr-vtv-bg-kenburns {
+  from { transform: scale(1.045); }
+  to   { transform: scale(1.0); }
 }
 
 .cr-vtv-pattern {
+  display: none;
   position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  opacity: 0.055;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg stroke='%23c8a035' fill='none' stroke-linecap='round'%3E%3Cpath d='M36,2 L70,36 L36,70 L2,36 Z' stroke-width='0.55'/%3E%3Cpath d='M36,2 C31,10 27,16 27,22 C31,20 36,18 36,14' stroke-width='0.6'/%3E%3Cpath d='M36,2 C41,10 45,16 45,22 C41,20 36,18 36,14' stroke-width='0.6'/%3E%3Cellipse cx='36' cy='24' rx='5' ry='3.5' stroke-width='0.5'/%3E%3Cpath d='M36,70 C31,62 27,56 27,50 C31,52 36,54 36,58' stroke-width='0.6'/%3E%3Cpath d='M36,70 C41,62 45,56 45,50 C41,52 36,54 36,58' stroke-width='0.6'/%3E%3Cellipse cx='36' cy='48' rx='5' ry='3.5' stroke-width='0.5'/%3E%3Cpath d='M2,36 C10,31 16,27 22,27 C20,31 18,36 14,36' stroke-width='0.6'/%3E%3Cpath d='M2,36 C10,41 16,45 22,45 C20,41 18,36 14,36' stroke-width='0.6'/%3E%3Cellipse cx='24' cy='36' rx='3.5' ry='5' stroke-width='0.5'/%3E%3Cpath d='M70,36 C62,31 56,27 50,27 C52,31 54,36 58,36' stroke-width='0.6'/%3E%3Cpath d='M70,36 C62,41 56,45 50,45 C52,41 54,36 58,36' stroke-width='0.6'/%3E%3Cellipse cx='48' cy='36' rx='3.5' ry='5' stroke-width='0.5'/%3E%3Cpath d='M36,27 L36,45' stroke-width='0.4' opacity='0.6'/%3E%3Cpath d='M27,36 L45,36' stroke-width='0.4' opacity='0.6'/%3E%3Ccircle cx='36' cy='36' r='5' stroke-width='0.55'/%3E%3Ccircle cx='36' cy='36' r='1.5' fill='%23c8a035' stroke='none'/%3E%3Ccircle cx='0' cy='0' r='2' fill='%23c8a035' stroke='none'/%3E%3Ccircle cx='72' cy='0' r='2' fill='%23c8a035' stroke='none'/%3E%3Ccircle cx='0' cy='72' r='2' fill='%23c8a035' stroke='none'/%3E%3Ccircle cx='72' cy='72' r='2' fill='%23c8a035' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: 72px 72px;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg stroke='%23c8a035' fill='none' stroke-linecap='round'%3E%3Cpath d='M0,30 C10,22 20,38 30,30 C40,22 50,38 60,30' stroke-width='0.65'/%3E%3Cpath d='M30,0 C38,10 22,20 30,27' stroke-width='0.65'/%3E%3Cpath d='M30,33 C22,40 22,50 30,60' stroke-width='0.65'/%3E%3Cpath d='M14,24 C10,16 6,18 10,24 C12,24 14,24 14,24Z' fill='%23c8a035' opacity='0.35' stroke-width='0.4'/%3E%3Cpath d='M46,36 C50,44 54,42 50,36 C48,36 46,36 46,36Z' fill='%23c8a035' opacity='0.35' stroke-width='0.4'/%3E%3Cpath d='M34,14 C40,10 42,4 36,6 C34,8 34,14 34,14Z' fill='%23c8a035' opacity='0.35' stroke-width='0.4'/%3E%3Cpath d='M24,46 C18,50 16,56 22,54 C24,52 24,46 24,46Z' fill='%23c8a035' opacity='0.35' stroke-width='0.4'/%3E%3Ccircle cx='30' cy='30' r='1.2' fill='%23c8a035' stroke='none' opacity='0.5'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 60px 60px;
   animation: cr-fade-in 2.5s ease 0.5s both;
 }
 
 .cr-vtv-portrait {
-  position: absolute; top: 5%; bottom: 28%; left: 7%; right: 7%;
+  position: absolute; top: 5%; bottom: 5%; left: 6%; right: 6%;
   overflow: hidden; z-index: 1;
 }
 .cr-vtv-portrait .cr-portrait-img {
   width: 100%; height: 100%; object-fit: cover;
   object-position: center 20%;
-  filter: sepia(.2) hue-rotate(200deg) saturate(.55) brightness(.45) contrast(1.1);
+  filter: saturate(.75) brightness(.90) contrast(1.05);
   animation: cr-vtv-kenburns 14s ease-out both;
 }
 @keyframes cr-vtv-kenburns {
@@ -1380,17 +1386,69 @@
 
 .cr-vtv-vignette {
   position: absolute; inset: 0; z-index: 2;
-  background:
-    radial-gradient(ellipse 60% 70% at 50% 50%, transparent 25%, rgba(2,5,14,.88) 100%),
-    linear-gradient(to bottom, rgba(2,5,14,.6) 0%, transparent 22%, transparent 68%, rgba(2,5,14,.9) 100%);
+  background: radial-gradient(ellipse 54% 64% at 50% 41%, transparent 32%, rgba(2,5,14,.78) 100%);
 }
 
 /* Art Deco frame */
 .cr-vtv-frame {
   position: absolute; inset: 0; z-index: 3; pointer-events: none;
 }
-/* Vertical side lines — flank the portrait without crossing it */
-.cr-vtv-line { position: absolute; }
+
+/* Frame overlay — PNG з прозорим центром, поверх портрету */
+.cr-vtv-frame-overlay {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: url("../assets/IMG_0953removed.png") center/cover no-repeat;
+  mix-blend-mode: multiply;
+  filter: brightness(2.2);
+  animation: cr-fade-in 1.2s ease both, cr-vtv-bg-kenburns 22s ease-out both;
+}
+
+/* Gold shimmer along the frame border */
+.cr-vtv-flare {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  overflow: hidden;
+}
+/* Thin gold sweep along the top border */
+.cr-vtv-flare::before {
+  content: '';
+  position: absolute;
+  top: 4%; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg,
+    transparent 47%,
+    rgba(255,230,100,.0) 48.5%,
+    rgba(255,248,180,.95) 50%,
+    rgba(255,230,100,.0) 51.5%,
+    transparent 53%
+  );
+  filter: blur(1px);
+  transform: translateX(-120%);
+  animation: cr-vtv-frame-shimmer 16s ease-in-out 2s infinite;
+}
+/* Soft gold glow at the contact point */
+.cr-vtv-flare::after {
+  content: '';
+  position: absolute;
+  top: 3%; left: 0;
+  width: 80px; height: 24px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse, rgba(255,248,180,.55) 0%, transparent 70%);
+  filter: blur(3px);
+  animation: cr-vtv-frame-glow 16s ease-in-out 2s infinite;
+}
+@keyframes cr-vtv-frame-shimmer {
+  0%    { transform: translateX(-120%); opacity: 0; }
+  4%    { opacity: 1; }
+  96%   { opacity: 1; }
+  100%  { transform: translateX(220%); opacity: 0; }
+}
+@keyframes cr-vtv-frame-glow {
+  0%    { left: -5%; opacity: 0; }
+  4%    { opacity: 1; }
+  96%   { opacity: .7; }
+  100%  { left: 105%; opacity: 0; }
+}
+/* Lines hidden — frame is part of the background image */
+.cr-vtv-line { display: none; position: absolute; overflow: hidden; }
 .cr-vtv-line--top {
   left: 6%; right: 6%; height: 1px; top: 4%;
   background: linear-gradient(90deg, transparent 0%, #7a5a10 5%, #c8a035 20%, #e8c050 50%, #c8a035 80%, #7a5a10 95%, transparent 100%);
@@ -1422,44 +1480,18 @@
   to   { transform: scaleX(1); opacity: 1; }
 }
 
-/* Inner echo lines (double frame) */
-.cr-vtv-line--top::after, .cr-vtv-line--bot::after {
-  content: ''; position: absolute; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(122,90,16,.4) 5%, rgba(200,160,53,.4) 20%, rgba(200,160,53,.5) 50%, rgba(200,160,53,.4) 80%, rgba(122,90,16,.4) 95%, transparent 100%);
-}
-.cr-vtv-line--top::after { top: 6px; }
-.cr-vtv-line--bot::after { top: -7px; }
-.cr-vtv-line--left::after, .cr-vtv-line--right::after {
-  content: ''; position: absolute; top: 0; bottom: 0; width: 1px;
-  background: linear-gradient(to bottom, transparent, rgba(122,90,16,.4) 8%, rgba(200,160,53,.4) 25%, rgba(200,160,53,.5) 50%, rgba(200,160,53,.4) 75%, rgba(122,90,16,.4) 92%, transparent);
-}
-.cr-vtv-line--left::after  { left: 6px; }
-.cr-vtv-line--right::after { left: -7px; }
-
 /* Gold shimmer sweeps along each line periodically */
 .cr-vtv-line--top::before, .cr-vtv-line--bot::before {
   content: ''; position: absolute;
-  top: -2px; bottom: -2px; left: 0; width: 28%;
+  top: 0; bottom: 0; left: 0; width: 28%;
   background: linear-gradient(90deg, transparent, rgba(255,248,190,.55), transparent);
   animation: cr-vtv-shimmer-h 11s ease-in-out 2.5s infinite;
-}
-.cr-vtv-line--left::before, .cr-vtv-line--right::before {
-  content: ''; position: absolute;
-  left: -2px; right: -2px; top: 0; height: 28%;
-  background: linear-gradient(to bottom, transparent, rgba(255,248,190,.55), transparent);
-  animation: cr-vtv-shimmer-v 13s ease-in-out 4s infinite;
 }
 @keyframes cr-vtv-shimmer-h {
   0%, 15%  { transform: translateX(-140%); opacity: 0; }
   20%      { opacity: 1; }
   80%      { opacity: 1; }
   85%, 100%{ transform: translateX(460%); opacity: 0; }
-}
-@keyframes cr-vtv-shimmer-v {
-  0%, 15%  { transform: translateY(-140%); opacity: 0; }
-  20%      { opacity: 1; }
-  80%      { opacity: 1; }
-  85%, 100%{ transform: translateY(460%); opacity: 0; }
 }
 
 @keyframes cr-vtv-corner-glow {
@@ -1472,6 +1504,7 @@
 }
 
 .cr-vtv-corner {
+  display: none;
   position: absolute; width: 42px; height: 42px;
   border-color: #c8a035; border-style: solid; border-width: 0;
 }
@@ -1519,7 +1552,7 @@
 
 /* Text */
 .cr-vtv-text {
-  position: absolute; z-index: 4;
+  position: absolute; z-index: 6;
   bottom: 0; left: 0; right: 0; height: 27%;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 6px;
@@ -1579,126 +1612,101 @@
   overflow: hidden; z-index: 1;
 }
 .cr-vtm-sd {
-  position: absolute; inset: -12%;
+  position: absolute; inset: 0;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
   animation-direction: alternate;
+  animation-fill-mode: both;
 }
 .cr-vtm-shard-img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
   object-position: center 25%;
-  filter: saturate(.3) hue-rotate(270deg) brightness(.55) contrast(1.3);
+  filter: saturate(.65) brightness(.86) contrast(1.05);
   display: block; border-radius: 0 !important;
 }
 
 @keyframes cr-vtm-drift-a {
-  0%   { transform: translate(0%,    0%); }
-  25%  { transform: translate(1.8%,  -1.2%); }
-  50%  { transform: translate(-1.2%, 1.8%); }
-  75%  { transform: translate(1%,    .6%); }
-  100% { transform: translate(.5%,   -1.8%); }
+  0%   { transform: translate(0%,     0%); }
+  25%  { transform: translate(.85%,  -.55%); }
+  50%  { transform: translate(-.55%,  .85%); }
+  75%  { transform: translate(.45%,   .28%); }
+  100% { transform: translate(.22%,  -.85%); }
 }
 @keyframes cr-vtm-drift-b {
-  0%   { transform: translate(0%,    0%); }
-  25%  { transform: translate(-1.8%, 1.2%); }
-  50%  { transform: translate(1%,    -1.5%); }
-  75%  { transform: translate(-.5%,  1.2%); }
-  100% { transform: translate(-1%,   1.8%); }
+  0%   { transform: translate(0%,     0%); }
+  25%  { transform: translate(-.85%,  .55%); }
+  50%  { transform: translate(.45%,  -.68%); }
+  75%  { transform: translate(-.22%,  .55%); }
+  100% { transform: translate(-.45%,  .85%); }
 }
 @keyframes cr-vtm-drift-c {
-  0%   { transform: translate(.5%,   -.5%); }
-  33%  { transform: translate(-1.2%, 1.2%); }
-  66%  { transform: translate(1.8%,  .5%); }
-  100% { transform: translate(-.5%,  -1.2%); }
+  0%   { transform: translate(0%,    0%); }
+  33%  { transform: translate(-.55%,  .55%); }
+  66%  { transform: translate(.85%,   .22%); }
+  100% { transform: translate(-.22%, -.55%); }
 }
 @keyframes cr-vtm-drift-d {
-  0%   { transform: translate(-.5%,  .5%); }
-  33%  { transform: translate(1.2%,  -1.2%); }
-  66%  { transform: translate(-1.8%, -.5%); }
-  100% { transform: translate(.5%,   1.2%); }
+  0%   { transform: translate(0%,    0%); }
+  33%  { transform: translate(.55%,  -.55%); }
+  66%  { transform: translate(-.85%, -.22%); }
+  100% { transform: translate(.22%,   .55%); }
 }
 
 @keyframes cr-vtm-rot3d-a {
   0%   { transform: rotateX(0deg)    rotateY(0deg)    rotateZ(0deg); }
-  33%  { transform: rotateX(4deg)    rotateY(-5deg)   rotateZ(0.8deg); }
-  66%  { transform: rotateX(-3deg)   rotateY(4deg)    rotateZ(-0.6deg); }
-  100% { transform: rotateX(2deg)    rotateY(-3deg)   rotateZ(0.4deg); }
+  33%  { transform: rotateX(2deg)    rotateY(-2.5deg) rotateZ(0.4deg); }
+  66%  { transform: rotateX(-1.5deg) rotateY(2deg)    rotateZ(-0.3deg); }
+  100% { transform: rotateX(1deg)    rotateY(-1.5deg) rotateZ(0.2deg); }
 }
 @keyframes cr-vtm-rot3d-b {
-  0%   { transform: rotateX(2deg)    rotateY(3deg)    rotateZ(-0.5deg); }
-  33%  { transform: rotateX(-4deg)   rotateY(-4deg)   rotateZ(0.7deg); }
-  66%  { transform: rotateX(3deg)    rotateY(5deg)    rotateZ(-0.9deg); }
-  100% { transform: rotateX(-2deg)   rotateY(-2deg)   rotateZ(0.3deg); }
+  0%   { transform: rotateX(0deg)    rotateY(0deg)    rotateZ(0deg); }
+  33%  { transform: rotateX(-2deg)   rotateY(-2deg)   rotateZ(0.35deg); }
+  66%  { transform: rotateX(1.5deg)  rotateY(2.5deg)  rotateZ(-0.45deg); }
+  100% { transform: rotateX(-1deg)   rotateY(-1deg)   rotateZ(0.15deg); }
 }
 @keyframes cr-vtm-rot3d-c {
-  0%   { transform: rotateX(-3deg)   rotateY(4deg)    rotateZ(0.6deg); }
-  33%  { transform: rotateX(5deg)    rotateY(-3deg)   rotateZ(-0.8deg); }
-  66%  { transform: rotateX(-4deg)   rotateY(5deg)    rotateZ(0.5deg); }
-  100% { transform: rotateX(3deg)    rotateY(-4deg)   rotateZ(-0.7deg); }
+  0%   { transform: rotateX(0deg)    rotateY(0deg)    rotateZ(0deg); }
+  33%  { transform: rotateX(2.5deg)  rotateY(-1.5deg) rotateZ(-0.4deg); }
+  66%  { transform: rotateX(-2deg)   rotateY(2.5deg)  rotateZ(0.25deg); }
+  100% { transform: rotateX(1.5deg)  rotateY(-2deg)   rotateZ(-0.35deg); }
 }
 @keyframes cr-vtm-rot3d-d {
-  0%   { transform: rotateX(3deg)    rotateY(-4deg)   rotateZ(-0.7deg); }
-  33%  { transform: rotateX(-5deg)   rotateY(3deg)    rotateZ(0.9deg); }
-  66%  { transform: rotateX(4deg)    rotateY(-5deg)   rotateZ(-0.5deg); }
-  100% { transform: rotateX(-3deg)   rotateY(4deg)    rotateZ(0.6deg); }
+  0%   { transform: rotateX(0deg)    rotateY(0deg)    rotateZ(0deg); }
+  33%  { transform: rotateX(-2.5deg) rotateY(1.5deg)  rotateZ(0.45deg); }
+  66%  { transform: rotateX(2deg)    rotateY(-2.5deg) rotateZ(-0.25deg); }
+  100% { transform: rotateX(-1.5deg) rotateY(2deg)    rotateZ(0.3deg); }
 }
 
-.cr-vtm-jolt-1 { animation: cr-vtm-jolt-1  .9s  cubic-bezier(.22,1,.36,1) both; }
-.cr-vtm-jolt-2 { animation: cr-vtm-jolt-2  .8s  cubic-bezier(.22,1,.36,1) both; }
-.cr-vtm-jolt-3 { animation: cr-vtm-jolt-3  1s   cubic-bezier(.22,1,.36,1) both; }
-.cr-vtm-jolt-4 { animation: cr-vtm-jolt-4  .85s cubic-bezier(.22,1,.36,1) both; }
-.cr-vtm-jolt-5 { animation: cr-vtm-jolt-5  .7s  cubic-bezier(.22,1,.36,1) both; }
-.cr-vtm-jolt-6 { animation: cr-vtm-jolt-6  .95s cubic-bezier(.22,1,.36,1) both; }
-.cr-vtm-jolt-7 { animation: cr-vtm-jolt-7  .75s cubic-bezier(.22,1,.36,1) both; }
-.cr-vtm-jolt-8 { animation: cr-vtm-jolt-8  1.05s cubic-bezier(.22,1,.36,1) both; }
-.cr-vtm-jolt-9 { animation: cr-vtm-jolt-9  .88s cubic-bezier(.22,1,.36,1) both; }
+/* Spread: oskolky povil'no rozlitayutsya vid tsentru (42%,48%).
+   Vykorystovuye CSS 'translate' — ne konfliktuye z 'transform' rot3d. */
+.cr-vtm-spread-1 { animation: cr-vtm-spread-1 5s ease-out 1.8s both; }
+.cr-vtm-spread-2 { animation: cr-vtm-spread-2 5s ease-out 1.8s both; }
+.cr-vtm-spread-3 { animation: cr-vtm-spread-3 5s ease-out 1.8s both; }
+.cr-vtm-spread-4 { animation: cr-vtm-spread-4 5s ease-out 1.8s both; }
+.cr-vtm-spread-5 { animation: cr-vtm-spread-5 5s ease-out 1.8s both; }
+.cr-vtm-spread-6 { animation: cr-vtm-spread-6 5s ease-out 1.8s both; }
+.cr-vtm-spread-7 { animation: cr-vtm-spread-7 5s ease-out 1.8s both; }
+.cr-vtm-spread-8 { animation: cr-vtm-spread-8 5s ease-out 1.8s both; }
+.cr-vtm-spread-9 { animation: cr-vtm-spread-9 5s ease-out 1.8s both; }
 
-@keyframes cr-vtm-jolt-1 {
-  0%   { opacity:0; transform: translate(-6%,-8%) scale(1.08) rotate(-2deg); }
-  60%  { opacity:1; transform: translate(1%,1%) scale(.98); }
-  100% { opacity:1; transform: none; }
-}
-@keyframes cr-vtm-jolt-2 {
-  0%   { opacity:0; transform: translate(-10%,4%) scale(1.1) skewY(3deg); }
-  60%  { opacity:1; transform: translate(2%,-1%); }
-  100% { opacity:1; transform: none; }
-}
-@keyframes cr-vtm-jolt-3 {
-  0%   { opacity:0; transform: translate(-8%,6%) scale(1.06) rotate(1.5deg); }
-  60%  { opacity:1; transform: translate(1%,-2%); }
-  100% { opacity:1; transform: none; }
-}
-@keyframes cr-vtm-jolt-4 {
-  0%   { opacity:0; transform: translate(-5%,10%) scale(1.09) skewX(-3deg); }
-  60%  { opacity:1; transform: translate(1%,-1%); }
-  100% { opacity:1; transform: none; }
-}
-@keyframes cr-vtm-jolt-5 {
-  0%   { opacity:0; transform: translate(0,12%) scale(1.07) rotate(-1deg); }
-  60%  { opacity:1; transform: translate(0,-2%); }
-  100% { opacity:1; transform: none; }
-}
-@keyframes cr-vtm-jolt-6 {
-  0%   { opacity:0; transform: translate(8%,8%) scale(1.1) skewX(2deg); }
-  60%  { opacity:1; transform: translate(-1%,-1%); }
-  100% { opacity:1; transform: none; }
-}
-@keyframes cr-vtm-jolt-7 {
-  0%   { opacity:0; transform: translate(10%,-2%) scale(1.08) rotate(2deg); }
-  60%  { opacity:1; transform: translate(-2%,1%); }
-  100% { opacity:1; transform: none; }
-}
-@keyframes cr-vtm-jolt-8 {
-  0%   { opacity:0; transform: translate(4%,-10%) scale(1.06) skewY(-2deg); }
-  60%  { opacity:1; transform: translate(-1%,2%); }
-  100% { opacity:1; transform: none; }
-}
-@keyframes cr-vtm-jolt-9 {
-  0%   { opacity:0; transform: translate(8%,-8%) scale(1.09) rotate(-2.5deg); }
-  60%  { opacity:1; transform: translate(-2%,2%); }
-  100% { opacity:1; transform: none; }
+@keyframes cr-vtm-spread-1 { from { translate: 0 0; } to { translate: -2% -3%; } }
+@keyframes cr-vtm-spread-2 { from { translate: 0 0; } to { translate: -3% -2%; } }
+@keyframes cr-vtm-spread-3 { from { translate: 0 0; } to { translate: -4%  2%; } }
+@keyframes cr-vtm-spread-4 { from { translate: 0 0; } to { translate: -2%  3%; } }
+@keyframes cr-vtm-spread-5 { from { translate: 0 0; } to { translate:  1%  4%; } }
+@keyframes cr-vtm-spread-6 { from { translate: 0 0; } to { translate:  3%  3%; } }
+@keyframes cr-vtm-spread-7 { from { translate: 0 0; } to { translate:  4% -1%; } }
+@keyframes cr-vtm-spread-8 { from { translate: 0 0; } to { translate:  1% -4%; } }
+@keyframes cr-vtm-spread-9 { from { translate: 0 0; } to { translate:  3% -3%; } }
+
+@keyframes cr-vtm-shard-fadein { from { opacity: 0; } to { opacity: 1; } }
+
+/* Static crack overlay on each shard — no animation, fades in with the shard itself */
+.cr-vtm-shard-crack-static {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 2;
 }
 
 .cr-vtm-noise {
@@ -1718,29 +1726,42 @@
   background: radial-gradient(ellipse 65% 70% at 50% 48%, transparent 20%, rgba(4,2,8,.88) 100%);
 }
 
-/* Crack SVG — direct child of .cr-vtm-shard, NOT inside .cr-vtm-sd.
-   Fills the shard (inset:0) so SVG viewBox 0-100 maps to viewport %. */
-.cr-vtm-shard-crack {
-  position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0;
-  animation: cr-vtm-crack-in .3s ease .65s both;
-}
-
-/* Shattered mirror overlay (legacy, no longer used) */
-.cr-vtm-cracks {
+/* Pre-image sequence: portrait appears, cracks form, container fades revealing spread shards */
+.cr-vtm-preimage {
   position: absolute; inset: 0; z-index: 4; pointer-events: none;
-  opacity: 0;
-  animation: cr-vtm-crack-in .3s ease .65s both;
+  animation: cr-vtm-preimage-full 2.8s ease both;
 }
-.cr-vtm-cracks svg { width: 100%; height: 100%; }
-@keyframes cr-vtm-crack-in {
-  0%   { opacity: 0; }
-  40%  { opacity: 1; }
-  100% { opacity: .7; }
+.cr-vtm-preimage-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: center 25%;
+  filter: saturate(.65) brightness(.88) contrast(1.05);
+}
+.cr-vtm-preimage-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 65% 70% at 50% 48%, transparent 35%, rgba(4,2,8,.65) 100%);
+}
+.cr-vtm-precrack {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; opacity: 0;
+  animation:
+    cr-vtm-precrack-fadein  0.5s ease 0.55s both,
+    cr-vtm-crack-radiate    0.9s ease 0.55s both;
+}
+@keyframes cr-vtm-preimage-full {
+  0%, 64% { opacity: 1; }   /* visible immediately, holds until t=1.8s */
+  100%    { opacity: 0; }   /* fades out by t=2.8s */
+}
+@keyframes cr-vtm-preimg-seq {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes cr-vtm-precrack-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes cr-vtm-crack-radiate {
+  from { clip-path: circle(0%   at 42% 48%); }
+  to   { clip-path: circle(150% at 42% 48%); }
 }
 
 /* Whispers */
@@ -1751,7 +1772,7 @@
   position: absolute;
   font-family: 'IM Fell English', serif; font-style: italic;
   font-size: clamp(.6rem, .95vw, .82rem);
-  color: rgba(170,90,220,.3);
+  color: rgba(210,180,255,.65);
   letter-spacing: .2em; white-space: nowrap;
   animation: cr-vtm-whisper-drift ease-in-out both;
 }
