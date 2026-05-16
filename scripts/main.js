@@ -558,6 +558,7 @@ function crHtmlLeone(img, name, cls, custom) {
     <div class="cr-lo-portrait">${img}</div>
     <div class="cr-lo-grain"></div>
     <div class="cr-lo-vignette"></div>
+    <div class="cr-lo-fog"></div>
     <div class="cr-lo-bar-top"></div>
     <div class="cr-lo-bar-bot"></div>
     <div class="cr-lo-dustline"></div>

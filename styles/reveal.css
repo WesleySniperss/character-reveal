@@ -1031,8 +1031,34 @@
     linear-gradient(to bottom, transparent 0%, transparent 60%, rgba(0,0,0,.5) 100%);
 }
 
+.cr-lo-fog {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden;
+}
+.cr-lo-fog::before {
+  content: '';
+  position: absolute;
+  left: -50%; top: 28%; right: -50%; height: 22%;
+  background: radial-gradient(ellipse 50% 100% at 50% 50%, rgba(225,210,175,.22) 0%, transparent 100%);
+  filter: blur(28px);
+  animation: cr-lo-fog-drift 22s ease-in-out infinite;
+}
+.cr-lo-fog::after {
+  content: '';
+  position: absolute;
+  left: -50%; top: 50%; right: -50%; height: 18%;
+  background: radial-gradient(ellipse 50% 100% at 50% 50%, rgba(210,195,160,.14) 0%, transparent 100%);
+  filter: blur(22px);
+  animation: cr-lo-fog-drift 30s ease-in-out 9s infinite reverse;
+}
+@keyframes cr-lo-fog-drift {
+  0%   { transform: translateX(-45%); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateX(45%); opacity: 0; }
+}
+
 .cr-lo-bar-top {
-  position: absolute; top: 0; left: 0; right: 0; z-index: 3;
+  position: absolute; top: 0; left: 0; right: 0; z-index: 4;
   height: 18%;
   background: #000;
   animation: cr-lo-bar-t-in .5s ease both;
@@ -1040,7 +1066,7 @@
 @keyframes cr-lo-bar-t-in { from { transform: translateY(-100%); } to { transform: translateY(0); } }
 
 .cr-lo-bar-bot {
-  position: absolute; bottom: 0; left: 0; right: 0; z-index: 3;
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 4;
   height: 26%;
   background: #000;
   animation: cr-lo-bar-b-in .5s ease both;
@@ -1048,14 +1074,14 @@
 @keyframes cr-lo-bar-b-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
 .cr-lo-dustline {
-  position: absolute; bottom: 26%; left: 0; right: 0; z-index: 4;
+  position: absolute; bottom: 26%; left: 0; right: 0; z-index: 5;
   height: 1px;
   background: linear-gradient(90deg, transparent 0%, rgba(180,140,40,.35) 20%, rgba(200,160,50,.5) 50%, rgba(180,140,40,.35) 80%, transparent 100%);
   animation: cr-fade-in .4s ease .8s both;
 }
 
 .cr-lo-text {
-  position: absolute; bottom: 0; left: 0; right: 0; z-index: 4;
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
   height: 26%;
   display: flex; flex-direction: column; justify-content: center;
   padding: 0 clamp(32px, 6vw, 80px);
