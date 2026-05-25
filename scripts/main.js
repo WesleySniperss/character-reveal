@@ -1051,12 +1051,18 @@ function crHtmlVtmGangrel(img, name, cls, custom, showClan, clan) {
   return `
     <div class="cr-gan-bg"></div>
     <div class="cr-gan-portrait">${img}</div>
+    <div class="cr-gan-eyes">
+      <div class="cr-gan-eye cr-gan-eye--l"></div>
+      <div class="cr-gan-eye cr-gan-eye--r"></div>
+    </div>
     <div class="cr-gan-moon"></div>
     <div class="cr-gan-mist"></div>
     <svg class="cr-gan-scratches" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <line x1="0" y1="28" x2="62" y2="52" class="cr-gan-claw cr-gan-claw--1"/>
-      <line x1="4"  y1="33" x2="67" y2="57" class="cr-gan-claw cr-gan-claw--2"/>
-      <line x1="9"  y1="39" x2="70" y2="63" class="cr-gan-claw cr-gan-claw--3"/>
+      <line x1="2"  y1="18" x2="68" y2="46" class="cr-gan-claw cr-gan-claw--1"/>
+      <line x1="6"  y1="24" x2="72" y2="52" class="cr-gan-claw cr-gan-claw--2"/>
+      <line x1="11" y1="30" x2="76" y2="58" class="cr-gan-claw cr-gan-claw--3"/>
+      <line x1="16" y1="36" x2="80" y2="64" class="cr-gan-claw cr-gan-claw--4"/>
+      <line x1="21" y1="42" x2="84" y2="70" class="cr-gan-claw cr-gan-claw--5"/>
     </svg>
     <div class="cr-gan-vignette"></div>
     <div class="cr-gan-text">
