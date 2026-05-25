@@ -980,10 +980,10 @@ function crHtmlVtmTremere(img, name, cls, custom, showClan, clan) {
     const eyePath = `M0,${cy.toFixed(1)} C${ulx1.toFixed(1)},${uy.toFixed(1)} ${ulx2.toFixed(1)},${uy.toFixed(1)} 200,${cy.toFixed(1)} C${lx2.toFixed(1)},${ly.toFixed(1)} ${lx1.toFixed(1)},${ly.toFixed(1)} 0,${cy.toFixed(1)} Z`;
 
     // Curved lid paths — bottom/top edge follows the eyelid margin curve, not a straight line
-    const topMeet = cy + rnd(4, 8);     // where top lid reaches at the corners
-    const topDip  = cy - rnd(2, 6);     // top lid edge arches upward at the middle
-    const botMeet = cy - rnd(4, 8);     // where bottom lid reaches at the corners
-    const botRise = cy + rnd(2, 6);     // bottom lid edge dips downward at the middle
+    const topMeet = cy + rnd(6, 12);    // where top lid reaches at the corners
+    const topDip  = cy + rnd(2, 6);    // top lid edge at the middle — below center so lids overlap
+    const botMeet = cy - rnd(6, 12);   // where bottom lid reaches at the corners
+    const botRise = cy - rnd(2, 6);    // bottom lid edge at the middle — above center so lids overlap
     const topLidPath = `M-5,${topMeet.toFixed(1)} C60,${topDip.toFixed(1)} 140,${topDip.toFixed(1)} 205,${topMeet.toFixed(1)} L205,-5 L-5,-5 Z`;
     const botLidPath = `M-5,${botMeet.toFixed(1)} C60,${botRise.toFixed(1)} 140,${botRise.toFixed(1)} 205,${botMeet.toFixed(1)} L205,85 L-5,85 Z`;
 
