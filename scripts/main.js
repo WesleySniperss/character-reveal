@@ -5,6 +5,17 @@
 
 const CR_ID = 'character-reveal';
 
+// Static background assets per style — preloaded before animation to avoid mid-animation GPU freeze
+const CR_BG_ASSETS = {
+  'vtm-toreador':  'Toreador1.jpg',
+  'vtm-ventrue':   'Ventrue back.png',
+  'vtm-nosferatu': null,
+  'vtm-gangrel':   null,
+  'vtm-brujah':    null,
+  'vtm-malkavian': null,
+  'vtm-tremere':   null,
+};
+
 const CR_STYLES = [
   { id: 'minimal',     label: 'Minimal',     icon: 'fa-circle-half-stroke' },
   { id: 'tarantino',   label: 'Tarantino',   icon: 'fa-film' },
@@ -14,7 +25,6 @@ const CR_STYLES = [
   { id: 'darksouls',   label: 'Dark Souls',  icon: 'fa-skull' },
   { id: 'manuscript',  label: 'Manuscript',  icon: 'fa-book-open' },
   { id: 'spotlight',   label: 'Spotlight',   icon: 'fa-star' },
-  { id: 'anime',       label: 'Anime',       icon: 'fa-bolt' },
   { id: 'leone',        label: 'Leone',        icon: 'fa-eye' },
   { id: 'vtm-ventrue',   label: 'VTM Ventrue',   icon: 'fa-crown' },
   { id: 'vtm-malkavian', label: 'VTM Malkavian', icon: 'fa-brain' },
@@ -22,6 +32,7 @@ const CR_STYLES = [
   { id: 'vtm-nosferatu', label: 'VTM Nosferatu', icon: 'fa-eye-slash' },
   { id: 'vtm-gangrel',   label: 'VTM Gangrel',   icon: 'fa-paw' },
   { id: 'vtm-brujah',    label: 'VTM Brujah',    icon: 'fa-fist-raised' },
+  { id: 'vtm-tremere',  label: 'VTM Tremere',   icon: 'fa-wand-sparkles' },
 ];
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
@@ -53,8 +64,8 @@ Hooks.once('vtools.ready', () => {
 
 // ─── Socket ────────────────────────────────────────────────────────────────────
 Hooks.once('ready', () => {
-  game.socket.on(`module.${CR_ID}`, data => {
-    if (data.action === 'reveal') crShowOverlay(data);
+  game.socket.on(`module.${CR_ID}`, async data => {
+    if (data.action === 'reveal') await crShowOverlay(data);
   });
 });
 
@@ -301,10 +312,23 @@ function crPlaySound(src) {
   }
 }
 
-function crShowOverlay(data) {
+async function crShowOverlay(data) {
   crPlaySound(data.soundSrc || null);
 
   document.getElementById('cr-overlay')?.remove();
+
+  // Decode ALL images before overlay appears — prevents mid-animation GPU upload freeze.
+  // CSS url() backgrounds load separately from <img> tags; both must be pre-decoded.
+  const bgFile = CR_BG_ASSETS[data.style];
+  const srcs = [
+    data.actorImg,
+    bgFile ? `modules/${CR_ID}/assets/${bgFile}` : null,
+  ].filter(Boolean);
+  await Promise.all(srcs.map(src => {
+    const img = new Image();
+    img.src = src;
+    return img.decode().catch(() => {});
+  }));
 
   const el = document.createElement('div');
   el.id = 'cr-overlay';
@@ -316,7 +340,16 @@ function crShowOverlay(data) {
      </button>`;
 
   document.body.appendChild(el);
-  requestAnimationFrame(() => el.classList.add('cr-visible'));
+  // Double rAF: frame 1 = layout+composite (GPU uploads via will-change on #cr-overlay),
+  // frame 2 = add cr-visible so animations start on clean slate with textures already in VRAM.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    el.classList.add('cr-visible');
+    if (el.dataset.style === 'vtm-tremere') {
+      crTreInitPool();
+      el.querySelectorAll('.cr-tre-eye-wrap').forEach(crTreBlink);
+    }
+    if (el.dataset.style === 'tarantino') crTaRun(el);
+  }));
 
   // Mute button — stops propagation so it doesn't close the overlay
   el.querySelector('.cr-mute-btn').addEventListener('click', function(e) {
@@ -348,7 +381,7 @@ function crBuildHTML(data) {
 
   const name   = showName  ? (actorName  || '') : '';
   const custom = customText || '';
-  const img    = `<img class="cr-portrait-img" src="${actorImg}" alt="${actorName}">`;
+  const img    = `<img class="cr-portrait-img" src="${actorImg}" alt="${actorName}" decoding="async">`;
 
   // Build secondary info line
   let cls = '';
@@ -373,7 +406,6 @@ function crBuildHTML(data) {
     case 'darksouls':   return crHtmlDarkSouls(img, name, cls, custom);
     case 'manuscript':  return crHtmlManuscript(img, name, cls, custom);
     case 'spotlight':   return crHtmlSpotlight(img, name, cls, custom);
-    case 'anime':       return crHtmlAnime(img, name, cls, custom);
     case 'leone':         return crHtmlLeone(img, name, cls, custom);
     case 'vtm-ventrue':   return crHtmlVtmVentrue(img, name, cls, custom, showClan, actorClan);
     case 'vtm-malkavian': return crHtmlVtmMalkavian(img, name, cls, custom, actorImg, showClan, actorClan);
@@ -381,6 +413,7 @@ function crBuildHTML(data) {
     case 'vtm-nosferatu': return crHtmlVtmNosferatu(img, name, cls, custom, showClan, actorClan);
     case 'vtm-gangrel':   return crHtmlVtmGangrel(img, name, cls, custom, showClan, actorClan);
     case 'vtm-brujah':    return crHtmlVtmBrujah(img, name, cls, custom, showClan, actorClan);
+    case 'vtm-tremere':  return crHtmlVtmTremere(img, name, cls, custom, showClan, actorClan);
     default:            return crHtmlMinimal(img, name, cls, custom, actorImg);
   }
 }
@@ -405,19 +438,64 @@ function crHtmlMinimal(img, name, cls, custom, imgSrc) {
 
 // ─── Style: Tarantino ──────────────────────────────────────────────────────────
 function crHtmlTarantino(img, name, cls, custom) {
+  const fields = [
+    custom && { text: custom, mod: 'custom' },
+    name   && { text: name,   mod: 'name'   },
+    cls    && { text: cls,    mod: 'cls'     },
+  ].filter(Boolean);
+
+  const cardsHtml = fields.map(f => `
+    <div class="cr-ta-card cr-ta-card--${f.mod}">
+      <span class="cr-ta-card-val">${f.text}</span>
+    </div>`).join('');
+
   return `
     <div class="cr-ta-grain"></div>
     <div class="cr-ta-scanlines"></div>
-    <div class="cr-ta-bar"></div>
-    <div class="cr-ta-inner">
-      <div class="cr-ta-img">${img}</div>
-      <div class="cr-ta-copy">
-        ${custom ? `<div class="cr-ta-sub">${custom}</div>` : ''}
-        ${name   ? `<div class="cr-ta-name">${name}</div>` : ''}
-        ${cls    ? `<div class="cr-ta-div"></div><div class="cr-ta-class">${cls}</div>` : ''}
-      </div>
-    </div>
+    <div class="cr-ta-vignette"></div>
+    <div class="cr-ta-portrait">${img}</div>
+    <div class="cr-ta-cards">${cardsHtml}</div>
   `;
+}
+
+function crTaRun(el) {
+  const cards = [...el.querySelectorAll('.cr-ta-card')];
+  if (!cards.length) return;
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  async function show(card) {
+    card.style.transition = 'none';
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(12px)';
+    await sleep(16);
+    card.style.transition = 'opacity 0.08s linear, transform 0.12s cubic-bezier(0.2,0,0.4,1)';
+    card.style.opacity = '1';
+    card.style.transform = 'translateY(0)';
+  }
+
+  async function hide(card) {
+    card.style.transition = 'opacity 0.06s linear';
+    card.style.opacity = '0';
+    await sleep(80);
+    card.style.transition = 'none';
+    card.style.transform = 'translateY(12px)';
+  }
+
+  async function loop() {
+    await sleep(700);
+    while (el.isConnected) {
+      for (const card of cards) {
+        if (!el.isConnected) return;
+        await show(card);
+        await sleep(1900 + Math.random() * 700);
+        if (!el.isConnected) return;
+        await hide(card);
+        await sleep(480);
+      }
+    }
+  }
+  loop();
 }
 
 // ─── Style: Wanted Poster ──────────────────────────────────────────────────────
@@ -456,24 +534,44 @@ function crHtmlBorderlands(img, name, cls, custom) {
 
 // ─── Style: Heraldry ───────────────────────────────────────────────────────────
 function crHtmlHeraldry(img, name, cls, custom) {
+  const embers = Array.from({ length: 14 }, () => {
+    const x   = (3 + Math.random() * 94).toFixed(1);
+    const dur  = (5 + Math.random() * 8).toFixed(1);
+    const del  = (Math.random() * 12).toFixed(1);
+    const sz   = (1.5 + Math.random() * 2.5).toFixed(1);
+    const dx   = ((Math.random() - 0.5) * 50).toFixed(0);
+    return `<div class="cr-her-ember" style="--x:${x}%;--dur:${dur}s;--del:${del}s;--sz:${sz}px;--dx:${dx}px"></div>`;
+  }).join('');
   return `
+    <div class="cr-her-rays"></div>
+    <div class="cr-her-embers">${embers}</div>
     <div class="cr-her-torches">
       <div class="cr-her-torch cr-her-torch--left">
         <div class="cr-her-torch-glow"></div>
         <div class="cr-her-torch-fire"></div>
+        <div class="cr-her-torch-cup"></div>
+        <div class="cr-her-torch-wrap"></div>
+        <div class="cr-her-torch-band"></div>
         <div class="cr-her-torch-body"></div>
+        <div class="cr-her-torch-ring"></div>
+        <div class="cr-her-torch-foot"></div>
       </div>
       <div class="cr-her-torch cr-her-torch--right">
         <div class="cr-her-torch-glow"></div>
         <div class="cr-her-torch-fire"></div>
+        <div class="cr-her-torch-cup"></div>
+        <div class="cr-her-torch-wrap"></div>
+        <div class="cr-her-torch-band"></div>
         <div class="cr-her-torch-body"></div>
+        <div class="cr-her-torch-ring"></div>
+        <div class="cr-her-torch-foot"></div>
       </div>
     </div>
     <div class="cr-her-banner-wrap">
       <div class="cr-her-banner-top"></div>
       <div class="cr-her-banner-body">
-        <div class="cr-her-ring">${img}</div>
-        <div class="cr-her-ornament">— ✦ —</div>
+        <div class="cr-her-ring-wrap"><div class="cr-her-ring">${img}</div></div>
+        <div class="cr-her-ornament">✦ ─── ⚜ ─── ✦</div>
         ${name   ? `<div class="cr-her-name">${name}</div>`   : ''}
         ${cls    ? `<div class="cr-her-title">${cls}</div>`   : ''}
         ${custom ? `<div class="cr-her-divider"></div><div class="cr-her-desc">${custom}</div>` : ''}
@@ -500,24 +598,42 @@ function crHtmlDarkSouls(img, name, cls, custom) {
 
 // ─── Style: Manuscript ─────────────────────────────────────────────────────────
 function crHtmlManuscript(img, name, cls, custom) {
-  const cap  = name ? name[0].toUpperCase() : '';
-  const rest = name ? name.slice(1) : '';
-
-  const bodyParts = [rest, cls ? `<em>${cls}</em>` : ''].filter(Boolean);
-  const bodyContent = bodyParts.join('<br>');
-
+  const caseNum = String(Math.floor(Math.random() * 9000) + 1000);
   return `
-    <div class="cr-ms-page">
-      <div class="cr-ms-corner cr-ms-corner--tl"></div>
-      <div class="cr-ms-corner cr-ms-corner--tr"></div>
-      <div class="cr-ms-corner cr-ms-corner--bl"></div>
-      <div class="cr-ms-corner cr-ms-corner--br"></div>
-      <div class="cr-ms-header">Chronicle of the Realm</div>
-      <div class="cr-ms-frame">${img}</div>
-      ${cap         ? `<div class="cr-ms-cap">${cap}</div>` : ''}
-      ${bodyContent ? `<div class="cr-ms-body">${bodyContent}</div>` : ''}
-      ${custom      ? `<div class="cr-ms-quote">\u201c${custom}\u201d</div>` : ''}
-      <hr class="cr-ms-ruling">
+    <div class="cr-dos-wrap">
+      <div class="cr-dos-bg-paper cr-dos-bg-paper--1"></div>
+      <div class="cr-dos-bg-paper cr-dos-bg-paper--2"></div>
+      <div class="cr-dos-bg-paper cr-dos-bg-paper--3"></div>
+    <div class="cr-dos-folder">
+      <div class="cr-dos-tab">CLASSIFIED</div>
+      <div class="cr-dos-stripe"></div>
+      <div class="cr-dos-header">
+        <span class="cr-dos-agency">INTELLIGENCE FILE</span>
+        <span class="cr-dos-case">CASE #${caseNum}-&#x2588;&#x2588;</span>
+      </div>
+      <div class="cr-dos-body">
+        <div class="cr-dos-photo-col">
+          <div class="cr-dos-photo">${img}</div>
+          <div class="cr-dos-photo-label">PORTRAIT</div>
+        </div>
+        <div class="cr-dos-info-col">
+          <div class="cr-dos-field-row"><span class="cr-dos-field-lbl">SUBJECT:</span></div>
+          <div class="cr-dos-name">${name || '&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;'}</div>
+          <div class="cr-dos-field-row"><span class="cr-dos-field-lbl">CLASSIFICATION:</span> <span class="cr-dos-inline-redact">${cls || '&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;'}</span></div>
+          <div class="cr-dos-redact-bar"></div>
+          ${custom
+            ? `<div class="cr-dos-field-row"><span class="cr-dos-field-lbl">NOTES:</span></div><div class="cr-dos-notes">${custom}</div>`
+            : '<div class="cr-dos-redact-bar cr-dos-redact-bar--wide"></div>'}
+          <div class="cr-dos-redact-bar cr-dos-redact-bar--sm"></div>
+        </div>
+      </div>
+      <div class="cr-dos-footer">
+        <span>&#x2588;&#x2588;&#x2588;&#x2588;&#x2588;&#x2588; INTELLIGENCE AGENCY</span>
+        <span>DATE: [REDACTED]</span>
+      </div>
+      <div class="cr-dos-stamp">TOP SECRET</div>
+      <div class="cr-dos-watermark">CONFIDENTIAL</div>
+    </div>
     </div>
   `;
 }
@@ -540,24 +656,6 @@ function crHtmlSpotlight(img, name, cls, custom) {
   `;
 }
 
-// ─── Style: Anime ──────────────────────────────────────────────────────────────
-function crHtmlAnime(img, name, cls, custom) {
-  const sub = [cls, custom].filter(Boolean).join(' · ');
-  return `
-    <div class="cr-an-bg"></div>
-    <div class="cr-an-lines"></div>
-    <div class="cr-an-flash"></div>
-    <div class="cr-an-ring">${img}</div>
-    <div class="cr-an-bottom">
-      <div class="cr-an-name-row">
-        <span class="cr-an-chevron">▶▶</span>
-        ${name ? `<span class="cr-an-name">${name}</span>` : ''}
-        <span class="cr-an-chevron">◀◀</span>
-      </div>
-      ${sub ? `<div class="cr-an-sub">${sub}</div>` : ''}
-    </div>
-  `;
-}
 
 // ─── Style: Leone ──────────────────────────────────────────────────────────────
 function crHtmlLeone(img, name, cls, custom) {
@@ -600,24 +698,6 @@ function crHtmlVtmVentrue(img, name, cls, custom, showClan, clan) {
       <div class="cr-vtv-corner cr-vtv-corner--br"></div>
     </div>
     <div class="cr-vtv-frame-overlay"></div>
-    <svg class="cr-vtv-shimmer" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="cr-sv-glow" x="-80%" y="-80%" width="260%" height="260%">
-          <feGaussianBlur stdDeviation="1.1"/>
-        </filter>
-      </defs>
-      <rect x="15" y="5" width="70" height="90"
-            fill="none" stroke="rgba(255,232,100,0.55)" stroke-width="3.5"
-            filter="url(#cr-sv-glow)"
-            stroke-dasharray="14 306" stroke-linecap="round" stroke-dashoffset="0">
-        <animate attributeName="stroke-dashoffset" from="0" to="-320" dur="12s" begin="2.5s" repeatCount="indefinite"/>
-      </rect>
-      <rect x="15" y="5" width="70" height="90"
-            fill="none" stroke="rgba(255,252,195,0.95)" stroke-width="0.5"
-            stroke-dasharray="8 312" stroke-linecap="round" stroke-dashoffset="0">
-        <animate attributeName="stroke-dashoffset" from="0" to="-320" dur="12s" begin="2.5s" repeatCount="indefinite"/>
-      </rect>
-    </svg>
     <div class="cr-vtv-text">
       ${clanLabel ? `<div class="cr-vtv-clan">✦ &nbsp; ${clanLabel.toUpperCase().split('').join(' ')} &nbsp; ✦</div>` : ''}
       ${name ? `<div class="cr-vtv-name">${name}</div>` : ''}
@@ -696,8 +776,75 @@ function crHtmlVtmToreador(img, name, cls, custom, showClan, clan) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
   const clanLabel = showClan ? (clan || 'TOREADOR') : null;
   const petals = Array.from({length: 12}, () => `<div class="cr-tor-petal"></div>`).join('');
+  const quotePool = [
+    '«La beauté est la promesse du bonheur.»',
+    '«Seul l\'amour donne au sang sa véritable couleur.»',
+    '«Le sang est la rose de la nuit.»',
+    '«Aimer, c\'est brûler sans se consumer.»',
+    '«Le désir est la prison des immortels.»',
+    '«Toute beauté cache une blessure secrète.»',
+    '«Je suis l\'art et l\'artiste, la proie et le prédateur.»',
+    '«Le rouge est la couleur de l\'âme.»',
+    '«Dans chaque regard, une éternité de soif.»',
+    '«La rose ne demande pas pourquoi elle saigne.»',
+    '«Mourir pour un seul regard en vaut l\'éternité.»',
+    '«La beauté est le seul péché que les anges reconnaissent.»',
+    '«Chaque nuit est une œuvre d\'art que je dévore.»',
+    '«L\'éternité est trop courte pour tant de beauté.»',
+    '«Je bois ton regard comme un vin interdit.»',
+    '«La mort est la plus belle des muses.»',
+    '«Le velours de la nuit me drape comme une amante.»',
+    '«Toute flamme qui me touche me révèle.»',
+    '«Le sang est ma peinture, le monde ma toile.»',
+    '«La passion est la seule immortalité qui vaille.»',
+    '«La beauté blesse plus sûrement que les crocs.»',
+    '«Je ne chasse pas — je crée.»',
+    '«Mon âme est une galerie aux miroirs sans fond.»',
+    '«L\'art ne meurt pas — il se nourrit.»',
+    '«Souffrir est la condition de toute grande œuvre.»',
+    '«Le désir est plus doux quand il est défendu.»',
+    '«Chaque victime est un chef-d\'œuvre inachevé.»',
+    '«Je suis éternelle — et je brûle.»',
+  ];
+  const r = (a, b) => a + Math.random() * (b - a);
+  const zones = [
+    { top: r(3,10),  left:  r(2,18),  mw: r(18,25), fs: r(1.5,2.25), align:'left'   },
+    { top: r(5,15),  right: r(1,8),   mw: r(10,16), fs: r(1.3,1.8),  align:'right'  },
+    { top: r(25,42), left:  r(1,6),   mw: r(10,14), fs: r(1.2,1.65), align:'left'   },
+    { top: r(45,62), right: r(1,6),   mw: r(10,14), fs: r(1.26,1.68),align:'right'  },
+    { top: r(62,78), left:  r(3,22),  mw: r(14,20), fs: r(1.23,1.62),align:'left'   },
+    { top: r(2,8),   left:  r(30,52), mw: r(18,28), fs: r(1.4,2.1),  align:'center' },
+    { top: r(74,86), right: r(2,14),  mw: r(12,17), fs: r(1.23,1.65),align:'right'  },
+  ];
+  // Spread phase offsets evenly across the full 14s cycle using negative delays.
+  // Negative delay = animation started N seconds ago → each quote is at a unique phase
+  // so they never appear/disappear at the same time.
+  const QUOTE_CYCLE = 14;
+  const step = QUOTE_CYCLE / zones.length;
+  const phaseOffsets = zones.map((_, i) => -(i * step + r(0, step * 0.55)));
+  // Shuffle offsets so screen position doesn't correlate with cycle phase
+  phaseOffsets.sort(() => Math.random() - 0.5);
+
+  const shuffledQ = quotePool.slice().sort(() => Math.random() - 0.5);
+  const quoteHtml = zones.map((z, i) => {
+    const q = shuffledQ[i % shuffledQ.length];
+    const pos = [];
+    if ('top'   in z) pos.push(`top:${z.top.toFixed(1)}%`);
+    if ('right' in z) pos.push(`right:${z.right.toFixed(1)}%`);
+    if ('left'  in z) pos.push(`left:${z.left.toFixed(1)}%`);
+    const st = [
+      ...pos,
+      `max-width:${z.mw.toFixed(1)}%`,
+      `font-size:clamp(1.17rem,${z.fs.toFixed(2)}vw,2.25rem)`,
+      `text-align:${z.align}`,
+      `--qdel:${phaseOffsets[i].toFixed(2)}s`,
+    ].join(';');
+    return `<div class="cr-tor-bg-quote" style="${st}">${q}</div>`;
+  }).join('\n        ');
   return `
+    <img class="cr-tor-bg-img" src="modules/${CR_ID}/assets/Toreador1.jpg" decoding="async" alt="">
     <div class="cr-tor-bg"></div>
+    <div class="cr-tor-bg-decor">${quoteHtml}</div>
     <div class="cr-tor-canvas">${img}</div>
     <div class="cr-tor-glow"></div>
     <div class="cr-tor-vignette"></div>
@@ -706,6 +853,176 @@ function crHtmlVtmToreador(img, name, cls, custom, showClan, clan) {
       ${clanLabel ? `<div class="cr-tor-clan">✦ ${clanLabel.toUpperCase().split('').join(' ')} ✦</div>` : ''}
       ${name ? `<div class="cr-tor-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-tor-sub">${sub}</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Tremere: JS blink loops — zone pool prevents overlap ────────────────────
+// 6 zones, non-overlapping with max eye 24vw × 19vh.
+// Left column at 5–20vw, right column at 57–72vw → x gap = 13vw ✓
+// Three rows: top (3–14vh), mid (40–51vh), bottom (76–84vh)
+// Verification (coverage = zone + max eye):
+//   x: left(5,44) vs right(57,96) → gap 13vw ✓
+//   y: top(3,33) vs mid(40,70) → gap 7vh ✓  mid(40,70) vs bot(76,103) → gap 6vh ✓
+const CR_TRE_ZONES = [
+  { lMin:  5, lMax: 20, tMin:  3, tMax: 14 },  // 0: left top
+  { lMin: 57, lMax: 72, tMin:  3, tMax: 14 },  // 1: right top
+  { lMin:  5, lMax: 20, tMin: 40, tMax: 51 },  // 2: left mid
+  { lMin: 57, lMax: 72, tMin: 40, tMax: 51 },  // 3: right mid
+  { lMin:  5, lMax: 20, tMin: 76, tMax: 84 },  // 4: left bottom
+  { lMin: 57, lMax: 72, tMin: 76, tMax: 84 },  // 5: right bottom
+];
+let _crTrePool = [];
+function crTreInitPool()       { _crTrePool = CR_TRE_ZONES.map((_, i) => i); }
+function crTreTakeZone()       { if (!_crTrePool.length) crTreInitPool(); const i = Math.floor(Math.random() * _crTrePool.length); const s = _crTrePool.splice(i, 1)[0]; return s; }
+function crTreReturnZone(slot) { if (slot != null && !_crTrePool.includes(slot)) _crTrePool.push(slot); }
+
+function crTreSleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function crTreBlink(wrap) {
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  let mySlot = null;
+
+  function lids(closed, speedS, ease) {
+    const val     = closed ? 'scaleY(1)' : 'scaleY(0)';
+    const defEase = closed ? 'cubic-bezier(0.85,0,1,0.5)' : 'cubic-bezier(0.25,0,0.5,1)';
+    wrap.querySelectorAll('.cr-tre-lid-top,.cr-tre-lid-bot').forEach(el => {
+      el.style.transition = `transform ${speedS}s ${ease || defEase}`;
+      el.style.transform  = val;
+    });
+  }
+
+  function relocate() {
+    crTreReturnZone(mySlot);
+    mySlot = crTreTakeZone();
+    const z  = CR_TRE_ZONES[mySlot];
+    const VW = window.innerWidth  / 100;
+    const VH = window.innerHeight / 100;
+    const minVis = 90; // minimum visible px per axis
+
+    let lPx = rnd(z.lMin, z.lMax) * VW;
+    let tPx = rnd(z.tMin, z.tMax) * VH;
+
+    // For left-column zones: eye overflows left edge — clamp so ≥ minVis px stays on screen
+    if (z.lMax <= 10) lPx = Math.max(lPx, -(wrap.offsetWidth  - minVis));
+    // For top-center zone: eye overflows top edge — clamp so ≥ minVis px stays on screen
+    if (z.tMax <= 0)  tPx = Math.max(tPx, -(wrap.offsetHeight - minVis));
+
+    wrap.style.transform = `translate(${lPx.toFixed(1)}px, ${tPx.toFixed(1)}px)`;
+  }
+
+  async function loop() {
+    relocate();                                    // position while guaranteed closed
+    while (wrap.isConnected) {
+      await crTreSleep(rnd(1200, 4000));           // hold closed at this position
+      if (!wrap.isConnected) break;
+
+      lids(false, rnd(0.22, 0.50), 'cubic-bezier(0.15,0,0.35,1)');
+      await crTreSleep(rnd(3500, 7000));           // hold open
+      if (!wrap.isConnected) break;
+
+      if (Math.random() < 0.6) {
+        lids(true,  0.14, 'cubic-bezier(0.8,0,1,0.4)');
+        await crTreSleep(200);
+        if (!wrap.isConnected) break;
+        lids(false, 0.20, 'cubic-bezier(0.1,0,0.35,1)');
+        await crTreSleep(rnd(500, 1800));
+        if (!wrap.isConnected) break;
+      }
+
+      const closeMs = rnd(600, 1100);
+      lids(true, closeMs / 1000, 'cubic-bezier(0.4,0,0.6,1)');
+      await crTreSleep(closeMs + 120);             // wait full close + buffer
+      if (!wrap.isConnected) break;
+      relocate();                                  // eye is fully closed — safe to reposition
+    }
+    crTreReturnZone(mySlot);
+  }
+
+  loop().catch(() => { crTreReturnZone(mySlot); });
+}
+
+// ─── Style: VTM Tremere ───────────────────────────────────────────────────────
+function crHtmlVtmTremere(img, name, cls, custom, showClan, clan) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const clanLabel = showClan ? (clan || 'TREMERE') : null;
+
+  // 6 eyes — varied base sizes; scale 0.35–0.82× then hard-capped to 24vw×19vh
+  // so they never blow out on small screens or collide even if the zone check misses.
+  const maxEyeW = Math.round(window.innerWidth  * 0.24);
+  const maxEyeH = Math.round(window.innerHeight * 0.19);
+  const eyeDefs = [
+    { bw: 300, bh: 130 },  // small
+    { bw: 560, bh: 241 },  // medium
+    { bw: 680, bh: 293 },  // large
+    { bw: 420, bh: 181 },  // medium-small
+    { bw: 480, bh: 207 },  // medium-2
+    { bw: 360, bh: 155 },  // small-2
+  ];
+
+  const irisImg = 'modules/character-reveal/assets/png-transparent-human-eye-iris-lens-color-dente-photography-people-human-body-thumbnail.png';
+
+  const eyes = eyeDefs.map((e, i) => {
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const scale = 0.35 + Math.random() * 0.47;
+    const w = Math.min(Math.round(e.bw * scale), maxEyeW);
+    const h = Math.min(Math.round(e.bh * scale), maxEyeH);
+    const cid = `tre-ec-${i}-${Math.random().toString(36).slice(2, 7)}`;
+
+    // Randomise eye shape — different bezier points per eye
+    const cy   = rnd(37, 44);           // vertical centre
+    const uy   = rnd(6,  18);           // upper arch apex Y (shallower ↔ deeper)
+    const ly   = rnd(56, 72);           // lower arch nadir Y
+    const lx1  = rnd(38, 68);           // lower-arch left control X
+    const lx2  = 200 - rnd(38, 68);    // lower-arch right control X
+    const ulx1 = rnd(40, 65);           // upper-arch left control X (different = asymmetry)
+    const ulx2 = 200 - rnd(40, 65);
+    const eyePath = `M0,${cy.toFixed(1)} C${ulx1.toFixed(1)},${uy.toFixed(1)} ${ulx2.toFixed(1)},${uy.toFixed(1)} 200,${cy.toFixed(1)} C${lx2.toFixed(1)},${ly.toFixed(1)} ${lx1.toFixed(1)},${ly.toFixed(1)} 0,${cy.toFixed(1)} Z`;
+
+    // Curved lid paths — bottom/top edge follows the eyelid margin curve, not a straight line
+    const topMeet = cy + rnd(4, 8);     // where top lid reaches at the corners
+    const topDip  = cy - rnd(2, 6);     // top lid edge arches upward at the middle
+    const botMeet = cy - rnd(4, 8);     // where bottom lid reaches at the corners
+    const botRise = cy + rnd(2, 6);     // bottom lid edge dips downward at the middle
+    const topLidPath = `M-5,${topMeet.toFixed(1)} C60,${topDip.toFixed(1)} 140,${topDip.toFixed(1)} 205,${topMeet.toFixed(1)} L205,-5 L-5,-5 Z`;
+    const botLidPath = `M-5,${botMeet.toFixed(1)} C60,${botRise.toFixed(1)} 140,${botRise.toFixed(1)} 205,${botMeet.toFixed(1)} L205,85 L-5,85 Z`;
+
+    return `
+      <div class="cr-tre-eye-wrap" style="width:${w}px;height:${h}px">
+        <svg class="cr-tre-eye-svg" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+          <defs>
+            <clipPath id="${cid}">
+              <path d="${eyePath}"/>
+            </clipPath>
+            <clipPath id="${cid}-c">
+              <circle cx="100" cy="${cy.toFixed(1)}" r="38"/>
+            </clipPath>
+            <radialGradient id="${cid}-rg" cx="50%" cy="${((cy/80)*100).toFixed(1)}%" r="55%">
+              <stop offset="25%" stop-color="rgba(0,0,0,0)"/>
+              <stop offset="100%" stop-color="rgba(0,0,0,0.88)"/>
+            </radialGradient>
+          </defs>
+          <g clip-path="url(#${cid})">
+            <rect width="200" height="80" fill="#181818"/>
+            <rect width="200" height="80" fill="url(#${cid}-rg)"/>
+            <image href="${irisImg}" x="60" y="${(cy-40).toFixed(1)}" width="80" height="80" preserveAspectRatio="xMidYMid meet" clip-path="url(#${cid}-c)"/>
+            <ellipse cx="82" cy="${(cy-17).toFixed(1)}" rx="5" ry="2.5" fill="rgba(255,255,255,.14)" transform="rotate(-15 82 ${(cy-17).toFixed(1)})"/>
+            <path class="cr-tre-lid-top" d="${topLidPath}" fill="#000"/>
+            <path class="cr-tre-lid-bot" d="${botLidPath}" fill="#000"/>
+          </g>
+        </svg>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="cr-tre-bg"></div>
+    <div class="cr-tre-eyes">${eyes}</div>
+    <div class="cr-tre-portrait">${img}</div>
+    <div class="cr-tre-vignette"></div>
+    <div class="cr-tre-text">
+      ${clanLabel ? `<div class="cr-tre-clan">✦ ${clanLabel.toUpperCase().split('').join(' ')} ✦</div>` : ''}
+      ${name ? `<div class="cr-tre-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-tre-sub">${sub}</div>` : ''}
     </div>
   `;
 }
@@ -755,48 +1072,59 @@ function crHtmlVtmBrujah(img, name, cls, custom, showClan, clan) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
   const clanLabel = showClan ? (clan || 'BRUJAH') : null;
 
-  // Cracks radiating from impact point (50, 42) — main cracks + branches
-  const CRACKS = [
-    [50,42,  6, 8], [50,42, 94, 6], [50,42, 98,52],
-    [50,42, 80,96], [50,42, 18,95], [50,42,  2,45],
-    [50,42, 48, 0], [50,42, 92,78],
-    // branch cracks from midpoints
-    [28,25, 12,40], [72,24, 84,44], [74,47, 88,62],
-    [34,68, 20,80],
-  ];
-  const mkLine = (cls2, i) => {
-    const [x1,y1,x2,y2] = CRACKS[i];
-    const len = Math.ceil(Math.hypot(x2-x1, y2-y1)) + 2;
-    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="cr-brj-cl ${cls2} cr-brj-cl--${i+1}" stroke-dasharray="${len}" stroke-dashoffset="${len}"/>`;
-  };
-  const crackGlow = CRACKS.map((_,i) => mkLine('cr-brj-clg', i)).join('');
-  const crackCore = CRACKS.map((_,i) => mkLine('cr-brj-clc', i)).join('');
+  // Sparks fly in varied directions: angle from vertical, dist = travel radius
+  const sparks = Array.from({length: 30}, (_, i) => {
+    const angle = ((i * 47) % 180) - 90;
+    const dist  = 80 + (i % 5) * 35;
+    const dx    = Math.round(Math.sin(angle * Math.PI / 180) * dist);
+    const dy    = -Math.round(Math.cos(angle * Math.PI / 180) * dist + 55);
+    const x     = (3 + (i % 15) * 6.5).toFixed(1);
+    const sy    = (2 + (i % 6) * 3).toFixed(0);
+    const del   = (i * 0.10).toFixed(2);
+    const dur   = (0.6 + (i % 6) * 0.19).toFixed(2);
+    const sz    = i % 5 === 0 ? 4 : i % 5 === 1 ? 3 : 2;
+    return `<div class="cr-brj-spark" style="--x:${x}%;--dx:${dx}px;--dy:${dy}px;--sy:${sy}%;--delay:${del}s;--dur:${dur}s;--sz:${sz}px"></div>`;
+  }).join('');
 
-  // Ember particles rising from bottom
-  const embers = Array.from({length: 16}, (_, i) => {
-    const x   = (4 + i * 5.8).toFixed(1);
-    const dx  = ((i % 3) - 1) * 22;
-    const del = (i * 0.28).toFixed(2);
-    const dur = (2.0 + (i % 5) * 0.35).toFixed(2);
-    const sz  = i % 3 === 0 ? 4 : i % 3 === 1 ? 3 : 2;
-    return `<div class="cr-brj-ember" style="--x:${x}%;--dx:${dx}px;--delay:${del}s;--dur:${dur}s;--sz:${sz}px"></div>`;
+  // Smoke wisps rising from the fire
+  const smokes = Array.from({length: 7}, (_, i) => {
+    const x   = (6 + i * 13).toFixed(0);
+    const ddx = ((i % 3) - 1) * 45;
+    const del = (i * 0.65 + 0.25).toFixed(2);
+    const dur = (6 + i).toFixed(1);
+    const sz  = (80 + (i % 3) * 55).toFixed(0);
+    return `<div class="cr-brj-smoke" style="--x:${x}%;--ddx:${ddx}px;--delay:${del}s;--dur:${dur}s;--sz:${sz}px"></div>`;
   }).join('');
 
   return `
     <div class="cr-brj-bg"></div>
     <div class="cr-brj-portrait">${img}</div>
-    <svg class="cr-brj-cracks" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="cr-brj-glow" x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur stdDeviation="1.4"/>
-        </filter>
-      </defs>
-      <g class="cr-brj-glow-layer">${crackGlow}</g>
-      <g class="cr-brj-core-layer">${crackCore}</g>
-      <circle cx="50" cy="42" r="2.8" class="cr-brj-impact"/>
-    </svg>
-    <div class="cr-brj-embers">${embers}</div>
+    <div class="cr-brj-fire">
+      <div class="cr-brj-fire-base"></div>
+      <div class="cr-brj-flame cr-brj-fl--1"></div>
+      <div class="cr-brj-flame cr-brj-fl--2"></div>
+      <div class="cr-brj-flame cr-brj-fl--3"></div>
+      <div class="cr-brj-flame cr-brj-fl--4"></div>
+      <div class="cr-brj-flame cr-brj-fl--5"></div>
+      <div class="cr-brj-flame cr-brj-fl--6"></div>
+      <div class="cr-brj-flame cr-brj-fl--7"></div>
+      <div class="cr-brj-flame cr-brj-fl--8"></div>
+    </div>
     <div class="cr-brj-vignette"></div>
+    <div class="cr-brj-smokes">${smokes}</div>
+    <div class="cr-brj-sparks">${sparks}</div>
+    <div class="cr-brj-strobes"></div>
+    <div class="cr-brj-uv"></div>
+    <div class="cr-brj-glyphs">
+      <div class="cr-brj-glyph"           style="--gx:7%;  --gy:11%; --del:1.2s; --gdur:10s">ANARCH</div>
+      <div class="cr-brj-glyph cr-brj-gb" style="--gx:70%; --gy:8%;  --del:2.4s; --gdur:8.5s">REVOLT</div>
+      <div class="cr-brj-glyph"           style="--gx:4%;  --gy:44%; --del:3.6s; --gdur:12s">BRUJAH</div>
+      <div class="cr-brj-glyph cr-brj-gb" style="--gx:72%; --gy:52%; --del:1.8s; --gdur:9.3s">NO MASTERS</div>
+      <div class="cr-brj-glyph"           style="--gx:35%; --gy:5%;  --del:2.8s; --gdur:11s">BEAST WITHIN</div>
+      <div class="cr-brj-glyph cr-brj-gb" style="--gx:6%;  --gy:70%; --del:4.1s; --gdur:13s">FRENZY</div>
+      <div class="cr-brj-glyph"           style="--gx:66%; --gy:74%; --del:3.0s; --gdur:8s">RAGE</div>
+      <div class="cr-brj-glyph cr-brj-gb" style="--gx:44%; --gy:36%; --del:5.2s; --gdur:9.8s">FREEDOM</div>
+    </div>
     <div class="cr-brj-text">
       ${clanLabel ? `<div class="cr-brj-clan">${clanLabel.toUpperCase()}</div>` : ''}
       ${name ? `<div class="cr-brj-name">${name}</div>` : ''}
