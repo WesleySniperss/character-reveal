@@ -1311,11 +1311,12 @@
 .cr-lo-portrait {
   position: absolute;
   inset: 0;
-  animation: cr-lo-slide-in 2.6s cubic-bezier(0.1, 0.82, 0.28, 1) both;
+  animation: cr-lo-slide-in 3.4s linear both;
 }
 @keyframes cr-lo-slide-in {
-  from { transform: translateX(-110vw); }
-  to   { transform: translateX(0); }
+  0%   { transform: translateX(-110vw); animation-timing-function: cubic-bezier(0.22, 0, 0.58, 1); }
+  18%  { transform: translateX(-14vw);  animation-timing-function: cubic-bezier(0, 0, 0.06, 1); }
+  100% { transform: translateX(0); }
 }
 .cr-lo-portrait .cr-portrait-img {
   width: 100%; height: 100%;
