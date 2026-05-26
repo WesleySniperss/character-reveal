@@ -1040,20 +1040,23 @@ function crHtmlVtmGangrel(img, name, cls, custom, showClan, clan) {
   const clanLabel = showClan ? (clan || 'GANGREL') : null;
   return `
     <div class="cr-gan-bg"></div>
-    <div class="cr-gan-portrait">${img}</div>
-    <div class="cr-gan-eyes">
-      <div class="cr-gan-eye cr-gan-eye--l"></div>
-      <div class="cr-gan-eye cr-gan-eye--r"></div>
-    </div>
     <div class="cr-gan-moon"></div>
+    <div class="cr-gan-portrait">${img}</div>
     <div class="cr-gan-mist"></div>
     <svg class="cr-gan-scratches" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <line x1="2"  y1="18" x2="68" y2="46" class="cr-gan-claw cr-gan-claw--1"/>
-      <line x1="6"  y1="24" x2="72" y2="52" class="cr-gan-claw cr-gan-claw--2"/>
-      <line x1="11" y1="30" x2="76" y2="58" class="cr-gan-claw cr-gan-claw--3"/>
-      <line x1="16" y1="36" x2="80" y2="64" class="cr-gan-claw cr-gan-claw--4"/>
-      <line x1="21" y1="42" x2="84" y2="70" class="cr-gan-claw cr-gan-claw--5"/>
+      <line x1="8"  y1="15" x2="78" y2="62" class="cr-gan-claw cr-gan-claw--1"/>
+      <line x1="11" y1="17" x2="81" y2="64" class="cr-gan-claw cr-gan-claw--2"/>
+      <line x1="14" y1="19" x2="84" y2="66" class="cr-gan-claw cr-gan-claw--3"/>
+      <line x1="17" y1="21" x2="87" y2="68" class="cr-gan-claw cr-gan-claw--4"/>
+      <line x1="20" y1="23" x2="90" y2="70" class="cr-gan-claw cr-gan-claw--5"/>
     </svg>
+    <div class="cr-gan-forest">
+      <div class="cr-gan-lurk">
+        <div class="cr-gan-eyepair cr-gan-eyepair--1"></div>
+        <div class="cr-gan-eyepair cr-gan-eyepair--2"></div>
+        <div class="cr-gan-eyepair cr-gan-eyepair--3"></div>
+      </div>
+    </div>
     <div class="cr-gan-vignette"></div>
     <div class="cr-gan-text">
       ${clanLabel ? `<div class="cr-gan-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}

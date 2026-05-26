@@ -2283,162 +2283,173 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   VTM GANGREL — moonlit wilderness, mist, beast clawmarks
+   VTM GANGREL — moonlit forest, lurking pack, claw-torn darkness
    ═══════════════════════════════════════════════════════════════════════════ */
 
-#cr-overlay[data-style="vtm-gangrel"] { background: #060c14; }
+#cr-overlay[data-style="vtm-gangrel"] { background: #030608; }
 
 .cr-gan-bg {
   position: absolute; inset: 0;
-  background:
-    radial-gradient(ellipse 55% 45% at 82% 14%, rgba(210,200,150,.1) 0%, transparent 50%),
-    radial-gradient(ellipse 100% 38% at 50% 100%, rgba(25,12,4,.9) 0%, transparent 60%),
-    linear-gradient(to bottom, #0c1828 0%, #060c14 100%);
-  animation: cr-fade-in 1s ease both;
+  background: linear-gradient(to bottom, #050a12 0%, #040810 45%, #030608 100%);
+}
+
+/* Large moon centred behind the portrait */
+.cr-gan-moon {
+  position: absolute;
+  top: 2%; left: 50%; transform: translateX(-50%);
+  width: clamp(200px, 30vw, 420px); height: clamp(200px, 30vw, 420px);
+  border-radius: 50%; z-index: 0; pointer-events: none;
+  background: radial-gradient(circle,
+    rgba(238,232,210,.82) 0%,
+    rgba(215,210,185,.48) 24%,
+    rgba(185,180,155,.14) 50%,
+    transparent 70%);
+  animation: cr-fade-in 2.4s ease 0.2s both;
 }
 
 .cr-gan-portrait {
-  position: absolute; inset: 0; overflow: hidden;
+  position: absolute; inset: 0; overflow: hidden; z-index: 1;
 }
 .cr-gan-portrait .cr-portrait-img {
   width: 100%; height: 100%;
   object-fit: cover; object-position: center 20%;
-  filter: saturate(.5) brightness(.72) contrast(1.18);
-  animation: cr-gan-portrait-in 2.8s ease .6s both;
+  filter: saturate(.32) brightness(.68) contrast(1.2);
+  animation: cr-gan-portrait-in 3.4s ease .5s both;
 }
 @keyframes cr-gan-portrait-in {
-  0%   { opacity: 0; filter: saturate(0) brightness(.15) contrast(1.3) blur(10px); }
-  45%  { filter: saturate(.25) brightness(.45) contrast(1.22) blur(3px); }
-  100% { opacity: 1; filter: saturate(.5) brightness(.72) contrast(1.18) blur(0); }
+  0%   { opacity: 0; filter: saturate(0) brightness(.06) contrast(1.2) blur(10px); }
+  38%  { filter: saturate(.14) brightness(.35) contrast(1.18) blur(3px); }
+  100% { opacity: 1; filter: saturate(.32) brightness(.68) contrast(1.2) blur(0); }
 }
 
-.cr-gan-moon {
-  position: absolute; top: 6%; right: 9%;
-  width: clamp(48px, 7.5vw, 88px); height: clamp(48px, 7.5vw, 88px);
-  z-index: 2; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle, rgba(245,238,215,1) 28%, rgba(225,218,185,.55) 55%, transparent 75%);
-  box-shadow: 0 0 28px rgba(240,235,210,.22), 0 0 80px rgba(220,215,180,.08);
-  animation: cr-fade-in 2s ease 1s both;
-}
-
+/* Drifting ground mist */
 .cr-gan-mist {
   position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden;
 }
 .cr-gan-mist::before, .cr-gan-mist::after {
   content: '';
   position: absolute;
-  left: -50%; right: -50%; height: 30%;
-  background: radial-gradient(ellipse 50% 100% at 50% 55%, rgba(175,198,220,.12) 0%, transparent 100%);
-  filter: blur(22px);
+  left: -50%; right: -50%; height: 22%;
+  background: radial-gradient(ellipse 50% 100% at 50% 60%, rgba(155,182,210,.09) 0%, transparent 100%);
+  filter: blur(30px);
 }
-.cr-gan-mist::before { top: 28%; animation: cr-gan-mist-drift 20s ease-in-out infinite; }
-.cr-gan-mist::after  { top: 52%; opacity: .55; animation: cr-gan-mist-drift 28s ease-in-out 8s infinite reverse; }
+.cr-gan-mist::before { top: 55%; animation: cr-gan-mist-drift 24s ease-in-out infinite; }
+.cr-gan-mist::after  { top: 68%; opacity: .5; animation: cr-gan-mist-drift 32s ease-in-out 12s infinite reverse; }
 @keyframes cr-gan-mist-drift {
-  0%,100% { transform: translateX(-28%); }
-  50%     { transform: translateX(18%); }
+  0%,100% { transform: translateX(-22%); }
+  50%     { transform: translateX(14%); }
 }
 
-/* ─── Beast eyes — appear in darkness, dissolve as portrait fades in ── */
-.cr-gan-eyes {
-  position: absolute; z-index: 2; pointer-events: none;
-  inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  gap: clamp(48px, 7vw, 110px);
-  padding-bottom: 10%;
-}
-.cr-gan-eye {
-  position: relative;
-  width: clamp(14px, 2.2vw, 28px);
-  height: clamp(8px, 1.3vw, 16px);
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 44% 42%,
-    rgba(255,218,28,1) 0%,
-    rgba(215,152,8,1) 38%,
-    rgba(160,98,0,.82) 65%,
-    transparent 90%);
-  box-shadow:
-    0 0 14px rgba(245,202,22,1),
-    0 0 32px rgba(210,158,12,.92),
-    0 0 68px rgba(180,122,0,.72),
-    0 0 130px rgba(148,98,0,.42);
-  animation:
-    cr-gan-eye-in  1.4s cubic-bezier(.2,1,.3,1) 0.35s both,
-    cr-gan-eye-out 1.0s ease-in 1.9s forwards;
-}
-/* Vertical slit pupil */
-.cr-gan-eye::after {
-  content: '';
-  position: absolute;
-  top: 10%; bottom: 10%;
-  left: 50%; transform: translateX(-50%);
-  width: 18%;
-  background: rgba(0,0,0,.95);
-  border-radius: 3px;
-}
-@keyframes cr-gan-eye-in {
-  0%   { opacity: 0; transform: scale(.15); }
-  55%  { opacity: 1; transform: scale(1.1); }
-  100% { opacity: 1; transform: scale(1); }
-}
-@keyframes cr-gan-eye-out {
-  0%   { opacity: 1; }
-  100% { opacity: 0; }
-}
-
+/* Claw marks — tight diagonal slash, bright flash then blood-red */
 .cr-gan-scratches {
   position: absolute; inset: 0; z-index: 4; pointer-events: none;
   width: 100%; height: 100%;
 }
 .cr-gan-claw {
-  fill: none; stroke-width: .62; stroke-linecap: round;
-  stroke-dasharray: 200; stroke-dashoffset: 200;
-  stroke: rgba(210,190,140,.18);
+  fill: none; stroke-width: .95; stroke-linecap: round;
+  stroke-dasharray: 150; stroke-dashoffset: 150;
+  stroke: transparent;
 }
-.cr-gan-claw--1 { animation: cr-gan-scratch 1.0s cubic-bezier(.3,0,.12,1) 1.10s both; }
-.cr-gan-claw--2 { animation: cr-gan-scratch 1.0s cubic-bezier(.3,0,.12,1) 1.22s both; }
-.cr-gan-claw--3 { animation: cr-gan-scratch 1.0s cubic-bezier(.3,0,.12,1) 1.34s both; }
-.cr-gan-claw--4 { animation: cr-gan-scratch 1.0s cubic-bezier(.3,0,.12,1) 1.46s both; }
-.cr-gan-claw--5 { animation: cr-gan-scratch 1.0s cubic-bezier(.3,0,.12,1) 1.58s both; }
+.cr-gan-claw--1 { animation: cr-gan-scratch .55s cubic-bezier(.1,0,.05,1) 1.80s both; }
+.cr-gan-claw--2 { animation: cr-gan-scratch .55s cubic-bezier(.1,0,.05,1) 1.88s both; }
+.cr-gan-claw--3 { animation: cr-gan-scratch .55s cubic-bezier(.1,0,.05,1) 1.96s both; }
+.cr-gan-claw--4 { animation: cr-gan-scratch .55s cubic-bezier(.1,0,.05,1) 2.04s both; }
+.cr-gan-claw--5 { animation: cr-gan-scratch .55s cubic-bezier(.1,0,.05,1) 2.12s both; }
 @keyframes cr-gan-scratch {
-  0%   { stroke-dashoffset: 200; stroke: rgba(210,190,140,0); }
-  18%  { stroke: rgba(240,215,162,.78); }
-  100% { stroke-dashoffset: 0;   stroke: rgba(210,190,140,.42); }
+  0%   { stroke-dashoffset: 150; stroke: rgba(255,240,200,0); }
+  12%  { stroke: rgba(255,238,195,.92); }
+  38%  { stroke-dashoffset: 0; stroke: rgba(255,225,175,.70); }
+  100% { stroke-dashoffset: 0; stroke: rgba(135,42,16,.42); }
 }
 
+/* Forest silhouette — pine-tree clip-path at the bottom */
+.cr-gan-forest {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 30%; z-index: 5; pointer-events: none;
+  background: #020406;
+  clip-path: polygon(
+    0% 100%, 0% 60%,
+    2% 55%, 4% 38%, 5% 55%, 7% 28%, 8% 48%, 10% 18%, 11% 36%,
+    13% 58%, 14% 40%, 15% 22%, 16% 36%, 18% 56%, 19% 38%, 20% 20%, 21% 34%,
+    23% 54%, 24% 36%, 25% 18%, 26% 32%, 28% 52%, 29% 34%, 30% 16%, 31% 30%,
+    33% 50%, 34% 34%, 35% 16%, 36% 30%, 38% 50%, 39% 34%, 40% 16%, 41% 30%,
+    43% 50%, 44% 34%, 45% 16%, 46% 30%, 48% 50%, 49% 34%, 50% 18%, 51% 32%,
+    53% 52%, 54% 36%, 55% 18%, 56% 32%, 58% 52%, 59% 36%, 60% 18%, 61% 30%,
+    63% 50%, 64% 34%, 65% 18%, 66% 32%, 68% 52%, 69% 36%, 70% 20%, 71% 34%,
+    73% 54%, 74% 38%, 75% 22%, 76% 38%, 78% 58%, 79% 44%, 80% 28%, 81% 42%,
+    83% 62%, 84% 50%, 85% 36%, 86% 50%, 88% 64%, 89% 54%, 90% 44%, 91% 54%,
+    93% 66%, 94% 58%, 95% 50%, 96% 60%, 98% 66%, 99% 62%,
+    100% 60%, 100% 100%
+  );
+}
+
+/* Lurking eyes at treeline */
+.cr-gan-lurk { position: absolute; inset: 0; }
+.cr-gan-eyepair { position: absolute; }
+.cr-gan-eyepair::before,
+.cr-gan-eyepair::after {
+  content: '';
+  position: absolute; top: 0;
+  width: clamp(3px, 0.45vw, 6px); height: clamp(2px, 0.28vw, 3.8px);
+  border-radius: 50%;
+  background: #e8aa10;
+  box-shadow:
+    0 0 5px rgba(232,170,16,1),
+    0 0 12px rgba(210,142,8,.9),
+    0 0 22px rgba(180,112,0,.7);
+}
+.cr-gan-eyepair::before { left: 0; }
+.cr-gan-eyepair::after  { left: clamp(8px, 1.1vw, 14px); }
+
+.cr-gan-eyepair--1 {
+  left: 11%; top: 62%;
+  animation: cr-gan-ep-in .2s ease .9s both, cr-gan-ep-out .35s ease 1.6s forwards;
+}
+.cr-gan-eyepair--2 {
+  left: 46%; top: 58%;
+  animation: cr-gan-ep-in .2s ease 1.2s both, cr-gan-ep-out .35s ease 1.9s forwards;
+}
+.cr-gan-eyepair--3 {
+  left: 78%; top: 65%;
+  animation: cr-gan-ep-in .2s ease .7s both, cr-gan-ep-out .35s ease 1.4s forwards;
+}
+@keyframes cr-gan-ep-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cr-gan-ep-out { from { opacity: 1; } to { opacity: 0; } }
+
 .cr-gan-vignette {
-  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  position: absolute; inset: 0; z-index: 6; pointer-events: none;
   background:
-    radial-gradient(ellipse 86% 86% at 50% 42%, transparent 42%, rgba(4,8,14,.82) 100%),
-    linear-gradient(to bottom, rgba(6,12,20,.38) 0%, transparent 18%, transparent 70%, rgba(4,8,14,.72) 100%);
+    radial-gradient(ellipse 82% 82% at 50% 40%, transparent 35%, rgba(2,4,8,.88) 100%),
+    linear-gradient(to bottom, rgba(3,6,12,.5) 0%, transparent 14%, transparent 62%, rgba(2,4,8,.6) 100%);
 }
 
 .cr-gan-text {
-  position: absolute; bottom: 0; left: 0; right: 0; z-index: 6;
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 8;
   height: 22%; display: flex; flex-direction: column;
   align-items: flex-start; justify-content: center;
   padding: 0 clamp(24px, 5vw, 60px); gap: 4px;
+  background: linear-gradient(to top, rgba(2,4,8,.96) 52%, rgba(2,4,8,.55) 78%, transparent 100%);
   animation: cr-fade-in .9s ease 2.8s both;
 }
 .cr-gan-clan {
   font-family: 'Cinzel', serif;
-  font-size: clamp(.5rem, .78vw, .7rem);
-  letter-spacing: .55em; color: rgba(192,158,55,.78);
-  text-shadow: 0 0 14px rgba(185,148,42,.5);
+  font-size: clamp(.48rem, .75vw, .68rem);
+  letter-spacing: .5em; color: rgba(175,142,48,.72);
+  text-shadow: 0 0 12px rgba(168,135,40,.48);
 }
 .cr-gan-name {
-  font-family: 'Uncial Antiqua', cursive; font-weight: 400;
-  font-size: clamp(1.8rem, 4.5vw, 4rem);
-  color: rgba(228,212,165,.94); letter-spacing: .1em; line-height: 1;
+  font-family: 'Rye', cursive;
+  font-size: clamp(1.7rem, 4.2vw, 3.8rem);
+  color: rgba(215,200,152,.92); letter-spacing: .04em; line-height: 1;
   text-shadow:
-    0 0 22px rgba(205,172,58,.62),
-    0 0 60px rgba(168,132,38,.35),
-    0 0 110px rgba(140,108,22,.2),
+    0 0 16px rgba(188,155,42,.55),
+    0 0 48px rgba(152,118,28,.28),
     0 2px 10px rgba(0,0,0,1);
 }
 .cr-gan-sub {
   font-family: 'IM Fell English', serif; font-style: italic;
   font-size: clamp(.62rem, 1vw, .88rem);
-  color: rgba(178,155,100,.52); letter-spacing: .14em;
+  color: rgba(162,140,88,.50); letter-spacing: .12em;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
