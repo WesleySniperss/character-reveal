@@ -569,14 +569,16 @@ function crHtmlHeraldry(img, name, cls, custom) {
     </div>
     <div class="cr-her-banner-wrap">
       <div class="cr-her-banner-top"></div>
-      <div class="cr-her-banner-body">
-        <div class="cr-her-ring-wrap"><div class="cr-her-ring">${img}</div></div>
-        <div class="cr-her-ornament">✦ ─── ⚜ ─── ✦</div>
-        ${name   ? `<div class="cr-her-name">${name}</div>`   : ''}
-        ${cls    ? `<div class="cr-her-title">${cls}</div>`   : ''}
-        ${custom ? `<div class="cr-her-divider"></div><div class="cr-her-desc">${custom}</div>` : ''}
+      <div class="cr-her-banner-inner">
+        <div class="cr-her-banner-body">
+          <div class="cr-her-ring-wrap"><div class="cr-her-ring">${img}</div></div>
+          <div class="cr-her-ornament">✦ ─── ⚜ ─── ✦</div>
+          ${name   ? `<div class="cr-her-name">${name}</div>`   : ''}
+          ${cls    ? `<div class="cr-her-title">${cls}</div>`   : ''}
+          ${custom ? `<div class="cr-her-divider"></div><div class="cr-her-desc">${custom}</div>` : ''}
+        </div>
+        <div class="cr-her-banner-tip"></div>
       </div>
-      <div class="cr-her-banner-tip"></div>
     </div>
   `;
 }

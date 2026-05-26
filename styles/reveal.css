@@ -782,6 +782,12 @@
   margin: 0 -10px;
 }
 
+.cr-her-banner-inner {
+  display: flex; flex-direction: column; align-items: center;
+  transform-origin: top center;
+  animation: cr-her-fabric-sway 7s ease-in-out 1.5s infinite;
+}
+
 .cr-her-banner-body {
   width: clamp(250px, 30vw, 390px);
   /* Rich fabric folds — 7 light/dark alternations */
@@ -799,15 +805,13 @@
     #6a0505         90%,
     rgba(20,0,0,1) 100%);
   border-left: 7px solid #DAA520; border-right: 7px solid #DAA520;
-  padding: clamp(14px,2vw,22px) clamp(16px,2.5vw,26px) clamp(24px,3.5vw,40px);
+  padding: clamp(14px,2vw,22px) clamp(16px,2.5vw,26px) clamp(44px,6vw,72px);
   box-shadow:
     inset 0 18px 32px rgba(0,0,0,.70),
     inset 14px 0 22px rgba(0,0,0,.45),
     inset -14px 0 22px rgba(0,0,0,.45),
     0 8px 32px rgba(0,0,0,.9);
   position: relative; overflow: hidden;
-  transform-origin: top center;
-  animation: cr-her-fabric-sway 7s ease-in-out 1.5s infinite;
 }
 @keyframes cr-her-fabric-sway {
   0%    { transform: skewX(0deg)    scaleX(1); }
