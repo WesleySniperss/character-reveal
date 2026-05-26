@@ -687,17 +687,6 @@ function crHtmlVtmVentrue(img, name, cls, custom, showClan, clan) {
     <div class="cr-vtv-pattern"></div>
     <div class="cr-vtv-portrait">${img}</div>
     <div class="cr-vtv-vignette"></div>
-    <div class="cr-vtv-frame">
-      <div class="cr-vtv-line cr-vtv-line--top"></div>
-      <div class="cr-vtv-line cr-vtv-line--left"></div>
-      <div class="cr-vtv-line cr-vtv-line--right"></div>
-      <div class="cr-vtv-line cr-vtv-line--bot"></div>
-      <div class="cr-vtv-corner cr-vtv-corner--tl"></div>
-      <div class="cr-vtv-corner cr-vtv-corner--tr"></div>
-      <div class="cr-vtv-corner cr-vtv-corner--bl"></div>
-      <div class="cr-vtv-corner cr-vtv-corner--br"></div>
-    </div>
-    <div class="cr-vtv-frame-overlay"></div>
     <div class="cr-vtv-text">
       ${clanLabel ? `<div class="cr-vtv-clan">✦ &nbsp; ${clanLabel.toUpperCase().split('').join(' ')} &nbsp; ✦</div>` : ''}
       ${name ? `<div class="cr-vtv-name">${name}</div>` : ''}
