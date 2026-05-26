@@ -999,6 +999,7 @@ function crHtmlVtmTremere(img, name, cls, custom, showClan, clan) {
             <path class="cr-tre-lid-top" d="${topLidPath}" fill="#000"/>
             <path class="cr-tre-lid-bot" d="${botLidPath}" fill="#000"/>
           </g>
+          <path d="${eyePath}" fill="none" stroke="#000" stroke-width="3"/>
         </svg>
       </div>`;
   }).join('');
