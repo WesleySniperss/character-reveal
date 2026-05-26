@@ -1315,7 +1315,7 @@
 .cr-lo-portrait {
   position: absolute;
   inset: 0;
-  animation: cr-lo-slide-in 3.4s linear both;
+  animation: cr-lo-slide-in 0.68s linear both;
 }
 @keyframes cr-lo-slide-in {
   0%   { transform: translateX(-110vw); animation-timing-function: cubic-bezier(0.22, 0, 0.58, 1); }
