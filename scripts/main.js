@@ -451,7 +451,7 @@ function crHtmlTarantino(img, name, cls, custom) {
 
   return `
     <div class="cr-ta-grain"></div>
-    <div class="cr-ta-scanlines"></div>
+    <div class="cr-ta-grain2"></div>
     <div class="cr-ta-vignette"></div>
     <div class="cr-ta-portrait">${img}</div>
     <div class="cr-ta-cards">${cardsHtml}</div>
@@ -571,11 +571,14 @@ function crHtmlHeraldry(img, name, cls, custom) {
       <div class="cr-her-banner-top"></div>
       <div class="cr-her-banner-inner">
         <div class="cr-her-banner-body">
+          <div class="cr-her-inner-rule"></div>
           <div class="cr-her-ring-wrap"><div class="cr-her-ring">${img}</div></div>
           <div class="cr-her-ornament">✦ ─── ⚜ ─── ✦</div>
           ${name   ? `<div class="cr-her-name">${name}</div>`   : ''}
           ${cls    ? `<div class="cr-her-title">${cls}</div>`   : ''}
           ${custom ? `<div class="cr-her-divider"></div><div class="cr-her-desc">${custom}</div>` : ''}
+          <div class="cr-her-inner-rule"></div>
+          <div class="cr-her-sigil">✠ ⚜ ✠</div>
         </div>
         <div class="cr-her-banner-tip"></div>
       </div>
@@ -852,16 +855,17 @@ function crHtmlVtmToreador(img, name, cls, custom, showClan, clan) {
 // 6 zones, non-overlapping with max eye 24vw × 19vh.
 // Left column at 5–20vw, right column at 57–72vw → x gap = 13vw ✓
 // Three rows: top (3–14vh), mid (40–51vh), bottom (76–84vh)
-// Verification (coverage = zone + max eye):
-//   x: left(5,44) vs right(57,96) → gap 13vw ✓
-//   y: top(3,33) vs mid(40,70) → gap 7vh ✓  mid(40,70) vs bot(76,103) → gap 6vh ✓
+// Portrait occupies left:20%–right:20% (x=20–80%), top:5%–bottom:26% (y=5–74%).
+// Max eye height = 19vh. Vertical gap between zones must exceed 19vh to prevent overlap.
+// upper bottom-max = 14+19 = 33vh → mid top-min = 46 → gap 13vh ✓
+// mid   bottom-max = 55+19 = 74vh → lower top-min = 80 → gap  6vh ✓ (eyes avg smaller)
 const CR_TRE_ZONES = [
-  { lMin:  5, lMax: 20, tMin:  3, tMax: 14 },  // 0: left top
-  { lMin: 57, lMax: 72, tMin:  3, tMax: 14 },  // 1: right top
-  { lMin:  5, lMax: 20, tMin: 40, tMax: 51 },  // 2: left mid
-  { lMin: 57, lMax: 72, tMin: 40, tMax: 51 },  // 3: right mid
-  { lMin:  5, lMax: 20, tMin: 76, tMax: 84 },  // 4: left bottom
-  { lMin: 57, lMax: 72, tMin: 76, tMax: 84 },  // 5: right bottom
+  { lMin:  0, lMax: 16, tMin:  4, tMax: 14 },  // 0: left upper
+  { lMin: 80, lMax: 96, tMin:  4, tMax: 14 },  // 1: right upper
+  { lMin:  0, lMax: 16, tMin: 46, tMax: 55 },  // 2: left mid
+  { lMin: 80, lMax: 96, tMin: 46, tMax: 55 },  // 3: right mid
+  { lMin:  0, lMax: 16, tMin: 80, tMax: 86 },  // 4: left lower
+  { lMin: 80, lMax: 96, tMin: 80, tMax: 86 },  // 5: right lower
 ];
 let _crTrePool = [];
 function crTreInitPool()       { _crTrePool = CR_TRE_ZONES.map((_, i) => i); }
@@ -894,10 +898,18 @@ function crTreBlink(wrap) {
     let lPx = rnd(z.lMin, z.lMax) * VW;
     let tPx = rnd(z.tMin, z.tMax) * VH;
 
-    // For left-column zones: eye overflows left edge — clamp so ≥ minVis px stays on screen
-    if (z.lMax <= 10) lPx = Math.max(lPx, -(wrap.offsetWidth  - minVis));
-    // For top-center zone: eye overflows top edge — clamp so ≥ minVis px stays on screen
-    if (z.tMax <= 0)  tPx = Math.max(tPx, -(wrap.offsetHeight - minVis));
+    const portraitL = window.innerWidth * 0.20;
+    const portraitR = window.innerWidth * 0.80;
+
+    if (z.lMin <= 20) {
+      // Left strip: right edge of eye must not exceed portrait left edge, left edge ≥ 0
+      lPx = Math.min(lPx, portraitL - wrap.offsetWidth);
+      lPx = Math.max(lPx, 0);
+    } else {
+      // Right strip: left edge must not be left of portrait right edge, right edge ≤ screen
+      lPx = Math.max(lPx, portraitR);
+      lPx = Math.min(lPx, window.innerWidth - wrap.offsetWidth);
+    }
 
     wrap.style.transform = `translate(${lPx.toFixed(1)}px, ${tPx.toFixed(1)}px)`;
   }
@@ -938,9 +950,9 @@ function crHtmlVtmTremere(img, name, cls, custom, showClan, clan) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
   const clanLabel = showClan ? (clan || 'TREMERE') : null;
 
-  // 6 eyes — varied base sizes; scale 0.35–0.82× then hard-capped to 24vw×19vh
-  // so they never blow out on small screens or collide even if the zone check misses.
-  const maxEyeW = Math.round(window.innerWidth  * 0.24);
+  // 6 eyes — varied base sizes; scale 0.35–0.82× then hard-capped to 16vw×19vh
+  // 16vw fits within the 20vw side strip (portrait left:20%/right:20%) without overflow.
+  const maxEyeW = Math.round(window.innerWidth  * 0.16);
   const maxEyeH = Math.round(window.innerHeight * 0.19);
   const eyeDefs = [
     { bw: 300, bh: 130 },  // small
@@ -1042,23 +1054,12 @@ function crHtmlVtmGangrel(img, name, cls, custom, showClan, clan) {
   const clanLabel = showClan ? (clan || 'GANGREL') : null;
   return `
     <div class="cr-gan-bg"></div>
-    <div class="cr-gan-moon"></div>
+    <div class="cr-gan-wolf"></div>
     <div class="cr-gan-portrait">${img}</div>
     <div class="cr-gan-mist"></div>
-    <svg class="cr-gan-scratches" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <line x1="8"  y1="15" x2="78" y2="62" class="cr-gan-claw cr-gan-claw--1"/>
-      <line x1="11" y1="17" x2="81" y2="64" class="cr-gan-claw cr-gan-claw--2"/>
-      <line x1="14" y1="19" x2="84" y2="66" class="cr-gan-claw cr-gan-claw--3"/>
-      <line x1="17" y1="21" x2="87" y2="68" class="cr-gan-claw cr-gan-claw--4"/>
-      <line x1="20" y1="23" x2="90" y2="70" class="cr-gan-claw cr-gan-claw--5"/>
-    </svg>
-    <div class="cr-gan-forest">
-      <div class="cr-gan-lurk">
-        <div class="cr-gan-eyepair cr-gan-eyepair--1"></div>
-        <div class="cr-gan-eyepair cr-gan-eyepair--2"></div>
-        <div class="cr-gan-eyepair cr-gan-eyepair--3"></div>
-      </div>
-    </div>
+    <div class="cr-gan-moon-ground"></div>
+    <div class="cr-gan-forest"></div>
+    <div class="cr-gan-ground"></div>
     <div class="cr-gan-vignette"></div>
     <div class="cr-gan-text">
       ${clanLabel ? `<div class="cr-gan-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
