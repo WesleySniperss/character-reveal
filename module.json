@@ -2,7 +2,7 @@
   "id": "character-reveal",
   "title": "Character Reveal",
   "description": "Cinematic character reveal effects for players. Integrates with VTools toolbar.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "compatibility": {
     "minimum": "13",
     "verified": "13",
