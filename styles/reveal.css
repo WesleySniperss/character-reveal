@@ -3074,3 +3074,264 @@
   font-size: clamp(.7rem, 1.1vw, .96rem);
   color: rgba(160, 145, 125, 0.55); letter-spacing: .10em;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VTM LASOMBRA — living shadows, void, Obtenebration
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cr-overlay[data-style="vtm-lasombra"] {
+  background: radial-gradient(ellipse 120% 100% at 50% 40%, #1a0840 0%, #0d0428 55%, #060118 100%);
+}
+
+/* Dark shadow fog on purple background */
+.cr-las-fog {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 20% 22% at  8% 28%, rgba(4,0,12,.82) 0%, transparent 100%),
+    radial-gradient(ellipse 18% 26% at 28% 62%, rgba(6,0,16,.78) 0%, transparent 100%),
+    radial-gradient(ellipse 24% 18% at 55% 18%, rgba(3,0,10,.80) 0%, transparent 100%),
+    radial-gradient(ellipse 20% 24% at 78% 52%, rgba(5,0,14,.76) 0%, transparent 100%),
+    radial-gradient(ellipse 22% 20% at 92% 80%, rgba(4,0,12,.80) 0%, transparent 100%),
+    radial-gradient(ellipse 18% 28% at 15% 88%, rgba(6,0,16,.75) 0%, transparent 100%),
+    radial-gradient(ellipse 26% 18% at 48% 95%, rgba(3,0,10,.78) 0%, transparent 100%),
+    radial-gradient(ellipse 20% 22% at 70%  8%, rgba(5,0,14,.80) 0%, transparent 100%);
+  background-size: 220% 220%;
+  filter: blur(30px);
+  animation: cr-las-drift 24s ease-in-out infinite alternate;
+}
+.cr-las-fog::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 22% 20% at 20% 12%, rgba(5,0,14,.75) 0%, transparent 100%),
+    radial-gradient(ellipse 18% 24% at 45% 42%, rgba(4,0,12,.72) 0%, transparent 100%),
+    radial-gradient(ellipse 24% 18% at 75% 25%, rgba(6,0,16,.76) 0%, transparent 100%),
+    radial-gradient(ellipse 20% 22% at  5% 68%, rgba(3,0,10,.78) 0%, transparent 100%),
+    radial-gradient(ellipse 18% 26% at 60% 78%, rgba(5,0,14,.74) 0%, transparent 100%),
+    radial-gradient(ellipse 22% 20% at 88% 45%, rgba(4,0,12,.76) 0%, transparent 100%);
+  background-size: 220% 220%;
+  filter: blur(40px);
+  animation: cr-las-drift2 32s ease-in-out infinite alternate-reverse;
+}
+@keyframes cr-las-drift {
+  0%   { background-position:   0%   0%; }
+  30%  { background-position:  60%  35%; }
+  70%  { background-position:  25%  85%; }
+  100% { background-position: 100%  55%; }
+}
+@keyframes cr-las-drift2 {
+  0%   { background-position: 100% 100%; }
+  35%  { background-position:  40%  55%; }
+  65%  { background-position:  80%  15%; }
+  100% { background-position:   0%  60%; }
+}
+
+.cr-las-portrait {
+  position: absolute; top: 6%; bottom: 22%; left: 18%; right: 18%;
+  z-index: 1; overflow: hidden;
+  animation: cr-las-portrait-in 3.5s ease 0.8s both;
+}
+.cr-las-portrait .cr-portrait-img {
+  width: 100%; height: 100%;
+  object-fit: contain; object-position: center top;
+  filter: saturate(.15) brightness(.72) contrast(1.25);
+}
+@keyframes cr-las-portrait-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.cr-las-vignette {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: radial-gradient(ellipse 75% 70% at 50% 40%, transparent 40%, rgba(0,0,0,.75) 100%);
+}
+
+.cr-las-text {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 4;
+  height: 20%; display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: center;
+  padding: 0 clamp(24px,5vw,60px); gap: 4px;
+  background: linear-gradient(to top, rgba(0,0,0,.96) 55%, transparent 100%);
+  animation: cr-fade-in 1s ease 2.8s both;
+}
+.cr-las-clan {
+  font-family: 'Cinzel', serif; font-size: clamp(.44rem,.68vw,.62rem);
+  letter-spacing: .55em; color: rgba(90,60,140,.75);
+  text-shadow: 0 0 14px rgba(80,40,160,.6);
+}
+.cr-las-name {
+  font-family: 'UnifrakturMaguntia', cursive;
+  font-size: clamp(1.8rem,4.4vw,4.2rem);
+  color: rgba(180,150,220,.92); letter-spacing: .03em; line-height: 1;
+  text-shadow: 0 0 18px rgba(120,60,200,.65), 0 0 55px rgba(80,20,160,.3), 0 2px 10px #000;
+}
+.cr-las-sub {
+  font-family: 'IM Fell English', serif; font-style: italic;
+  font-size: clamp(.6rem,1vw,.86rem);
+  color: rgba(140,110,180,.48); letter-spacing: .12em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VTM HECATA — necromancy, death, old photograph, Italian aristocracy
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cr-overlay[data-style="vtm-hecata"] { background: #0c0a06; }
+
+.cr-hec-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 85% 70% at 50% 35%, #1c1508 0%, #0c0a06 75%);
+}
+
+.cr-hec-portrait {
+  position: absolute; top: 5%; bottom: 22%; left: 18%; right: 18%;
+  z-index: 1; overflow: hidden;
+  animation: cr-hec-develop 4s ease 0.3s both;
+}
+.cr-hec-portrait .cr-portrait-img {
+  width: 100%; height: 100%;
+  object-fit: contain; object-position: center top;
+  filter: sepia(.85) brightness(.68) contrast(1.28);
+}
+@keyframes cr-hec-develop {
+  0%   { opacity: 0; filter: blur(16px) brightness(.1); }
+  25%  { opacity: .6; filter: blur(6px) brightness(.35) sepia(1); }
+  65%  { opacity: .9; filter: blur(1px); }
+  100% { opacity: 1; filter: blur(0); }
+}
+
+/* Ghost wisps rising from bottom */
+.cr-hec-wisps { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; }
+.cr-hec-wisp {
+  position: absolute; bottom: -8%; left: var(--x);
+  width: clamp(1px,.18vw,2.5px); height: 22%;
+  background: linear-gradient(to top, transparent 0%, rgba(200,185,140,.55) 40%, rgba(200,185,140,.18) 75%, transparent 100%);
+  border-radius: 50%;
+  filter: blur(1.5px);
+  animation: cr-hec-wisp var(--dur) ease-in var(--del) infinite;
+}
+@keyframes cr-hec-wisp {
+  0%   { transform: translateY(0) translateX(0) scaleX(1); opacity: 0; }
+  15%  { opacity: 1; }
+  60%  { transform: translateY(-55vh) translateX(12px) scaleX(1.4); opacity: .55; }
+  100% { transform: translateY(-90vh) translateX(-8px) scaleX(.7); opacity: 0; }
+}
+
+.cr-hec-vignette {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background:
+    radial-gradient(ellipse 78% 72% at 50% 38%, transparent 38%, rgba(8,6,2,.85) 100%),
+    linear-gradient(to bottom, rgba(10,8,3,.55) 0%, transparent 12%, transparent 78%, rgba(8,6,2,.65) 100%);
+}
+
+.cr-hec-text {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 4;
+  height: 20%; display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: center;
+  padding: 0 clamp(24px,5vw,60px); gap: 4px;
+  background: linear-gradient(to top, rgba(10,8,3,.97) 55%, transparent 100%);
+  animation: cr-fade-in 1s ease 3s both;
+}
+.cr-hec-clan {
+  font-family: 'Cinzel', serif; font-size: clamp(.44rem,.68vw,.62rem);
+  letter-spacing: .52em; color: rgba(160,130,60,.68);
+}
+.cr-hec-name {
+  font-family: 'Cormorant Garamond', serif; font-weight: 600;
+  font-size: clamp(1.8rem,4.3vw,4rem);
+  color: rgba(210,190,140,.9); letter-spacing: .06em; line-height: 1.05;
+  text-shadow: 0 0 20px rgba(160,130,60,.45), 0 2px 10px #000;
+}
+.cr-hec-sub {
+  font-family: 'IM Fell English', serif; font-style: italic;
+  font-size: clamp(.6rem,1vw,.86rem);
+  color: rgba(160,135,80,.45); letter-spacing: .12em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VTM BANU HAQIM — assassins, blood sorcery, desert night
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cr-overlay[data-style="vtm-banu-haqim"] { background: #080400; }
+
+.cr-ban-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 90% 50% at 50% 100%, rgba(80,30,0,.55) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 80% at 50% 30%, #110800 0%, #080400 100%);
+}
+
+.cr-ban-portrait {
+  position: absolute; top: 5%; bottom: 22%; left: 18%; right: 18%;
+  z-index: 1; overflow: hidden;
+  animation: cr-ban-reveal 0.18s cubic-bezier(.1,0,.05,1) 0.9s both;
+}
+.cr-ban-portrait .cr-portrait-img {
+  width: 100%; height: 100%;
+  object-fit: contain; object-position: center top;
+  filter: saturate(.55) brightness(.72) contrast(1.22) sepia(.18);
+}
+@keyframes cr-ban-reveal {
+  from { opacity: 0; clip-path: inset(0 100% 0 0); }
+  to   { opacity: 1; clip-path: inset(0 0% 0 0); }
+}
+
+/* Diagonal slash flash */
+.cr-ban-slash {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(105deg, transparent 30%, rgba(200,160,80,.65) 49%, rgba(255,210,120,.9) 50%, rgba(200,160,80,.65) 51%, transparent 70%);
+  animation: cr-ban-slash .22s ease 0.85s both;
+}
+@keyframes cr-ban-slash {
+  from { opacity: 0; transform: translateX(-60%); }
+  40%  { opacity: 1; }
+  to   { opacity: 0; transform: translateX(60%); }
+}
+
+/* Blood drops */
+.cr-ban-drops { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+.cr-ban-drop {
+  position: absolute; top: -3%; left: var(--x);
+  width: clamp(2px,.22vw,4px);
+  background: #8b0a0a;
+  border-radius: 0 0 50% 50%;
+  animation: cr-ban-drop var(--dur) ease-in var(--del) both;
+  filter: drop-shadow(0 0 3px rgba(180,10,10,.6));
+}
+@keyframes cr-ban-drop {
+  0%   { height: 0; transform: translateY(0); opacity: 0; }
+  10%  { opacity: 1; height: clamp(8px,1.8vh,28px); }
+  70%  { height: clamp(8px,1.8vh,28px); }
+  100% { transform: translateY(105vh); opacity: .7; }
+}
+
+.cr-ban-vignette {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: radial-gradient(ellipse 78% 72% at 50% 38%, transparent 40%, rgba(6,3,0,.88) 100%);
+}
+
+.cr-ban-text {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
+  height: 20%; display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: center;
+  padding: 0 clamp(24px,5vw,60px); gap: 4px;
+  background: linear-gradient(to top, rgba(8,4,0,.97) 55%, transparent 100%);
+  animation: cr-fade-in 1s ease 2s both;
+}
+.cr-ban-clan {
+  font-family: 'Cinzel', serif; font-size: clamp(.44rem,.68vw,.62rem);
+  letter-spacing: .5em; color: rgba(180,120,40,.7);
+  text-shadow: 0 0 10px rgba(180,100,20,.4);
+}
+.cr-ban-name {
+  font-family: 'Cinzel', serif; font-weight: 700;
+  font-size: clamp(1.7rem,4.2vw,3.9rem);
+  color: rgba(215,180,100,.92); letter-spacing: .06em; line-height: 1.05;
+  text-shadow: 0 0 18px rgba(200,130,30,.55), 0 0 50px rgba(180,80,0,.25), 0 2px 10px #000;
+}
+.cr-ban-sub {
+  font-family: 'IM Fell English', serif; font-style: italic;
+  font-size: clamp(.6rem,1vw,.86rem);
+  color: rgba(160,110,45,.48); letter-spacing: .12em;
+}
+
+

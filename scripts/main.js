@@ -32,7 +32,10 @@ const CR_STYLES = [
   { id: 'vtm-nosferatu', label: 'VTM Nosferatu', icon: 'fa-eye-slash' },
   { id: 'vtm-gangrel',   label: 'VTM Gangrel',   icon: 'fa-paw' },
   { id: 'vtm-brujah',    label: 'VTM Brujah',    icon: 'fa-fist-raised' },
-  { id: 'vtm-tremere',  label: 'VTM Tremere',   icon: 'fa-wand-sparkles' },
+  { id: 'vtm-tremere',    label: 'VTM Tremere',    icon: 'fa-wand-sparkles' },
+  { id: 'vtm-lasombra',  label: 'VTM Lasombra',  icon: 'fa-moon' },
+  { id: 'vtm-hecata',    label: 'VTM Hecata',    icon: 'fa-skull' },
+  { id: 'vtm-banu-haqim',label: 'VTM Banu Haqim',icon: 'fa-khanda' },
 ];
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
@@ -413,8 +416,11 @@ function crBuildHTML(data) {
     case 'vtm-nosferatu': return crHtmlVtmNosferatu(img, name, cls, custom, showClan, actorClan);
     case 'vtm-gangrel':   return crHtmlVtmGangrel(img, name, cls, custom, showClan, actorClan);
     case 'vtm-brujah':    return crHtmlVtmBrujah(img, name, cls, custom, showClan, actorClan);
-    case 'vtm-tremere':  return crHtmlVtmTremere(img, name, cls, custom, showClan, actorClan);
-    default:            return crHtmlMinimal(img, name, cls, custom, actorImg);
+    case 'vtm-tremere':    return crHtmlVtmTremere(img, name, cls, custom, showClan, actorClan);
+    case 'vtm-lasombra':   return crHtmlVtmLasombra(img, name, cls, custom, showClan, actorClan);
+    case 'vtm-hecata':     return crHtmlVtmHecata(img, name, cls, custom, showClan, actorClan);
+    case 'vtm-banu-haqim': return crHtmlVtmBanuHaqim(img, name, cls, custom, showClan, actorClan);
+    default:               return crHtmlMinimal(img, name, cls, custom, actorImg);
   }
 }
 
@@ -1134,3 +1140,68 @@ function crHtmlVtmBrujah(img, name, cls, custom, showClan, clan) {
     </div>
   `;
 }
+
+// ─── Style: VTM Lasombra ──────────────────────────────────────────────────────
+function crHtmlVtmLasombra(img, name, cls, custom, showClan, clan) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const clanLabel = showClan ? (clan || 'LASOMBRA') : null;
+  return `
+    <div class="cr-las-fog"></div>
+    <div class="cr-las-portrait">${img}</div>
+    <div class="cr-las-vignette"></div>
+    <div class="cr-las-text">
+      ${clanLabel ? `<div class="cr-las-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
+      ${name ? `<div class="cr-las-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-las-sub">${sub}</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Style: VTM Tzimisce ─────────────────────────────────────────────────────
+// ─── Style: VTM Hecata ───────────────────────────────────────────────────────
+function crHtmlVtmHecata(img, name, cls, custom, showClan, clan) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const clanLabel = showClan ? (clan || 'HECATA') : null;
+  const wisps = Array.from({length: 7}, (_, i) => {
+    const x   = (5 + (i * 13 + 7) % 88).toFixed(0);
+    const del = (i * 0.6).toFixed(1);
+    const dur = (4 + (i % 3) * 1.5).toFixed(1);
+    return `<div class="cr-hec-wisp" style="--x:${x}%;--del:${del}s;--dur:${dur}s"></div>`;
+  }).join('');
+  return `
+    <div class="cr-hec-bg"></div>
+    <div class="cr-hec-portrait">${img}</div>
+    <div class="cr-hec-wisps">${wisps}</div>
+    <div class="cr-hec-vignette"></div>
+    <div class="cr-hec-text">
+      ${clanLabel ? `<div class="cr-hec-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
+      ${name ? `<div class="cr-hec-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-hec-sub">${sub}</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Style: VTM Banu Haqim ───────────────────────────────────────────────────
+function crHtmlVtmBanuHaqim(img, name, cls, custom, showClan, clan) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const clanLabel = showClan ? (clan || 'BANU HAQIM') : null;
+  const drops = Array.from({length: 6}, (_, i) => {
+    const x   = (12 + i * 14 + (i % 2) * 5).toFixed(0);
+    const del = (0.8 + i * 0.25).toFixed(2);
+    const dur = (1.6 + (i % 3) * 0.3).toFixed(1);
+    return `<div class="cr-ban-drop" style="--x:${x}%;--del:${del}s;--dur:${dur}s"></div>`;
+  }).join('');
+  return `
+    <div class="cr-ban-bg"></div>
+    <div class="cr-ban-portrait">${img}</div>
+    <div class="cr-ban-slash"></div>
+    <div class="cr-ban-drops">${drops}</div>
+    <div class="cr-ban-vignette"></div>
+    <div class="cr-ban-text">
+      ${clanLabel ? `<div class="cr-ban-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
+      ${name ? `<div class="cr-ban-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-ban-sub">${sub}</div>` : ''}
+    </div>
+  `;
+}
+
