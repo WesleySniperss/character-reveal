@@ -35,7 +35,7 @@ const CR_STYLES = [
   { id: 'vtm-tremere',    label: 'VTM Tremere',    icon: 'fa-wand-sparkles' },
   { id: 'vtm-lasombra',  label: 'VTM Lasombra',  icon: 'fa-moon' },
   { id: 'vtm-hecata',    label: 'VTM Hecata',    icon: 'fa-skull' },
-  { id: 'vtm-banu-haqim',label: 'VTM Banu Haqim',icon: 'fa-khanda' },
+  { id: 'vtm-tzimisce',  label: 'VTM Tzimisce',  icon: 'fa-dna' },
 ];
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
@@ -347,8 +347,8 @@ async function crShowOverlay(data) {
   // frame 2 = add cr-visible so animations start on clean slate with textures already in VRAM.
   requestAnimationFrame(() => requestAnimationFrame(() => {
     el.classList.add('cr-visible');
-    if (el.dataset.style === 'vtm-tremere') {
-      crTreInitPool();
+    if (el.dataset.style === 'vtm-tzimisce') {
+      _crTzeLive.clear();
       el.querySelectorAll('.cr-tre-eye-wrap').forEach(crTreBlink);
     }
     if (el.dataset.style === 'tarantino') crTaRun(el);
@@ -368,7 +368,23 @@ async function crShowOverlay(data) {
     setTimeout(() => el.remove(), 500);
   };
 
-  el.addEventListener('click', dismiss);
+  // Only the GM can close the overlay
+  el.addEventListener('click', () => {
+    if (typeof game !== 'undefined' && game.user && !game.user.isGM) return;
+
+    if (el.dataset.style === 'vtm-malkavian') {
+      // Malkavian: click 1 = crack, click 2 = close
+      if (!el.classList.contains('cr-mal-cracked')) {
+        el.querySelector('.cr-vtm-preimage')
+          ?.insertAdjacentHTML('beforeend', CR_MAL_PRECRACK_SVG);
+        el.classList.add('cr-mal-cracked');
+      } else {
+        dismiss();
+      }
+    } else {
+      dismiss();
+    }
+  });
 
   const onKey = e => {
     if (e.key === 'Escape') { dismiss(); document.removeEventListener('keydown', onKey); }
@@ -419,7 +435,7 @@ function crBuildHTML(data) {
     case 'vtm-tremere':    return crHtmlVtmTremere(img, name, cls, custom, showClan, actorClan);
     case 'vtm-lasombra':   return crHtmlVtmLasombra(img, name, cls, custom, showClan, actorClan);
     case 'vtm-hecata':     return crHtmlVtmHecata(img, name, cls, custom, showClan, actorClan);
-    case 'vtm-banu-haqim': return crHtmlVtmBanuHaqim(img, name, cls, custom, showClan, actorClan);
+    case 'vtm-tzimisce':   return crHtmlVtmTzimisce(img, name, cls, custom, showClan, actorClan);
     default:               return crHtmlMinimal(img, name, cls, custom, actorImg);
   }
 }
@@ -509,6 +525,7 @@ function crHtmlWanted(img, name, cls, custom) {
   return `
     <div class="cr-op-rays"></div>
     <div class="cr-op-poster">
+      <span class="cr-op-nail"></span>
       <div class="cr-op-header"><span>WANTED</span></div>
       <div class="cr-op-frame">${img}</div>
       <div class="cr-op-doa">
@@ -699,6 +716,7 @@ function crHtmlVtmVentrue(img, name, cls, custom, showClan, clan) {
     <div class="cr-vtv-portrait">${img}</div>
     <div class="cr-vtv-vignette"></div>
     <div class="cr-vtv-text">
+      <img class="cr-crest cr-crest--gold" src="modules/character-reveal/assets/Ventrue_symbol.png" alt="">
       ${clanLabel ? `<div class="cr-vtv-clan">✦ &nbsp; ${clanLabel.toUpperCase().split('').join(' ')} &nbsp; ✦</div>` : ''}
       ${name ? `<div class="cr-vtv-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-vtv-sub">${sub}</div>`   : ''}
@@ -707,6 +725,9 @@ function crHtmlVtmVentrue(img, name, cls, custom, showClan, clan) {
 }
 
 // ─── Style: VTM Malkavian ──────────────────────────────────────────────────────
+const CR_MAL_CRACK_PATHS = `<g fill="none" stroke-linecap="butt"><path d="M 42,48 L 25,8 L 0,0" stroke="rgba(220,235,255,.82)" stroke-width="0.40"/><path d="M 25,8 L 14,0" stroke="rgba(220,235,255,.38)" stroke-width="0.18"/><path d="M 42,48 L 0,35" stroke="rgba(220,235,255,.75)" stroke-width="0.37"/><path d="M 42,48 L 8,88 L 0,88" stroke="rgba(220,235,255,.72)" stroke-width="0.34"/><path d="M 42,48 L 38,100" stroke="rgba(220,235,255,.68)" stroke-width="0.32"/><path d="M 42,48 L 72,95 L 68,100" stroke="rgba(220,235,255,.72)" stroke-width="0.34"/><path d="M 42,48 L 88,62 L 100,62" stroke="rgba(220,235,255,.68)" stroke-width="0.32"/><path d="M 42,48 L 60,5 L 72,28 L 100,18" stroke="rgba(220,235,255,.75)" stroke-width="0.37"/><path d="M 60,0 L 72,28" stroke="rgba(220,235,255,.44)" stroke-width="0.20"/><path d="M 42,48 L 42,0" stroke="rgba(220,235,255,.70)" stroke-width="0.34"/><path d="M 42,48 L 50,42 L 58,35" stroke="rgba(220,235,255,.42)" stroke-width="0.19"/><path d="M 42,48 L 36,42 L 28,36" stroke="rgba(220,235,255,.38)" stroke-width="0.17"/><path d="M 42,48 L 46,56 L 52,66" stroke="rgba(220,235,255,.38)" stroke-width="0.17"/><path d="M 42,48 L 35,54 L 28,62" stroke="rgba(220,235,255,.36)" stroke-width="0.16"/><path d="M 42,48 L 46,46" stroke="rgba(220,235,255,.58)" stroke-width="0.25"/><path d="M 42,48 L 38,46" stroke="rgba(220,235,255,.55)" stroke-width="0.24"/><path d="M 42,48 L 44,51" stroke="rgba(220,235,255,.53)" stroke-width="0.23"/><path d="M 42,48 L 40,51" stroke="rgba(220,235,255,.50)" stroke-width="0.22"/><path d="M 44,47 L 48,45" stroke="rgba(220,235,255,.46)" stroke-width="0.20"/><path d="M 40,49 L 36,51" stroke="rgba(220,235,255,.44)" stroke-width="0.19"/></g>`;
+const CR_MAL_PRECRACK_SVG = `<svg class="cr-vtm-precrack" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">${CR_MAL_CRACK_PATHS}</svg>`;
+
 const CR_VTM_WHISPERS = [
   'you see it too', '...mirrors', 'we are many', 'broken glass',
   '...listen', 'all of us', 'the truth hurts', '...shattered',
@@ -735,9 +756,7 @@ function crHtmlVtmMalkavian(img, name, cls, custom, actorImg, showClan, clan) {
     .map((w, i) => `<span class="cr-vtm-whisper cr-vtm-whisper--${i + 1}">${w}</span>`)
     .join('');
 
-  const CRACK_PATHS = `<g fill="none" stroke-linecap="butt"><path d="M 42,48 L 25,8 L 0,0" stroke="rgba(220,235,255,.82)" stroke-width="0.40"/><path d="M 25,8 L 14,0" stroke="rgba(220,235,255,.38)" stroke-width="0.18"/><path d="M 42,48 L 0,35" stroke="rgba(220,235,255,.75)" stroke-width="0.37"/><path d="M 42,48 L 8,88 L 0,88" stroke="rgba(220,235,255,.72)" stroke-width="0.34"/><path d="M 42,48 L 38,100" stroke="rgba(220,235,255,.68)" stroke-width="0.32"/><path d="M 42,48 L 72,95 L 68,100" stroke="rgba(220,235,255,.72)" stroke-width="0.34"/><path d="M 42,48 L 88,62 L 100,62" stroke="rgba(220,235,255,.68)" stroke-width="0.32"/><path d="M 42,48 L 60,5 L 72,28 L 100,18" stroke="rgba(220,235,255,.75)" stroke-width="0.37"/><path d="M 60,0 L 72,28" stroke="rgba(220,235,255,.44)" stroke-width="0.20"/><path d="M 42,48 L 42,0" stroke="rgba(220,235,255,.70)" stroke-width="0.34"/><path d="M 42,48 L 50,42 L 58,35" stroke="rgba(220,235,255,.42)" stroke-width="0.19"/><path d="M 42,48 L 36,42 L 28,36" stroke="rgba(220,235,255,.38)" stroke-width="0.17"/><path d="M 42,48 L 46,56 L 52,66" stroke="rgba(220,235,255,.38)" stroke-width="0.17"/><path d="M 42,48 L 35,54 L 28,62" stroke="rgba(220,235,255,.36)" stroke-width="0.16"/><path d="M 42,48 L 46,46" stroke="rgba(220,235,255,.58)" stroke-width="0.25"/><path d="M 42,48 L 38,46" stroke="rgba(220,235,255,.55)" stroke-width="0.24"/><path d="M 42,48 L 44,51" stroke="rgba(220,235,255,.53)" stroke-width="0.23"/><path d="M 42,48 L 40,51" stroke="rgba(220,235,255,.50)" stroke-width="0.22"/><path d="M 44,47 L 48,45" stroke="rgba(220,235,255,.46)" stroke-width="0.20"/><path d="M 40,49 L 36,51" stroke="rgba(220,235,255,.44)" stroke-width="0.19"/></g>`;
-  const CRACK_SVG_PRE   = `<svg class="cr-vtm-precrack"          viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">${CRACK_PATHS}</svg>`;
-  const CRACK_SVG_SHARD = `<svg class="cr-vtm-shard-crack-static" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">${CRACK_PATHS}</svg>`;
+  const CRACK_SVG_SHARD = `<svg class="cr-vtm-shard-crack-static" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">${CR_MAL_CRACK_PATHS}</svg>`;
 
   const shards = CR_VTM_SHARDS.map(s => `
     <div class="cr-vtm-shard" style="clip-path:${s.clip};animation-name:cr-vtm-rot3d-${s.rot},cr-vtm-spread-${s.jolt};animation-duration:${(s.dur * 0.9).toFixed(1)}s,${(s.dur * 1.4).toFixed(1)}s;animation-delay:1.8s,1.8s;animation-timing-function:ease-in-out,ease-in-out;animation-iteration-count:infinite,infinite;animation-direction:alternate,alternate;animation-fill-mode:both,both">
@@ -753,13 +772,13 @@ function crHtmlVtmMalkavian(img, name, cls, custom, actorImg, showClan, clan) {
     <div class="cr-vtm-preimage">
       <img src="${actorImg}" alt="" class="cr-vtm-preimage-img">
       <div class="cr-vtm-preimage-vignette"></div>
-      ${CRACK_SVG_PRE}
     </div>
     ${shards}
     <div class="cr-vtm-noise"></div>
     <div class="cr-vtm-vignette"></div>
     <div class="cr-vtm-whispers">${whispers}</div>
     <div class="cr-vtm-text">
+      <img class="cr-crest cr-crest--purple" src="modules/character-reveal/assets/Malkavian_symbol.png" alt="">
       <div class="cr-vtm-name-wrap">
         <span class="cr-vtm-name-r" aria-hidden="true">${name}</span>
         <span class="cr-vtm-name">${name}</span>
@@ -850,6 +869,7 @@ function crHtmlVtmToreador(img, name, cls, custom, showClan, clan) {
     <div class="cr-tor-vignette"></div>
     <div class="cr-tor-petals">${petals}</div>
     <div class="cr-tor-text">
+      <img class="cr-crest cr-crest--rose" src="modules/character-reveal/assets/Toreador_symbol.png" alt="">
       ${clanLabel ? `<div class="cr-tor-clan">✦ ${clanLabel.toUpperCase().split('').join(' ')} ✦</div>` : ''}
       ${name ? `<div class="cr-tor-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-tor-sub">${sub}</div>` : ''}
@@ -857,80 +877,97 @@ function crHtmlVtmToreador(img, name, cls, custom, showClan, clan) {
   `;
 }
 
-// ─── Tremere: JS blink loops — zone pool prevents overlap ────────────────────
-// 6 zones, non-overlapping with max eye 24vw × 19vh.
-// Left column at 5–20vw, right column at 57–72vw → x gap = 13vw ✓
-// Three rows: top (3–14vh), mid (40–51vh), bottom (76–84vh)
-// Portrait occupies left:20%–right:20% (x=20–80%), top:5%–bottom:26% (y=5–74%).
-// Max eye height = 19vh. Vertical gap between zones must exceed 19vh to prevent overlap.
-// upper bottom-max = 14+19 = 33vh → mid top-min = 46 → gap 13vh ✓
-// mid   bottom-max = 55+19 = 74vh → lower top-min = 80 → gap  6vh ✓ (eyes avg smaller)
-const CR_TRE_ZONES = [
-  { lMin:  0, lMax: 16, tMin:  4, tMax: 14 },  // 0: left upper
-  { lMin: 80, lMax: 96, tMin:  4, tMax: 14 },  // 1: right upper
-  { lMin:  0, lMax: 16, tMin: 46, tMax: 55 },  // 2: left mid
-  { lMin: 80, lMax: 96, tMin: 46, tMax: 55 },  // 3: right mid
-  { lMin:  0, lMax: 16, tMin: 80, tMax: 86 },  // 4: left lower
-  { lMin: 80, lMax: 96, tMin: 80, tMax: 86 },  // 5: right lower
-];
-let _crTrePool = [];
-function crTreInitPool()       { _crTrePool = CR_TRE_ZONES.map((_, i) => i); }
-function crTreTakeZone()       { if (!_crTrePool.length) crTreInitPool(); const i = Math.floor(Math.random() * _crTrePool.length); const s = _crTrePool.splice(i, 1)[0]; return s; }
-function crTreReturnZone(slot) { if (slot != null && !_crTrePool.includes(slot)) _crTrePool.push(slot); }
-
+// ─── Tzimisce/Tremere eyes — teleport while closed, never overlap ──────────────
 function crTreSleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Shared registry of every live eye's VISIBLE box, keyed by id.
+const _crTzeLive = new Map();
+let   _crTzeNextId = 0;
+
+// Find a screen spot whose visible ellipse clears the portrait and every other
+// eye. Uses best-candidate sampling: among all non-overlapping candidates, pick
+// the one FARTHEST from the nearest other eye — spreads eyes across the canvas
+// instead of letting them clump. Returns {cL,cT,box} or null (keep old spot).
+function crTzeFindSpot(W, H, selfId) {
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const SW = window.innerWidth, SH = window.innerHeight;
+  const pL = SW * 0.18, pR = SW * 0.82, pT = SH * 0.04, pB = SH * 0.78;
+  const VIS_W = 0.74, VIS_H = 0.64, GAP = 18;     // visible part of the DOM box
+  const vw = W * VIS_W, vh = H * VIS_H;
+
+  // collect centres of all other live eyes
+  const others = [];
+  for (const [id, p] of _crTzeLive) {
+    if (id !== selfId) others.push({ cx: p.x + p.w / 2, cy: p.y + p.h / 2 });
+  }
+
+  let best = null, bestDist = -1;
+  for (let attempt = 0; attempt < 220; attempt++) {
+    const cL = rnd(0, SW - W);
+    const cT = rnd(0, SH - H);
+    const vx = cL + (W - vw) / 2;
+    const vy = cT + (H - vh) / 2;
+    const cx = cL + W / 2, cy = cT + H / 2;
+    if (cx > pL && cx < pR && cy > pT && cy < pB) continue;   // over portrait
+
+    let ok = true, nearest = Infinity;
+    for (const [id, p] of _crTzeLive) {
+      if (id === selfId) continue;
+      if (vx < p.x + p.w + GAP && vx + vw > p.x - GAP &&
+          vy < p.y + p.h + GAP && vy + vh > p.y - GAP) { ok = false; break; }
+    }
+    if (!ok) continue;
+
+    for (const o of others) {
+      const d = (cx - o.cx) ** 2 + (cy - o.cy) ** 2;
+      if (d < nearest) nearest = d;
+    }
+    if (nearest > bestDist) {
+      bestDist = nearest;
+      best = { cL, cT, box: { x: vx, y: vy, w: vw, h: vh } };
+    }
+  }
+  return best;
+}
 
 function crTreBlink(wrap) {
   const rnd = (a, b) => a + Math.random() * (b - a);
-  let mySlot = null;
+  const id  = ++_crTzeNextId;
 
   function lids(closed, speedS, ease) {
-    const val     = closed ? 'scaleY(1)' : 'scaleY(0)';
+    const val     = closed ? 'scaleY(1)' : 'scaleY(0.2)';
     const defEase = closed ? 'cubic-bezier(0.85,0,1,0.5)' : 'cubic-bezier(0.25,0,0.5,1)';
+    const easeVal = ease || defEase;
     wrap.querySelectorAll('.cr-tre-lid-top,.cr-tre-lid-bot').forEach(el => {
-      el.style.transition = `transform ${speedS}s ${ease || defEase}`;
+      el.style.transition = `transform ${speedS}s ${easeVal}`;
       el.style.transform  = val;
     });
+    wrap.style.transition = `opacity ${speedS}s ${easeVal}`;
+    wrap.style.opacity    = closed ? '0' : '1';
   }
 
+  // Teleport to a fresh free spot (called only while the eye is shut & invisible).
+  // If nothing is free, keep the current spot so eyes never stack.
   function relocate() {
-    crTreReturnZone(mySlot);
-    mySlot = crTreTakeZone();
-    const z  = CR_TRE_ZONES[mySlot];
-    const VW = window.innerWidth  / 100;
-    const VH = window.innerHeight / 100;
-    const minVis = 90; // minimum visible px per axis
-
-    let lPx = rnd(z.lMin, z.lMax) * VW;
-    let tPx = rnd(z.tMin, z.tMax) * VH;
-
-    const portraitL = window.innerWidth * 0.20;
-    const portraitR = window.innerWidth * 0.80;
-
-    if (z.lMin <= 20) {
-      // Left strip: right edge of eye must not exceed portrait left edge, left edge ≥ 0
-      lPx = Math.min(lPx, portraitL - wrap.offsetWidth);
-      lPx = Math.max(lPx, 0);
-    } else {
-      // Right strip: left edge must not be left of portrait right edge, right edge ≤ screen
-      lPx = Math.max(lPx, portraitR);
-      lPx = Math.min(lPx, window.innerWidth - wrap.offsetWidth);
-    }
-
-    wrap.style.transform = `translate(${lPx.toFixed(1)}px, ${tPx.toFixed(1)}px)`;
+    const W = wrap.offsetWidth  || 140;
+    const H = wrap.offsetHeight || 60;
+    const spot = crTzeFindSpot(W, H, id);
+    if (!spot) return;
+    _crTzeLive.set(id, spot.box);
+    wrap.style.transition = 'none';
+    wrap.style.transform  = `translate(${spot.cL.toFixed(1)}px, ${spot.cT.toFixed(1)}px)`;
   }
+
+  relocate();   // initial position, set synchronously so siblings see it
 
   async function loop() {
-    relocate();                                    // position while guaranteed closed
+    await crTreSleep(rnd(200, 2200));              // staggered first open
     while (wrap.isConnected) {
-      await crTreSleep(rnd(1200, 4000));           // hold closed at this position
-      if (!wrap.isConnected) break;
-
       lids(false, rnd(0.22, 0.50), 'cubic-bezier(0.15,0,0.35,1)');
       await crTreSleep(rnd(3500, 7000));           // hold open
       if (!wrap.isConnected) break;
 
-      if (Math.random() < 0.6) {
+      if (Math.random() < 0.6) {                   // occasional double-blink
         lids(true,  0.14, 'cubic-bezier(0.8,0,1,0.4)');
         await crTreSleep(200);
         if (!wrap.isConnected) break;
@@ -941,34 +978,132 @@ function crTreBlink(wrap) {
 
       const closeMs = rnd(600, 1100);
       lids(true, closeMs / 1000, 'cubic-bezier(0.4,0,0.6,1)');
-      await crTreSleep(closeMs + 120);             // wait full close + buffer
+      await crTreSleep(closeMs + 120);             // wait until fully shut
       if (!wrap.isConnected) break;
-      relocate();                                  // eye is fully closed — safe to reposition
+      relocate();                                  // move while invisible
+      await crTreSleep(rnd(800, 2600));            // stay shut at new spot
+      if (!wrap.isConnected) break;                // next iteration opens here
     }
-    crTreReturnZone(mySlot);
+    _crTzeLive.delete(id);
   }
 
-  loop().catch(() => { crTreReturnZone(mySlot); });
+  loop().catch(() => _crTzeLive.delete(id));
 }
 
 // ─── Style: VTM Tremere ───────────────────────────────────────────────────────
+// Blood sorcery: a ritual circle of hermetic sigils turns around the figure,
+// crimson light pulses like a heartbeat, large glyphs flicker across the frame.
+// Tremere descend from the Order of Hermes; their Thaumaturgy is medieval
+// ceremonial magic — so the glyphs are planetary, zodiacal & alchemical,
+// the actual language of hermetic ritual, not Norse runes.
+const CR_TRE_RUNES = [
+  // Seven classical planets + outer
+  '☉','☽','☿','♀','♂','♃','♄','♅','♆',
+  // Zodiac
+  '♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓',
+  // Lunar nodes, dark moon, aspects, pentacle
+  '☊','☋','⚸','⚹','☌','☍','⛤',
+  // Alchemical elements & prime substances
+  '🜁','🜂','🜃','🜄','🜍','🜔','🜚','🜛','🜞','🜟',
+];
+
+// Tremere V5 disciplines + hermetic invocations (grimoire Latin, V for U)
+const CR_TRE_WORDS = [
+  'SANGVIS', 'VITAE', 'THAVMATVRGIA', 'ORDO HERMETICVS',
+  'AVSPEX', 'DOMINATE', 'BLOOD SORCERY', 'PER SANGVINEM',
+  'SCIENTIA POTENTIA EST', 'SANGVINIS POTENTIA', 'TREMERE',
+];
+
 function crHtmlVtmTremere(img, name, cls, custom, showClan, clan) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
   const clanLabel = showClan ? (clan || 'TREMERE') : null;
 
-  // 6 eyes — varied base sizes; scale 0.35–0.82× then hard-capped to 16vw×19vh
-  // 16vw fits within the 20vw side strip (portrait left:20%/right:20%) without overflow.
+  // Sigils evenly spaced around the rotating outer ring
+  const ringCount = 12;
+  const sigils = Array.from({ length: ringCount }, (_, i) => {
+    const a  = (360 / ringCount) * i;
+    const ch = CR_TRE_RUNES[(i * 2) % CR_TRE_RUNES.length];
+    return `<span class="cr-tre-sigil" style="--a:${a}deg">${ch}</span>`;
+  }).join('');
+
+  // Alchemical glyphs drifting up through the dark
+  const floats = Array.from({ length: 9 }, (_, i) => {
+    const x   = (6 + i * 10.5).toFixed(0);
+    const ch  = CR_TRE_RUNES[(i * 5 + 3) % CR_TRE_RUNES.length];
+    const del = (i * 0.8).toFixed(1);
+    const dur = (9 + (i % 4) * 2.5).toFixed(1);
+    const sz  = (0.8 + (i % 3) * 0.55).toFixed(2);
+    return `<span class="cr-tre-float" style="--x:${x}%;--del:${del}s;--dur:${dur}s;--sz:${sz}rem">${ch}</span>`;
+  }).join('');
+
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  // Large casting glyphs flickering into being — kept to the side bands and top
+  // strip so they frame the figure instead of covering the portrait.
+  const runes = Array.from({ length: 16 }, () => {
+    const r = Math.random();
+    let x, y;
+    if      (r < 0.42) { x = rnd(1, 15);  y = rnd(4, 92); }   // left band
+    else if (r < 0.84) { x = rnd(85, 99); y = rnd(4, 92); }   // right band
+    else               { x = rnd(20, 80); y = rnd(1, 5);  }   // top strip
+    const sz  = (Math.pow(Math.random(), 1.8) * 7 + 2.4).toFixed(2);  // 2.4–9.4rem, weighted small
+    const del = rnd(0, 7).toFixed(1);
+    const dur = rnd(4, 9).toFixed(1);
+    const rot = rnd(-26, 26).toFixed(0);
+    const ch  = CR_TRE_RUNES[Math.floor(Math.random() * CR_TRE_RUNES.length)];
+    return `<span class="cr-tre-rune" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;--sz:${sz}rem;--del:${del}s;--dur:${dur}s;--rot:${rot}deg">${ch}</span>`;
+  }).join('');
+
+  // Latin invocations & discipline names — kept to the top and bottom strips,
+  // clear of the portrait, flickering like grimoire script.
+  const words = Array.from({ length: 5 }, (_, i) => {
+    const top = i % 2 === 0;
+    const x   = rnd(14, 60).toFixed(1);
+    const y   = (top ? rnd(1.5, 5) : rnd(76, 80)).toFixed(1);
+    const del = rnd(0, 8).toFixed(1);
+    const dur = rnd(8, 13).toFixed(1);
+    const rot = rnd(-7, 7).toFixed(0);
+    const w   = CR_TRE_WORDS[Math.floor(Math.random() * CR_TRE_WORDS.length)];
+    return `<span class="cr-tre-word" style="left:${x}%;top:${y}%;--del:${del}s;--dur:${dur}s;--rot:${rot}deg">${w}</span>`;
+  }).join('');
+
+  return `
+    <div class="cr-tre-bg"></div>
+    <div class="cr-tre-glow"></div>
+    <div class="cr-tre-ring cr-tre-ring--o"><div class="cr-tre-sigils">${sigils}</div></div>
+    <div class="cr-tre-ring cr-tre-ring--m"></div>
+    <div class="cr-tre-ring cr-tre-ring--i"></div>
+    <div class="cr-tre-floats">${floats}</div>
+    <div class="cr-tre-portrait">${img}</div>
+    <div class="cr-tre-runes">${runes}${words}</div>
+    <div class="cr-tre-vignette"></div>
+    <div class="cr-tre-text">
+      <img class="cr-crest cr-crest--blood" src="modules/character-reveal/assets/Tremere_symbol.png" alt="">
+      ${clanLabel ? `<div class="cr-tre-clan">✦ ${clanLabel.toUpperCase().split('').join(' ')} ✦</div>` : ''}
+      ${name ? `<div class="cr-tre-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-tre-sub">${sub}</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Tzimisce eye builder (shared eye-building logic) ─────────────────────────
+function _crBuildTziEyes() {
   const maxEyeW = Math.round(window.innerWidth  * 0.16);
   const maxEyeH = Math.round(window.innerHeight * 0.19);
   const eyeDefs = [
-    { bw: 300, bh: 130 },  // small
-    { bw: 560, bh: 241 },  // medium
-    { bw: 680, bh: 293 },  // large
-    { bw: 420, bh: 181 },  // medium-small
-    { bw: 480, bh: 207 },  // medium-2
-    { bw: 360, bh: 155 },  // small-2
+    { bw: 300, bh: 130 },
+    { bw: 560, bh: 241 },
+    { bw: 680, bh: 293 },
+    { bw: 420, bh: 181 },
+    { bw: 480, bh: 207 },
+    { bw: 360, bh: 155 },
+    { bw: 280, bh: 120 },
+    { bw: 540, bh: 233 },
+    { bw: 640, bh: 275 },
+    { bw: 400, bh: 172 },
+    { bw: 460, bh: 198 },
+    { bw: 340, bh: 146 },
   ];
-
   const irisImg = 'modules/character-reveal/assets/png-transparent-human-eye-iris-lens-color-dente-photography-people-human-body-thumbnail.png';
 
   const eyes = eyeDefs.map((e, i) => {
@@ -996,6 +1131,16 @@ function crHtmlVtmTremere(img, name, cls, custom, showClan, clan) {
     const topLidPath = `M-5,${topMeet.toFixed(1)} C60,${topDip.toFixed(1)} 140,${topDip.toFixed(1)} 205,${topMeet.toFixed(1)} L205,-5 L-5,-5 Z`;
     const botLidPath = `M-5,${botMeet.toFixed(1)} C60,${botRise.toFixed(1)} 140,${botRise.toFixed(1)} 205,${botMeet.toFixed(1)} L205,85 L-5,85 Z`;
 
+    // Bloodshot veins — thin red threads creeping from the corners toward the pupil
+    const veins = Array.from({ length: 4 + Math.floor(Math.random() * 3) }, () => {
+      const fromL = Math.random() < 0.5;
+      const sx = fromL ? 0 : 200;
+      const sy = rnd(cy - 16, cy + 16);
+      const mx = fromL ? rnd(25, 78) : rnd(122, 175);
+      const my = rnd(cy - 13, cy + 13);
+      return `<path d="M${sx},${sy.toFixed(0)} Q${mx.toFixed(0)},${my.toFixed(0)} 100,${cy.toFixed(0)}" stroke="rgba(150,26,16,.55)" stroke-width="${rnd(0.3, 0.8).toFixed(2)}" fill="none"/>`;
+    }).join('');
+
     return `
       <div class="cr-tre-eye-wrap" style="width:${w}px;height:${h}px">
         <svg class="cr-tre-eye-svg" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
@@ -1008,33 +1153,25 @@ function crHtmlVtmTremere(img, name, cls, custom, showClan, clan) {
             </clipPath>
             <radialGradient id="${cid}-rg" cx="50%" cy="${((cy/80)*100).toFixed(1)}%" r="55%">
               <stop offset="25%" stop-color="rgba(0,0,0,0)"/>
-              <stop offset="100%" stop-color="rgba(0,0,0,0.88)"/>
+              <stop offset="100%" stop-color="rgba(20,0,0,0.92)"/>
             </radialGradient>
           </defs>
           <g clip-path="url(#${cid})">
-            <rect width="200" height="80" fill="#181818"/>
-            <rect width="200" height="80" fill="url(#${cid}-rg)"/>
+            <rect width="200" height="80" fill="#240807"/>
+            ${veins}
             <image href="${irisImg}" x="60" y="${(cy-40).toFixed(1)}" width="80" height="80" preserveAspectRatio="xMidYMid meet" clip-path="url(#${cid}-c)"/>
-            <ellipse cx="82" cy="${(cy-17).toFixed(1)}" rx="5" ry="2.5" fill="rgba(255,255,255,.14)" transform="rotate(-15 82 ${(cy-17).toFixed(1)})"/>
-            <path class="cr-tre-lid-top" d="${topLidPath}" fill="#000"/>
-            <path class="cr-tre-lid-bot" d="${botLidPath}" fill="#000"/>
+            <circle cx="100" cy="${cy.toFixed(1)}" r="38" fill="rgba(140,20,10,0.34)" clip-path="url(#${cid}-c)"/>
+            <rect width="200" height="80" fill="url(#${cid}-rg)"/>
+            <ellipse cx="82" cy="${(cy-17).toFixed(1)}" rx="5" ry="2.5" fill="rgba(255,235,225,.16)" transform="rotate(-15 82 ${(cy-17).toFixed(1)})"/>
+            <path class="cr-tre-lid-top" d="${topLidPath}" fill="#1a0504"/>
+            <path class="cr-tre-lid-bot" d="${botLidPath}" fill="#1a0504"/>
           </g>
-          <path d="${eyePath}" fill="none" stroke="#000" stroke-width="3"/>
+          <path d="${eyePath}" fill="none" stroke="transparent" stroke-width="3"/>
         </svg>
       </div>`;
   }).join('');
 
-  return `
-    <div class="cr-tre-bg"></div>
-    <div class="cr-tre-eyes">${eyes}</div>
-    <div class="cr-tre-portrait">${img}</div>
-    <div class="cr-tre-vignette"></div>
-    <div class="cr-tre-text">
-      ${clanLabel ? `<div class="cr-tre-clan">✦ ${clanLabel.toUpperCase().split('').join(' ')} ✦</div>` : ''}
-      ${name ? `<div class="cr-tre-name">${name}</div>` : ''}
-      ${sub  ? `<div class="cr-tre-sub">${sub}</div>` : ''}
-    </div>
-  `;
+  return eyes;
 }
 
 // ─── Style: VTM Nosferatu ──────────────────────────────────────────────────────
@@ -1047,6 +1184,7 @@ function crHtmlVtmNosferatu(img, name, cls, custom, showClan, clan) {
     <div class="cr-nos-glow"></div>
     <div class="cr-nos-vignette"></div>
     <div class="cr-nos-text">
+      <img class="cr-crest cr-crest--shadow" src="modules/character-reveal/assets/Nosferatu_symbol.png" alt="">
       ${clanLabel ? `<div class="cr-nos-clan">⌇ ${clanLabel.toUpperCase()} ⌇</div>` : ''}
       ${name ? `<div class="cr-nos-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-nos-sub">${sub}</div>` : ''}
@@ -1068,6 +1206,7 @@ function crHtmlVtmGangrel(img, name, cls, custom, showClan, clan) {
     <div class="cr-gan-ground"></div>
     <div class="cr-gan-vignette"></div>
     <div class="cr-gan-text">
+      <img class="cr-crest cr-crest--earth" src="modules/character-reveal/assets/Gangrel_symbol.png" alt="">
       ${clanLabel ? `<div class="cr-gan-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
       ${name ? `<div class="cr-gan-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-gan-sub">${sub}</div>` : ''}
@@ -1106,6 +1245,7 @@ function crHtmlVtmBrujah(img, name, cls, custom, showClan, clan) {
 
   return `
     <div class="cr-brj-bg"></div>
+    <img class="cr-brj-graffiti" src="modules/character-reveal/assets/brujah graffiti2.jpg" alt="">
     <div class="cr-brj-portrait">${img}</div>
     <div class="cr-brj-fire">
       <div class="cr-brj-fire-base"></div>
@@ -1134,6 +1274,7 @@ function crHtmlVtmBrujah(img, name, cls, custom, showClan, clan) {
       <div class="cr-brj-glyph cr-brj-gb" style="--gx:44%; --gy:36%; --del:5.2s; --gdur:9.8s">FREEDOM</div>
     </div>
     <div class="cr-brj-text">
+      <img class="cr-crest cr-crest--fire" src="modules/character-reveal/assets/Brujah_symbol.png" alt="">
       ${clanLabel ? `<div class="cr-brj-clan">${clanLabel.toUpperCase()}</div>` : ''}
       ${name ? `<div class="cr-brj-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-brj-sub">${sub}</div>` : ''}
@@ -1142,14 +1283,107 @@ function crHtmlVtmBrujah(img, name, cls, custom, showClan, clan) {
 }
 
 // ─── Style: VTM Lasombra ──────────────────────────────────────────────────────
+// Obtenebration — cast shadows playing on a dim-lit wall. The background is a
+// faintly lit surface; dark shadow shapes crawl across it BEHIND the figure
+// (so they read as real shadows, not a veil over the token), while only faint
+// shadow falls onto the figure and a cold light wanders so they "play".
 function crHtmlVtmLasombra(img, name, cls, custom, showClan, clan) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
   const clanLabel = showClan ? (clan || 'LASOMBRA') : null;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  // Arms of the Abyss — each tentacle is ONE filled SVG path (a tapering ribbon
+  // bent into an S). Its `d` morphs between phase-shifted shapes via SMIL, so a
+  // wave runs along it and it writhes as a single continuous shape — cheap
+  // (8 paths, not 100+ divs), smooth, and clearly a tentacle, not grass.
+  // Coords are in a 0–100 viewBox stretched to the screen (≈ percent).
+  const tentPath = (bx, by, ang, len, wid, phase, waves, curl) => {
+    const N = 16, a = ang * Math.PI / 180, pa = a + Math.PI / 2;
+    const dx = Math.cos(a), dy = Math.sin(a), px = Math.cos(pa), py = Math.sin(pa);
+    const Lp = [], Rp = [];
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      const dist = t * len;
+      const bend = Math.sin(t * Math.PI * waves + phase) * curl * t;
+      const cx = bx + dx * dist + px * bend;
+      const cy = by + dy * dist + py * bend;
+      const hw = wid * (1 - t * 0.94) / 2;
+      Lp.push([cx - px * hw, cy - py * hw]);
+      Rp.push([cx + px * hw, cy + py * hw]);
+    }
+    let d = `M${Lp[0][0].toFixed(1)},${Lp[0][1].toFixed(1)}`;
+    for (let i = 1; i <= N; i++) d += `L${Lp[i][0].toFixed(1)},${Lp[i][1].toFixed(1)}`;
+    for (let i = N; i >= 0; i--) d += `L${Rp[i][0].toFixed(1)},${Rp[i][1].toFixed(1)}`;
+    return d + 'Z';
+  };
+  // 36 tentacles, fully randomised so nothing moves in sync. Origins spread
+  // across the bottom edge and the two sides, each with its own length, width,
+  // speed, wave count, curl and starting phase.
+  const TWO_PI = Math.PI * 2;
+  const tentDefs = Array.from({ length: 36 }, () => {
+    const r = Math.random();
+    let bx, by, ang;
+    if (r < 0.62) {                 // up from the bottom edge
+      bx = rnd(0, 100); by = rnd(102, 114); ang = -90 + rnd(-24, 24);
+    } else if (r < 0.81) {          // in from the left
+      bx = rnd(-6, 2);  by = rnd(32, 96);  ang = -40 + rnd(-22, 22);
+    } else {                        // in from the right
+      bx = rnd(98, 106); by = rnd(32, 96); ang = -140 + rnd(-22, 22);
+    }
+    // Keep central tentacles short so they don't rise up through the portrait
+    // (whose mask edges are transparent) and appear to stand in front of it.
+    const central = bx > 26 && bx < 74;
+    return {
+      bx, by, ang,
+      len:   central ? rnd(26, 44) : rnd(40, 68),
+      wid:   rnd(7, 16),
+      dur:   rnd(24, 62),           // wide spread of speeds → no shared cycle
+      waves: rnd(1.4, 2.3),
+      curl:  rnd(13, 24),
+      ph:    rnd(0, TWO_PI),
+    };
+  });
+  const tentacles = tentDefs.map((d) => {
+    const phs = [d.ph, d.ph + Math.PI * 0.66, d.ph + Math.PI * 1.33, d.ph + Math.PI * 2];
+    const vals = phs.map(p => tentPath(d.bx, d.by, d.ang, d.len, d.wid, p, d.waves, d.curl)).join(';');
+    const del = (rnd(0, 8)).toFixed(2);                       // staggered emergence
+    return `<path class="cr-las-arm" style="--del:${del}s" d="${vals.split(';')[0]}">`
+         + `<animate attributeName="d" values="${vals}" dur="${d.dur}s" calcMode="spline"`
+         + ` keyTimes="0;0.33;0.66;1" keySplines="0.4 0 0.6 1;0.4 0 0.6 1;0.4 0 0.6 1"`
+         + ` repeatCount="indefinite"/></path>`;
+  }).join('');
+
+  // A few distant bats far back in the gloom — small, faint, slow
+  const bats = Array.from({ length: 3 }, () => {
+    const y = rnd(8, 58).toFixed(1);
+    const sz = rnd(1.2, 2.2).toFixed(2);
+    const dur = rnd(13, 20).toFixed(1);
+    const del = rnd(0, 12).toFixed(1);
+    const drift = rnd(-10, 10).toFixed(0);
+    const flap = rnd(0.4, 0.6).toFixed(2);
+    return `<span class="cr-las-bat" style="top:${y}%;--sz:${sz}rem;--dur:${dur}s;--del:${del}s;--drift:${drift}vh;--op:0.28;--blur:4px;--flap:${flap}s">`
+         + `<span class="cr-las-bat-i">🦇</span></span>`;
+  }).join('');
+
   return `
-    <div class="cr-las-fog"></div>
+    <div class="cr-las-wall"></div>
+    <div class="cr-las-glint"></div>
+    <div class="cr-las-bats">${bats}</div>
+    <svg class="cr-las-tentacles" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="cr-las-tgrad" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0"   stop-color="rgba(1,0,4,0.96)"/>
+          <stop offset="0.55" stop-color="rgba(2,0,6,0.6)"/>
+          <stop offset="1"   stop-color="rgba(2,0,6,0.05)"/>
+        </linearGradient>
+      </defs>
+      ${tentacles}
+    </svg>
     <div class="cr-las-portrait">${img}</div>
+    <div class="cr-las-cast cr-las-cast--1"></div>
     <div class="cr-las-vignette"></div>
     <div class="cr-las-text">
+      <img class="cr-crest cr-crest--void" src="modules/character-reveal/assets/Lasombra_symbol.png" alt="">
       ${clanLabel ? `<div class="cr-las-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
       ${name ? `<div class="cr-las-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-las-sub">${sub}</div>` : ''}
@@ -1174,6 +1408,7 @@ function crHtmlVtmHecata(img, name, cls, custom, showClan, clan) {
     <div class="cr-hec-wisps">${wisps}</div>
     <div class="cr-hec-vignette"></div>
     <div class="cr-hec-text">
+      <img class="cr-crest cr-crest--bone" src="modules/character-reveal/assets/Hecata_symbol.png" alt="">
       ${clanLabel ? `<div class="cr-hec-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
       ${name ? `<div class="cr-hec-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-hec-sub">${sub}</div>` : ''}
@@ -1182,25 +1417,41 @@ function crHtmlVtmHecata(img, name, cls, custom, showClan, clan) {
 }
 
 // ─── Style: VTM Banu Haqim ───────────────────────────────────────────────────
-function crHtmlVtmBanuHaqim(img, name, cls, custom, showClan, clan) {
+function crHtmlVtmTzimisce(img, name, cls, custom, showClan, clan) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
-  const clanLabel = showClan ? (clan || 'BANU HAQIM') : null;
-  const drops = Array.from({length: 6}, (_, i) => {
-    const x   = (12 + i * 14 + (i % 2) * 5).toFixed(0);
-    const del = (0.8 + i * 0.25).toFixed(2);
-    const dur = (1.6 + (i % 3) * 0.3).toFixed(1);
-    return `<div class="cr-ban-drop" style="--x:${x}%;--del:${del}s;--dur:${dur}s"></div>`;
-  }).join('');
+  const clanLabel = showClan ? (clan || 'TZIMISCE') : null;
+  const eyes = _crBuildTziEyes();
   return `
-    <div class="cr-ban-bg"></div>
-    <div class="cr-ban-portrait">${img}</div>
-    <div class="cr-ban-slash"></div>
-    <div class="cr-ban-drops">${drops}</div>
-    <div class="cr-ban-vignette"></div>
-    <div class="cr-ban-text">
-      ${clanLabel ? `<div class="cr-ban-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
-      ${name ? `<div class="cr-ban-name">${name}</div>` : ''}
-      ${sub  ? `<div class="cr-ban-sub">${sub}</div>` : ''}
+    <svg class="cr-tzi-filters" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="cr-tzi-flesh" x="-60%" y="-60%" width="220%" height="220%">
+          <feTurbulence type="turbulence" baseFrequency="0.010 0.016" numOctaves="2" seed="7" result="noise">
+            <animate attributeName="baseFrequency"
+              values="0.010 0.016;0.015 0.011;0.008 0.020;0.013 0.013;0.010 0.016"
+              dur="200s" repeatCount="indefinite"/>
+          </feTurbulence>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="16" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <filter id="cr-tzi-eye-warp" x="-40%" y="-40%" width="180%" height="180%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.028 0.04" numOctaves="2" seed="11" result="en">
+            <animate attributeName="baseFrequency"
+              values="0.028 0.04;0.045 0.028;0.022 0.05;0.034 0.034;0.028 0.04"
+              dur="13s" repeatCount="indefinite"/>
+          </feTurbulence>
+          <feDisplacementMap in="SourceGraphic" in2="en" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+    </svg>
+    <div class="cr-tzi-bg"></div>
+    <img class="cr-tzi-bg-img" src="modules/character-reveal/assets/tzimisce back.png" alt="">
+    <div class="cr-tre-eyes">${eyes}</div>
+    <div class="cr-tzi-portrait">${img}</div>
+    <div class="cr-tzi-vignette"></div>
+    <div class="cr-tzi-text">
+      <img class="cr-crest cr-crest--flesh" src="modules/character-reveal/assets/Tzimisce_symbol.png" alt="">
+      ${clanLabel ? `<div class="cr-tzi-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
+      ${name ? `<div class="cr-tzi-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-tzi-sub">${sub}</div>` : ''}
     </div>
   `;
 }
