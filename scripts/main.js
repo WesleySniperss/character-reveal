@@ -7,8 +7,8 @@ const CR_ID = 'character-reveal';
 
 // Static background assets per style — preloaded before animation to avoid mid-animation GPU freeze
 const CR_BG_ASSETS = {
-  'vtm-toreador':  'Toreador1.jpg',
-  'vtm-ventrue':   'Ventrue back.png',
+  'vtm-toreador':  'Toreador1.webp',
+  'vtm-ventrue':   'Ventrue back.webp',
   'vtm-nosferatu': null,
   'vtm-gangrel':   null,
   'vtm-brujah':    null,
@@ -368,6 +368,9 @@ async function crShowOverlay(data) {
     setTimeout(() => el.remove(), 500);
   };
 
+  // Leone is a drive-through: once the portrait tears away, close on its own
+  if (data.style === 'leone') setTimeout(() => { if (el.isConnected) dismiss(); }, 2500);
+
   // Only the GM can close the overlay
   el.addEventListener('click', () => {
     if (typeof game !== 'undefined' && game.user && !game.user.isGM) return;
@@ -716,7 +719,7 @@ function crHtmlVtmVentrue(img, name, cls, custom, showClan, clan) {
     <div class="cr-vtv-portrait">${img}</div>
     <div class="cr-vtv-vignette"></div>
     <div class="cr-vtv-text">
-      <img class="cr-crest cr-crest--gold" src="modules/character-reveal/assets/Ventrue_symbol.png" alt="">
+      ${showClan ? `<img class="cr-crest cr-crest--gold" src="modules/character-reveal/assets/Ventrue_symbol.webp" alt="">` : ""}
       ${clanLabel ? `<div class="cr-vtv-clan">✦ &nbsp; ${clanLabel.toUpperCase().split('').join(' ')} &nbsp; ✦</div>` : ''}
       ${name ? `<div class="cr-vtv-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-vtv-sub">${sub}</div>`   : ''}
@@ -778,7 +781,7 @@ function crHtmlVtmMalkavian(img, name, cls, custom, actorImg, showClan, clan) {
     <div class="cr-vtm-vignette"></div>
     <div class="cr-vtm-whispers">${whispers}</div>
     <div class="cr-vtm-text">
-      <img class="cr-crest cr-crest--purple" src="modules/character-reveal/assets/Malkavian_symbol.png" alt="">
+      ${showClan ? `<img class="cr-crest cr-crest--purple" src="modules/character-reveal/assets/Malkavian_symbol.webp" alt="">` : ""}
       <div class="cr-vtm-name-wrap">
         <span class="cr-vtm-name-r" aria-hidden="true">${name}</span>
         <span class="cr-vtm-name">${name}</span>
@@ -861,7 +864,7 @@ function crHtmlVtmToreador(img, name, cls, custom, showClan, clan) {
     return `<div class="cr-tor-bg-quote" style="${st}">${q}</div>`;
   }).join('\n        ');
   return `
-    <img class="cr-tor-bg-img" src="modules/${CR_ID}/assets/Toreador1.jpg" decoding="async" alt="">
+    <img class="cr-tor-bg-img" src="modules/${CR_ID}/assets/Toreador1.webp" decoding="async" alt="">
     <div class="cr-tor-bg"></div>
     <div class="cr-tor-bg-decor">${quoteHtml}</div>
     <div class="cr-tor-canvas">${img}</div>
@@ -869,7 +872,7 @@ function crHtmlVtmToreador(img, name, cls, custom, showClan, clan) {
     <div class="cr-tor-vignette"></div>
     <div class="cr-tor-petals">${petals}</div>
     <div class="cr-tor-text">
-      <img class="cr-crest cr-crest--rose" src="modules/character-reveal/assets/Toreador_symbol.png" alt="">
+      ${showClan ? `<img class="cr-crest cr-crest--rose" src="modules/character-reveal/assets/Toreador_symbol.webp" alt="">` : ""}
       ${clanLabel ? `<div class="cr-tor-clan">✦ ${clanLabel.toUpperCase().split('').join(' ')} ✦</div>` : ''}
       ${name ? `<div class="cr-tor-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-tor-sub">${sub}</div>` : ''}
@@ -991,94 +994,179 @@ function crTreBlink(wrap) {
 }
 
 // ─── Style: VTM Tremere ───────────────────────────────────────────────────────
-// Blood sorcery: a ritual circle of hermetic sigils turns around the figure,
-// crimson light pulses like a heartbeat, large glyphs flicker across the frame.
-// Tremere descend from the Order of Hermes; their Thaumaturgy is medieval
-// ceremonial magic — so the glyphs are planetary, zodiacal & alchemical,
-// the actual language of hermetic ritual, not Norse runes.
-const CR_TRE_RUNES = [
-  // Seven classical planets + outer
-  '☉','☽','☿','♀','♂','♃','♄','♅','♆',
-  // Zodiac
-  '♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓',
-  // Lunar nodes, dark moon, aspects, pentacle
-  '☊','☋','⚸','⚹','☌','☍','⛤',
-  // Alchemical elements & prime substances
-  '🜁','🜂','🜃','🜄','🜍','🜔','🜚','🜛','🜞','🜟',
+// Blood sorcery: a ritual circle turns around the figure, crimson light pulses
+// like a heartbeat, vitae floats in zero-g, ritual sigils and grim clan lore
+// flicker round the edges.
+
+// Phrases that define the Tremere — grim lore, not slogans: the diablerie of
+// Saulot, the fall of Vienna, the Pyramid, the cost of every drop.
+const CR_TRE_WORDS = [
+  'A GOD DIED FOR OUR THIRST', 'THE BLOOD REMEMBERS WHAT YOU FORGET',
+  'VIENNA BURNED. WE ENDURE.', 'THE PYRAMID HAS NO EXIT',
+  'THREE DROPS AND YOU ARE OURS', 'EVERY OATH IS A CHAIN',
+  'NO PRAYER. ONLY PROCEDURE.', 'KNOWLEDGE HAS A BLOOD PRICE',
+  'WE TRADED HEAVEN FOR FORMULAE', 'WHAT WE BIND CANNOT BE UNBOUND',
+  'SAULOT SLEEPS IN OUR VEINS', 'THE CHANTRY DOOR LOCKS FROM OUTSIDE',
+  'YOUR VITAE, OUR INK', 'CURSED BY CAINE, CHAINED BY CONTRACT',
+  'TREMERE STILL DREAMS BENEATH VIENNA', 'THE SEVEN ARE WATCHING',
+  'ASK NOT WHAT THE BLOOD COSTS', 'WE MADE ETERNITY A LABORATORY',
+  'GORATRIX SENDS HIS REGARDS', 'THAUMATURGY IS A DEBT',
+  'THE BOND IS BROKEN. THE HABIT REMAINS.', 'HOUSE AND CLAN ABOVE ALL',
+  'EVERY FAVOUR IS A LEASH', 'THE BLOOD IS THE PROOF',
 ];
 
-// Tremere V5 disciplines + hermetic invocations (grimoire Latin, V for U)
-const CR_TRE_WORDS = [
-  'SANGVIS', 'VITAE', 'THAVMATVRGIA', 'ORDO HERMETICVS',
-  'AVSPEX', 'DOMINATE', 'BLOOD SORCERY', 'PER SANGVINEM',
-  'SCIENTIA POTENTIA EST', 'SANGVINIS POTENTIA', 'TREMERE',
+// Hand-drawn ritual seals (inline SVG, stroke = currentColor) — layered
+// ceremonial sigils: staffs, crossbars, curls, ticks and anchor points.
+const CR_TRE_SIGILS = [
+  // sealed staff: curled crown, three shrinking crossbars, footed base
+  '<path d="M20 3v34M16 37h8"/><path d="M9 11h22M12 18h16M15 25h10"/><path d="M13 6q7-6 14 0"/><circle class="f" cx="9" cy="11" r="1.2"/><circle class="f" cx="31" cy="11" r="1.2"/>',
+  // hexagram lattice with axial spurs and bound centre
+  '<path d="M20 4 33 26H7Z"/><path d="M20 36 7 14h26Z"/><path d="M20 4v6M20 30v6"/><circle class="f" cx="20" cy="20" r="1.5"/>',
+  // lightning seal crossed by two offset bars, tipped ends
+  '<path d="M26 3 11 19h18L14 37"/><path d="M7 25h10M23 13h10"/><circle class="f" cx="26" cy="3" r="1.3"/><circle class="f" cx="14" cy="37" r="1.3"/>',
+  // forked rod: three prongs with end-ticks, barred shaft, anchored foot
+  '<path d="M20 37V16M20 16 9 5M20 16 31 5M20 16V4"/><path d="M6 7l5-2M29 5l5 2M17 4h6"/><path d="M13 30h14"/><circle class="f" cx="20" cy="37" r="1.4"/>',
+  // twin bound diamonds with flanking ticks and joint-points
+  '<path d="M20 4 29 13 20 22 11 13Z"/><path d="M20 22 27 29 20 36 13 29Z"/><path d="M5 13h4M31 13h4"/><circle class="f" cx="20" cy="13" r="1.2"/><circle class="f" cx="20" cy="29" r="1"/>',
+  // arched seal over descending chevrons, crowned point
+  '<path d="M8 12q12-12 24 0"/><path d="M12 18l8 7 8-7M14 26l6 6 6-6"/><path d="M20 6v4"/><circle class="f" cx="20" cy="34" r="1.3"/>',
+  // key of the chantry: diamond bow, toothed shaft
+  '<path d="M20 4 26 10 20 16 14 10Z"/><path d="M20 16v20M20 26h6v4M20 31h5"/><circle class="f" cx="20" cy="10" r="1.2"/>',
+  // crossed scythes bound at the base
+  '<path d="M10 6q14 8 6 30M30 6q-14 8-6 30"/><path d="M12 33h16"/><circle class="f" cx="20" cy="18" r="1.3"/>',
+  // ladder of broken rungs
+  '<path d="M14 4v32M26 4v32"/><path d="M14 10h7M19 18h7M14 26h7M19 32h7"/><circle class="f" cx="20" cy="4" r="1.1"/>',
+  // horned crown over a footed staff
+  '<path d="M8 5l12 12L32 5"/><path d="M20 17v18M14 35h12"/><circle class="f" cx="8" cy="5" r="1.2"/><circle class="f" cx="32" cy="5" r="1.2"/>',
+  // angular labyrinth spiral
+  '<path d="M26 6H8v26h24V12H14v14h12v-8"/><circle class="f" cx="26" cy="18" r="1.2"/>',
+  // chalice seal: staff through bar, wide arc beneath, flanking points
+  '<path d="M20 4v24M12 14h16"/><path d="M8 24q12 16 24 0"/><circle class="f" cx="20" cy="4" r="1.4"/><circle class="f" cx="8" cy="24" r="1.1"/><circle class="f" cx="32" cy="24" r="1.1"/>',
 ];
 
 function crHtmlVtmTremere(img, name, cls, custom, showClan, clan) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
   const clanLabel = showClan ? (clan || 'TREMERE') : null;
 
-  // Sigils evenly spaced around the rotating outer ring
-  const ringCount = 12;
-  const sigils = Array.from({ length: ringCount }, (_, i) => {
-    const a  = (360 / ringCount) * i;
-    const ch = CR_TRE_RUNES[(i * 2) % CR_TRE_RUNES.length];
-    return `<span class="cr-tre-sigil" style="--a:${a}deg">${ch}</span>`;
-  }).join('');
-
-  // Alchemical glyphs drifting up through the dark
-  const floats = Array.from({ length: 9 }, (_, i) => {
-    const x   = (6 + i * 10.5).toFixed(0);
-    const ch  = CR_TRE_RUNES[(i * 5 + 3) % CR_TRE_RUNES.length];
-    const del = (i * 0.8).toFixed(1);
-    const dur = (9 + (i % 4) * 2.5).toFixed(1);
-    const sz  = (0.8 + (i % 3) * 0.55).toFixed(2);
-    return `<span class="cr-tre-float" style="--x:${x}%;--del:${del}s;--dur:${dur}s;--sz:${sz}rem">${ch}</span>`;
-  }).join('');
-
   const rnd = (a, b) => a + Math.random() * (b - a);
 
-  // Large casting glyphs flickering into being — kept to the side bands and top
-  // strip so they frame the figure instead of covering the portrait.
-  const runes = Array.from({ length: 16 }, () => {
-    const r = Math.random();
-    let x, y;
-    if      (r < 0.42) { x = rnd(1, 15);  y = rnd(4, 92); }   // left band
-    else if (r < 0.84) { x = rnd(85, 99); y = rnd(4, 92); }   // right band
-    else               { x = rnd(20, 80); y = rnd(1, 5);  }   // top strip
-    const sz  = (Math.pow(Math.random(), 1.8) * 7 + 2.4).toFixed(2);  // 2.4–9.4rem, weighted small
-    const del = rnd(0, 7).toFixed(1);
-    const dur = rnd(4, 9).toFixed(1);
-    const rot = rnd(-26, 26).toFixed(0);
-    const ch  = CR_TRE_RUNES[Math.floor(Math.random() * CR_TRE_RUNES.length)];
-    return `<span class="cr-tre-rune" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;--sz:${sz}rem;--del:${del}s;--dur:${dur}s;--rot:${rot}deg">${ch}</span>`;
+  const shuffle = (a) => {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
+  // Clan phrases — random pool pick, edge-anchored slots, staggered visibility
+  // windows so they read one after another. Their rects are remembered so the
+  // sigils can avoid them.
+  const occupied = [];
+  const pool = shuffle(CR_TRE_WORDS.slice());
+  const wordSlots = shuffle([
+    { side: 'left',  y0: 2,  y1: 6  },
+    { side: 'right', y0: 2,  y1: 6  },
+    { side: 'left',  y0: 8,  y1: 12 },
+    { side: 'right', y0: 73, y1: 77 },
+    { side: 'left',  y0: 79, y1: 83 },
+  ]);
+  // Clan phrases reveal the clan — render them only when the clan box is on.
+  const words = !showClan ? '' : pool.slice(0, 5).map((w, i) => {
+    const s    = wordSlots[i];
+    const edge = rnd(2.5, 7);
+    const y    = rnd(s.y0, s.y1);
+    const wEst = w.length * 1.0 + 2;
+    const x0   = s.side === 'left' ? edge : 100 - edge - wEst;
+    occupied.push({ x0, x1: x0 + wEst, y0: y - 1.5, y1: y + 3.5 });
+    const del  = (i * 3.3 + rnd(0, 0.8)).toFixed(1);
+    return `<span class="cr-tre-word" style="${s.side}:${edge.toFixed(1)}%;top:${y.toFixed(1)}%;--del:${del}s;--dur:16.5s">${w}</span>`;
   }).join('');
 
-  // Latin invocations & discipline names — kept to the top and bottom strips,
-  // clear of the portrait, flickering like grimoire script.
-  const words = Array.from({ length: 5 }, (_, i) => {
-    const top = i % 2 === 0;
-    const x   = rnd(14, 60).toFixed(1);
-    const y   = (top ? rnd(1.5, 5) : rnd(76, 80)).toFixed(1);
-    const del = rnd(0, 8).toFixed(1);
-    const dur = rnd(8, 13).toFixed(1);
-    const rot = rnd(-7, 7).toFixed(0);
-    const w   = CR_TRE_WORDS[Math.floor(Math.random() * CR_TRE_WORDS.length)];
-    return `<span class="cr-tre-word" style="left:${x}%;top:${y}%;--del:${del}s;--dur:${dur}s;--rot:${rot}deg">${w}</span>`;
+  // Ritual seals — scattered anywhere on screen except the face, the name
+  // block, the phrases and each other. Unique designs per reveal.
+  const noGo = [
+    { x0: 28, x1: 72, y0: 8,  y1: 62 },    // face core
+    { x0: 16, x1: 84, y0: 68, y1: 100 },   // name block
+  ];
+  const sigilPick = shuffle(CR_TRE_SIGILS.slice()).slice(0, 6);
+  const runes = sigilPick.map((sg) => {
+    const sz   = rnd(2.4, 5);
+    const half = sz * 0.55;                              // ≈ rem→vw half-extent
+    for (let attempt = 0; attempt < 60; attempt++) {
+      const x = rnd(3 + half, 97 - half);
+      const y = rnd(4 + half, 84 - half);
+      const r = { x0: x - half, x1: x + half, y0: y - half, y1: y + half };
+      const hit = [...noGo, ...occupied].some(b =>
+        r.x0 < b.x1 + 1.5 && r.x1 > b.x0 - 1.5 && r.y0 < b.y1 + 1.5 && r.y1 > b.y0 - 1.5);
+      if (hit) continue;
+      occupied.push(r);
+      const del = rnd(0, 7).toFixed(1);
+      const dur = rnd(4, 9).toFixed(1);
+      const rot = rnd(-18, 18).toFixed(0);
+      return `<span class="cr-tre-rune" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;--sz:${sz.toFixed(2)}rem;--del:${del}s;--dur:${dur}s;--rot:${rot}deg">`
+           + `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">${sg}</svg></span>`;
+    }
+    return '';                                           // no room — drop it
+  }).join('');
+
+  // Blood sorcery: spheres of vitae floating free in zero gravity. Drops are
+  // placed on a stratified grid (one per cell, jittered) and each orbit is
+  // capped below half a cell — so no two drops can ever overlap.
+  const cells = [];
+  for (let cx = 0; cx < 6; cx++) for (let cy = 0; cy < 5; cy++) cells.push([cx, cy]);
+  for (let i = cells.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cells[i], cells[j]] = [cells[j], cells[i]];
+  }
+  const CW = 84 / 6, CH = 80 / 5;                                    // cell size (vw/vh)
+  const blood = cells.slice(0, 24).map(([cx, cy]) => {
+    const x   = (8 + (cx + 0.5) * CW + rnd(-0.12, 0.12) * CW).toFixed(1);
+    const y   = (8 + (cy + 0.5) * CH + rnd(-0.12, 0.12) * CH).toFixed(1);
+    const sz  = (Math.pow(Math.random(), 1.7) * 12 + 4).toFixed(1);
+    const del = (rnd(-30, 0)).toFixed(1);                            // already mid-drift
+    const dur = rnd(27, 51).toFixed(1);
+    const rx  = rnd(1.8, 3.4), ry = rnd(1.8, 3.2);                   // capped loop radii
+    const ph  = rnd(0, Math.PI * 2);
+    const spin = Math.random() < 0.5 ? 1 : -1;
+    // four points around an irregular ellipse — a smooth closed orbit
+    const px = [], py = [];
+    for (let k = 0; k < 4; k++) {
+      const a = ph + spin * k * (Math.PI / 2) + rnd(-0.35, 0.35);
+      const m = rnd(0.78, 1.18);
+      px.push((Math.cos(a) * rx * m).toFixed(1));
+      py.push((Math.sin(a) * ry * m).toFixed(1));
+    }
+    const sdur = rnd(10.5, 24).toFixed(1);                           // own spin period
+    const sdir = Math.random() < 0.5 ? 360 : -360;
+    return `<div class="cr-tre-blood" style="left:${x}%;top:${y}%;--sz:${sz}px;--del:${del}s;--dur:${dur}s;`
+         + `--x0:${px[0]}vw;--y0:${py[0]}vh;--x1:${px[1]}vw;--y1:${py[1]}vh;`
+         + `--x2:${px[2]}vw;--y2:${py[2]}vh;--x3:${px[3]}vw;--y3:${py[3]}vh">`
+         + `<div class="cr-tre-blood-body" style="--sdur:${sdur}s;--sdir:${sdir}deg"></div></div>`;
   }).join('');
 
   return `
     <div class="cr-tre-bg"></div>
+    <div class="cr-tre-mist cr-tre-mist--1"></div>
+    <div class="cr-tre-mist cr-tre-mist--2"></div>
     <div class="cr-tre-glow"></div>
-    <div class="cr-tre-ring cr-tre-ring--o"><div class="cr-tre-sigils">${sigils}</div></div>
+    <div class="cr-tre-ring cr-tre-ring--o"></div>
     <div class="cr-tre-ring cr-tre-ring--m"></div>
     <div class="cr-tre-ring cr-tre-ring--i"></div>
-    <div class="cr-tre-floats">${floats}</div>
+    <svg class="cr-tre-circlework" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <!-- the Seven: heptagram counter-rotating against the rings -->
+      <g opacity=".5">
+        <animateTransform attributeName="transform" type="rotate"
+          from="360 50 50" to="0 50 50" dur="110s" repeatCount="indefinite"/>
+        <path d="M50 22.5 61.9 74.8 28.5 32.9 76.8 56.1 38.1 74.8 71.5 32.9 23.2 56.1Z"
+              fill="none" stroke="rgba(170,38,42,.55)" stroke-width=".45" stroke-linejoin="round"/>
+      </g>
+    </svg>
     <div class="cr-tre-portrait">${img}</div>
+    <div class="cr-tre-blood-drops">${blood}</div>
     <div class="cr-tre-runes">${runes}${words}</div>
     <div class="cr-tre-vignette"></div>
     <div class="cr-tre-text">
-      <img class="cr-crest cr-crest--blood" src="modules/character-reveal/assets/Tremere_symbol.png" alt="">
+      ${showClan ? `<img class="cr-crest cr-crest--blood" src="modules/character-reveal/assets/Tremere_symbol.webp" alt="">` : ""}
       ${clanLabel ? `<div class="cr-tre-clan">✦ ${clanLabel.toUpperCase().split('').join(' ')} ✦</div>` : ''}
       ${name ? `<div class="cr-tre-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-tre-sub">${sub}</div>` : ''}
@@ -1104,7 +1192,7 @@ function _crBuildTziEyes() {
     { bw: 460, bh: 198 },
     { bw: 340, bh: 146 },
   ];
-  const irisImg = 'modules/character-reveal/assets/png-transparent-human-eye-iris-lens-color-dente-photography-people-human-body-thumbnail.png';
+  const irisImg = 'modules/character-reveal/assets/png-transparent-human-eye-iris-lens-color-dente-photography-people-human-body-thumbnail.webp';
 
   const eyes = eyeDefs.map((e, i) => {
     const rnd = (a, b) => a + Math.random() * (b - a);
@@ -1184,7 +1272,7 @@ function crHtmlVtmNosferatu(img, name, cls, custom, showClan, clan) {
     <div class="cr-nos-glow"></div>
     <div class="cr-nos-vignette"></div>
     <div class="cr-nos-text">
-      <img class="cr-crest cr-crest--shadow" src="modules/character-reveal/assets/Nosferatu_symbol.png" alt="">
+      ${showClan ? `<img class="cr-crest cr-crest--shadow" src="modules/character-reveal/assets/Nosferatu_symbol.webp" alt="">` : ""}
       ${clanLabel ? `<div class="cr-nos-clan">⌇ ${clanLabel.toUpperCase()} ⌇</div>` : ''}
       ${name ? `<div class="cr-nos-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-nos-sub">${sub}</div>` : ''}
@@ -1198,7 +1286,6 @@ function crHtmlVtmGangrel(img, name, cls, custom, showClan, clan) {
   const clanLabel = showClan ? (clan || 'GANGREL') : null;
   return `
     <div class="cr-gan-bg"></div>
-    <div class="cr-gan-wolf"></div>
     <div class="cr-gan-portrait">${img}</div>
     <div class="cr-gan-mist"></div>
     <div class="cr-gan-moon-ground"></div>
@@ -1206,7 +1293,7 @@ function crHtmlVtmGangrel(img, name, cls, custom, showClan, clan) {
     <div class="cr-gan-ground"></div>
     <div class="cr-gan-vignette"></div>
     <div class="cr-gan-text">
-      <img class="cr-crest cr-crest--earth" src="modules/character-reveal/assets/Gangrel_symbol.png" alt="">
+      ${showClan ? `<img class="cr-crest cr-crest--earth" src="modules/character-reveal/assets/Gangrel_symbol.webp" alt="">` : ""}
       ${clanLabel ? `<div class="cr-gan-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
       ${name ? `<div class="cr-gan-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-gan-sub">${sub}</div>` : ''}
@@ -1245,7 +1332,7 @@ function crHtmlVtmBrujah(img, name, cls, custom, showClan, clan) {
 
   return `
     <div class="cr-brj-bg"></div>
-    <img class="cr-brj-graffiti" src="modules/character-reveal/assets/brujah graffiti2.jpg" alt="">
+    <img class="cr-brj-graffiti" src="modules/character-reveal/assets/brujah graffiti2.webp" alt="">
     <div class="cr-brj-portrait">${img}</div>
     <div class="cr-brj-fire">
       <div class="cr-brj-fire-base"></div>
@@ -1263,18 +1350,18 @@ function crHtmlVtmBrujah(img, name, cls, custom, showClan, clan) {
     <div class="cr-brj-sparks">${sparks}</div>
     <div class="cr-brj-strobes"></div>
     <div class="cr-brj-uv"></div>
-    <div class="cr-brj-glyphs">
-      <div class="cr-brj-glyph"           style="--gx:7%;  --gy:11%; --del:1.2s; --gdur:10s">ANARCH</div>
-      <div class="cr-brj-glyph cr-brj-gb" style="--gx:70%; --gy:8%;  --del:2.4s; --gdur:8.5s">REVOLT</div>
-      <div class="cr-brj-glyph"           style="--gx:4%;  --gy:44%; --del:3.6s; --gdur:12s">BRUJAH</div>
-      <div class="cr-brj-glyph cr-brj-gb" style="--gx:72%; --gy:52%; --del:1.8s; --gdur:9.3s">NO MASTERS</div>
-      <div class="cr-brj-glyph"           style="--gx:35%; --gy:5%;  --del:2.8s; --gdur:11s">BEAST WITHIN</div>
-      <div class="cr-brj-glyph cr-brj-gb" style="--gx:6%;  --gy:70%; --del:4.1s; --gdur:13s">FRENZY</div>
-      <div class="cr-brj-glyph"           style="--gx:66%; --gy:74%; --del:3.0s; --gdur:8s">RAGE</div>
-      <div class="cr-brj-glyph cr-brj-gb" style="--gx:44%; --gy:36%; --del:5.2s; --gdur:9.8s">FREEDOM</div>
-    </div>
+    ${!showClan ? '' : `<div class="cr-brj-glyphs">
+      <div class="cr-brj-glyph" style="--gx:4%;  --gy:7%;  --del:.8s;  --gdur:10s;  --grot:-7deg">ANARCH</div>
+      <div class="cr-brj-glyph" style="--gx:63%; --gy:12%; --del:1.1s; --gdur:8.5s; --grot:5deg">REVOLT</div>
+      <div class="cr-brj-glyph" style="--gx:10%; --gy:31%; --del:.9s;  --gdur:12s;  --grot:-12deg">BRUJAH</div>
+      <div class="cr-brj-glyph" style="--gx:72%; --gy:38%; --del:1.2s; --gdur:9.3s; --grot:8deg">NO MASTERS</div>
+      <div class="cr-brj-glyph" style="--gx:35%; --gy:3%;  --del:1s;   --gdur:11s;  --grot:3deg">BEAST WITHIN</div>
+      <div class="cr-brj-glyph" style="--gx:3%;  --gy:55%; --del:1.3s; --gdur:13s;  --grot:-9deg">FRENZY</div>
+      <div class="cr-brj-glyph" style="--gx:80%; --gy:60%; --del:.85s; --gdur:8s;   --grot:11deg">RAGE</div>
+      <div class="cr-brj-glyph" style="--gx:20%; --gy:80%; --del:1.15s;--gdur:9.8s; --grot:-4deg">FREEDOM</div>
+    </div>`}
     <div class="cr-brj-text">
-      <img class="cr-crest cr-crest--fire" src="modules/character-reveal/assets/Brujah_symbol.png" alt="">
+      ${showClan ? `<img class="cr-crest cr-crest--fire" src="modules/character-reveal/assets/Brujah_symbol.webp" alt="">` : ""}
       ${clanLabel ? `<div class="cr-brj-clan">${clanLabel.toUpperCase()}</div>` : ''}
       ${name ? `<div class="cr-brj-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-brj-sub">${sub}</div>` : ''}
@@ -1383,7 +1470,7 @@ function crHtmlVtmLasombra(img, name, cls, custom, showClan, clan) {
     <div class="cr-las-cast cr-las-cast--1"></div>
     <div class="cr-las-vignette"></div>
     <div class="cr-las-text">
-      <img class="cr-crest cr-crest--void" src="modules/character-reveal/assets/Lasombra_symbol.png" alt="">
+      ${showClan ? `<img class="cr-crest cr-crest--void" src="modules/character-reveal/assets/Lasombra_symbol.webp" alt="">` : ""}
       ${clanLabel ? `<div class="cr-las-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
       ${name ? `<div class="cr-las-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-las-sub">${sub}</div>` : ''}
@@ -1393,22 +1480,34 @@ function crHtmlVtmLasombra(img, name, cls, custom, showClan, clan) {
 
 // ─── Style: VTM Tzimisce ─────────────────────────────────────────────────────
 // ─── Style: VTM Hecata ───────────────────────────────────────────────────────
+// Clan of death — a graveyard of clawing hands (provided background image).
+// The field slowly pulls back while the necromancer drifts closer, both easing
+// to a halt.
 function crHtmlVtmHecata(img, name, cls, custom, showClan, clan) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
   const clanLabel = showClan ? (clan || 'HECATA') : null;
-  const wisps = Array.from({length: 7}, (_, i) => {
-    const x   = (5 + (i * 13 + 7) % 88).toFixed(0);
-    const del = (i * 0.6).toFixed(1);
-    const dur = (4 + (i % 3) * 1.5).toFixed(1);
-    return `<div class="cr-hec-wisp" style="--x:${x}%;--del:${del}s;--dur:${dur}s"></div>`;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  // A little ash sifting down over the field
+  const ash = Array.from({ length: 12 }, () => {
+    const x   = rnd(2, 98).toFixed(1);
+    const sz  = rnd(2, 4.2).toFixed(1);
+    const del = (rnd(-24, 0)).toFixed(1);            // already mid-fall
+    const dur = rnd(16, 30).toFixed(1);
+    const dx  = rnd(-9, 9).toFixed(1);
+    const rot = rnd(-260, 260).toFixed(0);
+    const op  = rnd(.3, .6).toFixed(2);
+    return `<div class="cr-hec-ash" style="left:${x}%;--sz:${sz}px;--del:${del}s;--dur:${dur}s;--dx:${dx}vw;--rot:${rot}deg;--op:${op}"></div>`;
   }).join('');
+
   return `
     <div class="cr-hec-bg"></div>
+    <img class="cr-hec-bg-img" src="modules/character-reveal/assets/hecatabacground.webp" alt="">
+    <div class="cr-hec-ashes">${ash}</div>
     <div class="cr-hec-portrait">${img}</div>
-    <div class="cr-hec-wisps">${wisps}</div>
     <div class="cr-hec-vignette"></div>
     <div class="cr-hec-text">
-      <img class="cr-crest cr-crest--bone" src="modules/character-reveal/assets/Hecata_symbol.png" alt="">
+      ${showClan ? `<img class="cr-crest cr-crest--bone" src="modules/character-reveal/assets/Hecata_symbol.webp" alt="">` : ""}
       ${clanLabel ? `<div class="cr-hec-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
       ${name ? `<div class="cr-hec-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-hec-sub">${sub}</div>` : ''}
@@ -1443,12 +1542,12 @@ function crHtmlVtmTzimisce(img, name, cls, custom, showClan, clan) {
       </defs>
     </svg>
     <div class="cr-tzi-bg"></div>
-    <img class="cr-tzi-bg-img" src="modules/character-reveal/assets/tzimisce back.png" alt="">
+    <img class="cr-tzi-bg-img" src="modules/character-reveal/assets/tzimisce back.webp" alt="">
     <div class="cr-tre-eyes">${eyes}</div>
     <div class="cr-tzi-portrait">${img}</div>
     <div class="cr-tzi-vignette"></div>
     <div class="cr-tzi-text">
-      <img class="cr-crest cr-crest--flesh" src="modules/character-reveal/assets/Tzimisce_symbol.png" alt="">
+      ${showClan ? `<img class="cr-crest cr-crest--flesh" src="modules/character-reveal/assets/Tzimisce_symbol.webp" alt="">` : ""}
       ${clanLabel ? `<div class="cr-tzi-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
       ${name ? `<div class="cr-tzi-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-tzi-sub">${sub}</div>` : ''}
