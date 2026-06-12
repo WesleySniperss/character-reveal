@@ -65,6 +65,30 @@ Hooks.once('vtools.ready', () => {
   });
 });
 
+// ─── Fallback: native scene-control button when VTools is missing ──────────────
+Hooks.on('getSceneControlButtons', (controls) => {
+  if (game.modules.get('vtools')?.active) return;   // VTools hosts the button
+  if (!game.user?.isGM) return;
+
+  const tool = {
+    name:  CR_ID,
+    title: 'Character Reveal',
+    icon:  'fas fa-masks-theater',
+    button: true,
+    onClick:  crOpenDialog,           // v12 and earlier
+    onChange: () => crOpenDialog(),   // v13 SceneControls
+  };
+
+  // v13: controls/tools are records; v12: arrays
+  const tokenCtrl = Array.isArray(controls)
+    ? controls.find(c => c.name === 'token' || c.name === 'tokens')
+    : (controls.tokens ?? controls.token);
+  if (!tokenCtrl) return;
+
+  if (Array.isArray(tokenCtrl.tools)) tokenCtrl.tools.push(tool);
+  else tokenCtrl.tools[tool.name] = { ...tool, order: Object.keys(tokenCtrl.tools).length };
+});
+
 // ─── Socket ────────────────────────────────────────────────────────────────────
 Hooks.once('ready', () => {
   game.socket.on(`module.${CR_ID}`, async data => {
