@@ -2,7 +2,7 @@
    CHARACTER REVEAL — reveal.css
    ═══════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bangers&family=Rye&family=Special+Elite&family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700;900&family=IM+Fell+English:ital@0;1&family=UnifrakturMaguntia&family=Caveat:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Uncial+Antiqua&family=Barlow+Condensed:wght@700;800&family=Pirata+One&family=MedievalSharp&family=Playfair+Display:wght@700&family=Great+Vibes&family=Permanent+Marker&family=Rock+Salt&family=Black+Ops+One&family=Sedgwick+Ave+Display&family=Wallpoet&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bangers&family=Rye&family=Special+Elite&family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700;900&family=IM+Fell+English:ital@0;1&family=UnifrakturMaguntia&family=Caveat:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Uncial+Antiqua&family=Barlow+Condensed:wght@700;800&family=Pirata+One&family=MedievalSharp&family=Playfair+Display:wght@700&family=Great+Vibes&family=Permanent+Marker&family=Rock+Salt&family=Black+Ops+One&family=Sedgwick+Ave+Display&family=Wallpoet&family=Butcherman&display=swap');
 
 /* ─── Base overlay ───────────────────────────────────────────── */
 #cr-overlay {
@@ -1396,11 +1396,13 @@
   inset: 0;
   animation: cr-lo-ride 2.5s linear both;
 }
-/* Slam in → 1.5s of slow-mo drifting across the middle → slam out. 2.5s total. */
+/* Slam in → slow-mo crawl around the centre → slam out. Perfectly mirrored:
+   the exit easing is the exact time-reverse of the entry easing, and the
+   slow-mo drift is small & symmetric about centre (0). 2.5s total. */
 @keyframes cr-lo-ride {
-  0%   { transform: translateX(-115vw); animation-timing-function: cubic-bezier(.1,.8,.2,1); }
-  20%  { transform: translateX(-2.5vw); animation-timing-function: linear; }
-  80%  { transform: translateX(2.5vw);  animation-timing-function: cubic-bezier(.8,0,.9,.2); }
+  0%   { transform: translateX(-115vw); animation-timing-function: cubic-bezier(.12,.78,.22,1); }
+  22%  { transform: translateX(-1.5vw); animation-timing-function: linear; }
+  78%  { transform: translateX(1.5vw);  animation-timing-function: cubic-bezier(.78,0,.88,.22); }
   100% { transform: translateX(115vw); }
 }
 .cr-lo-portrait .cr-portrait-img {
@@ -1476,7 +1478,7 @@
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
   height: 26%;
   display: flex; flex-direction: column; justify-content: center;
-  padding: 0 clamp(32px, 6vw, 80px);
+  padding: 0 clamp(32px, 6vw, 80px) clamp(18px,3.2vh,42px);
   gap: 4px;
 }
 
@@ -1559,7 +1561,7 @@
   animation: cr-vtv-kenburns 22s ease-out both;
 }
 @keyframes cr-vtv-kenburns {
-  from { transform: scale(1.18) translateY(2%); }
+  from { transform: scale(1.07) translateY(1%); }
   to   { transform: scale(1)    translateY(0); }
 }
 
@@ -1700,7 +1702,8 @@
   position: absolute; z-index: 10;
   bottom: 0; left: 0; right: 0; height: 27%;
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 6px;
+  align-items: center; justify-content: flex-end; gap: 6px;
+  padding-bottom: clamp(18px,3.2vh,42px);
   background: linear-gradient(to top, rgba(2,5,15,.92) 45%, rgba(2,5,15,.5) 75%, transparent 100%);
 }
 
@@ -1778,8 +1781,8 @@
 .cr-vtm-shard-img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: center 25%;
+  object-fit: contain;
+  object-position: center top;
   filter: saturate(.65) brightness(.86) contrast(1.05);
   display: block; border-radius: 0 !important;
 }
@@ -1890,7 +1893,7 @@
 }
 .cr-vtm-preimage-img {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; object-position: center 25%;
+  object-fit: contain; object-position: center top;
   filter: saturate(.65) brightness(.88) contrast(1.05);
 }
 .cr-vtm-preimage-vignette {
@@ -2225,7 +2228,8 @@
 .cr-tor-text {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
   height: 26%; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 5px;
+  align-items: center; justify-content: flex-end; gap: 5px;
+  padding-bottom: clamp(18px,3.2vh,42px);
   overflow: visible;
   animation: cr-fade-in .9s ease 2s both;
 }
@@ -2291,7 +2295,7 @@
 }
 .cr-nos-bg .cr-portrait-img {
   width: 100%; height: 100%;
-  object-fit: cover; object-position: center 15%;
+  object-fit: contain; object-position: center top;
   filter: saturate(0) brightness(.52) contrast(1.42) sepia(.06);
   /* emerge runs first (5s); flicker takes over at 6s — listed last so it wins filter */
   animation: cr-nos-emerge 5s ease .4s both, cr-nos-flicker 30s linear 6s forwards;
@@ -2369,8 +2373,8 @@
 .cr-nos-text {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
   height: 24%; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; text-align: center;
-  padding: 0 clamp(24px, 5vw, 60px); gap: 4px;
+  align-items: center; justify-content: flex-end; text-align: center;
+  padding: 0 clamp(24px, 5vw, 60px) clamp(18px,3.2vh,42px); gap: 4px;
   background: linear-gradient(to top, rgba(0,0,0,.92) 42%, transparent 100%);
   animation: cr-fade-in .8s ease 4s both;
 }
@@ -2552,8 +2556,8 @@
 .cr-gan-text {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 8;
   height: 22%; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; text-align: center;
-  padding: 0 clamp(24px, 5vw, 60px); gap: 4px;
+  align-items: center; justify-content: flex-end; text-align: center;
+  padding: 0 clamp(24px, 5vw, 60px) clamp(18px,3.2vh,42px); gap: 4px;
   background: linear-gradient(to top, rgba(2,4,8,.96) 52%, rgba(2,4,8,.55) 78%, transparent 100%);
   animation: cr-fade-in .9s ease 2.8s both;
 }
@@ -2821,8 +2825,8 @@
 .cr-brj-text {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 6;
   height: 22%; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; text-align: center;
-  padding: 0 clamp(24px, 5vw, 60px); gap: 3px;
+  align-items: center; justify-content: flex-end; text-align: center;
+  padding: 0 clamp(24px, 5vw, 60px) clamp(18px,3.2vh,42px); gap: 3px;
 }
 .cr-brj-clan {
   font-family: 'Cinzel', serif;
@@ -3317,7 +3321,8 @@
 .cr-tre-text {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
   height: 26%; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 6px;
+  align-items: center; justify-content: flex-end; gap: 6px;
+  padding-bottom: clamp(18px,3.2vh,42px);
   background: linear-gradient(to top, rgba(5,0,10,.95) 48%, rgba(5,0,10,.52) 76%, transparent 100%);
   animation: cr-fade-in .8s ease 2.9s both;
 }
@@ -3330,9 +3335,9 @@
 }
 
 .cr-tre-name {
-  font-family: 'UnifrakturMaguntia', cursive;
-  font-size: clamp(2rem, 5vw, 4.5rem);
-  letter-spacing: .06em; line-height: 1.2;
+  font-family: 'Cinzel Decorative', 'Cinzel', serif; font-weight: 900;
+  font-size: clamp(1.8rem, 4.4vw, 4rem);
+  letter-spacing: .08em; line-height: 1.2;
   color: #d4c8b8;
   text-shadow:
     0 0 18px rgba(175, 10, 28, .95),
@@ -3479,8 +3484,8 @@
 .cr-las-text {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 4;
   height: 20%; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; text-align: center;
-  padding: 0 clamp(24px,5vw,60px); gap: 4px;
+  align-items: center; justify-content: flex-end; text-align: center;
+  padding: 0 clamp(24px,5vw,60px) clamp(18px,3.2vh,42px); gap: 4px;
   background: linear-gradient(to top, rgba(0,0,0,.96) 55%, transparent 100%);
   animation: cr-fade-in 1s ease 2.8s both;
 }
@@ -3519,7 +3524,7 @@
   position: absolute; inset: 0; z-index: 0;
   width: 100%; height: 100%;
   object-fit: cover; object-position: center;
-  filter: brightness(0.35) saturate(.75);
+  filter: brightness(1.12) saturate(.78);
   transform-origin: 50% 46%;
   animation: cr-hec-bg-pull 32s cubic-bezier(.12,.66,.2,1) both, cr-fade-in 2s ease both;
 }
@@ -3580,8 +3585,8 @@
 .cr-hec-text {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 5;
   height: 20%; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; text-align: center;
-  padding: 0 clamp(24px,5vw,60px); gap: 4px;
+  align-items: center; justify-content: flex-end; text-align: center;
+  padding: 0 clamp(24px,5vw,60px) clamp(18px,3.2vh,42px); gap: 4px;
   background: linear-gradient(to top, rgba(2,6,7,.97) 55%, transparent 100%);
   animation: cr-fade-in 1s ease 3s both;
 }
@@ -3633,13 +3638,13 @@
   position: absolute; top: 5%; bottom: 22%; left: 18%; right: 18%;
   z-index: 1; overflow: hidden;
   animation: cr-fade-in 2.8s ease 1.2s both;
-  -webkit-mask-image: radial-gradient(ellipse 82% 90% at 50% 42%, black 45%, rgba(0,0,0,.6) 65%, transparent 84%);
-  mask-image:         radial-gradient(ellipse 82% 90% at 50% 42%, black 45%, rgba(0,0,0,.6) 65%, transparent 84%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 96% at 50% 44%, black 84%, rgba(0,0,0,.9) 94%, transparent 100%);
+  mask-image:         radial-gradient(ellipse 90% 96% at 50% 44%, black 84%, rgba(0,0,0,.9) 94%, transparent 100%);
 }
 .cr-tzi-portrait .cr-portrait-img {
   width: 100%; height: 100%;
   object-fit: contain; object-position: center top;
-  filter: saturate(.22) brightness(.72) contrast(1.38) hue-rotate(-8deg);
+  filter: saturate(.4) brightness(.97) contrast(1.18) hue-rotate(-8deg);
 }
 
 /* Flesh cracks radiating from centre */
@@ -3667,8 +3672,8 @@
 .cr-tzi-text {
   position: absolute; bottom: 0; left: 0; right: 0; z-index: 4;
   height: 20%; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; text-align: center;
-  padding: 0 clamp(24px,5vw,60px); gap: 4px;
+  align-items: center; justify-content: flex-end; text-align: center;
+  padding: 0 clamp(24px,5vw,60px) clamp(18px,3.2vh,42px); gap: 4px;
   background: linear-gradient(to top, rgba(12,2,0,.97) 55%, transparent 100%);
   animation: cr-fade-in 1s ease 3s both;
 }
@@ -3677,10 +3682,10 @@
   letter-spacing: .5em; color: rgba(160,75,45,.72);
 }
 .cr-tzi-name {
-  font-family: 'MedievalSharp', cursive;
-  font-size: clamp(1.6rem,4vw,3.8rem);
-  color: rgba(215,185,155,.92); letter-spacing: .04em; line-height: 1.05;
-  text-shadow: 0 0 18px rgba(180,70,35,.5), 0 2px 12px #000;
+  font-family: 'Pirata One', 'UnifrakturMaguntia', serif;
+  font-size: clamp(1.9rem,4.6vw,4.3rem);
+  color: rgba(218,180,150,.94); letter-spacing: .03em; line-height: 1.1;
+  text-shadow: 0 0 20px rgba(180,55,28,.55), 0 0 42px rgba(120,20,10,.3), 0 2px 12px #000;
 }
 .cr-tzi-sub {
   font-family: 'IM Fell English', serif; font-style: italic;
