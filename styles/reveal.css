@@ -1409,7 +1409,7 @@
   width: 100%; height: 100%;
   object-fit: cover;
   object-position: center 8%;
-  filter: contrast(1.12) brightness(.88) saturate(.75);
+  filter: contrast(1.12) brightness(.9) saturate(.75);
 }
 
 .cr-lo-grain {
@@ -1783,7 +1783,7 @@
   width: 100%; height: 100%;
   object-fit: contain;
   object-position: center top;
-  filter: saturate(.65) brightness(.86) contrast(1.05);
+  filter: saturate(.65) brightness(.9) contrast(1.05);
   display: block; border-radius: 0 !important;
 }
 
@@ -1894,7 +1894,7 @@
 .cr-vtm-preimage-img {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: contain; object-position: center top;
-  filter: saturate(.65) brightness(.88) contrast(1.05);
+  filter: saturate(.65) brightness(.9) contrast(1.05);
 }
 .cr-vtm-preimage-vignette {
   position: absolute; inset: 0;
@@ -2296,30 +2296,30 @@
 .cr-nos-bg .cr-portrait-img {
   width: 100%; height: 100%;
   object-fit: contain; object-position: center top;
-  filter: saturate(0) brightness(.52) contrast(1.42) sepia(.06);
+  filter: saturate(0) brightness(.9) contrast(1.2) sepia(.04);
   /* emerge runs first (5s); flicker takes over at 6s — listed last so it wins filter */
   animation: cr-nos-emerge 5s ease .4s both, cr-nos-flicker 30s linear 6s forwards;
 }
 @keyframes cr-nos-flicker {
   /* Brief B&W silence, then THE 3rd flash (flashes 1-2 were in cr-nos-emerge) */
-  0%, 1.5%   { filter: saturate(0) brightness(.52) contrast(1.42) sepia(.06); }
+  0%, 1.5%   { filter: saturate(0) brightness(.9) contrast(1.2) sepia(.04); }
   2%         { filter: saturate(0) brightness(.9)  contrast(1.26) sepia(.02); }
   2.4%       { filter: saturate(0) brightness(.45) contrast(1.52) sepia(.08); }
   2.8%       { filter: saturate(0) brightness(1.15) contrast(1.18) sepia(.01); }
-  3.5%       { filter: saturate(0) brightness(.52) contrast(1.42) sepia(.06); }
+  3.5%       { filter: saturate(0) brightness(.9) contrast(1.2) sepia(.04); }
   /* Color gain starts immediately — 3.5% → 20% (~5s) */
   8%         { filter: saturate(.22) brightness(.58) contrast(1.36) sepia(.03); }
   13%        { filter: saturate(.52) brightness(.68) contrast(1.26) sepia(.01); }
   17%        { filter: saturate(.82) brightness(.78) contrast(1.16); }
-  20%        { filter: saturate(1)   brightness(.85) contrast(1.12); }
+  20%        { filter: saturate(1)   brightness(.9) contrast(1.12); }
   /* Full color — long stable stretch */
-  20%, 62%   { filter: saturate(1) brightness(.85) contrast(1.12); }
+  20%, 62%   { filter: saturate(1) brightness(.9) contrast(1.12); }
   62.5%      { filter: saturate(1) brightness(1.4) contrast(1.04); }
-  63%        { filter: saturate(1) brightness(.85) contrast(1.12); }
-  63%, 86%   { filter: saturate(1) brightness(.85) contrast(1.12); }
+  63%        { filter: saturate(1) brightness(.9) contrast(1.12); }
+  63%, 86%   { filter: saturate(1) brightness(.9) contrast(1.12); }
   86.5%      { filter: saturate(1) brightness(1.2) contrast(1.08); }
-  87%        { filter: saturate(1) brightness(.85) contrast(1.12); }
-  100%       { filter: saturate(1) brightness(.85) contrast(1.12); }
+  87%        { filter: saturate(1) brightness(.9) contrast(1.12); }
+  100%       { filter: saturate(1) brightness(.9) contrast(1.12); }
 }
 @keyframes cr-nos-emerge {
   0%, 12%  { filter: saturate(0) brightness(0) contrast(2); }
@@ -2328,7 +2328,7 @@
   16%      { filter: saturate(0) brightness(1.9) contrast(2.2); }  /* flash 2 */
   18%      { filter: saturate(0) brightness(.02) contrast(2); }
   32%      { filter: saturate(0) brightness(.12) contrast(1.9); }
-  100%     { filter: saturate(0) brightness(.52) contrast(1.42) sepia(.06); }
+  100%     { filter: saturate(0) brightness(.9) contrast(1.2) sepia(.04); }
 }
 
 /* Black veil — lifts after lightning sequence */
@@ -2439,13 +2439,15 @@
 .cr-gan-portrait .cr-portrait-img {
   max-height: 88vh; max-width: 72%; width: auto; height: auto;
   object-fit: contain;
-  filter: saturate(.5) brightness(.95) contrast(1.12);
+  filter: saturate(.5) brightness(.9) contrast(1.12);
+  -webkit-mask-image: radial-gradient(ellipse 84% 90% at 50% 44%, #000 66%, rgba(0,0,0,.5) 86%, transparent 100%);
+  mask-image:         radial-gradient(ellipse 84% 90% at 50% 44%, #000 66%, rgba(0,0,0,.5) 86%, transparent 100%);
   animation: cr-gan-portrait-in 3.4s ease .5s both;
 }
 @keyframes cr-gan-portrait-in {
   0%   { opacity: 0; filter: saturate(0) brightness(.08) contrast(1.2) blur(10px); }
   38%  { filter: saturate(.22) brightness(.55) contrast(1.16) blur(3px); }
-  100% { opacity: 1; filter: saturate(.5) brightness(.95) contrast(1.12) blur(0); }
+  100% { opacity: 1; filter: saturate(.5) brightness(.9) contrast(1.12) blur(0); }
 }
 
 /* Drifting ground mist */
@@ -2610,11 +2612,13 @@
 .cr-brj-portrait {
   position: absolute; top: 1%; bottom: 1%; left: 6%; right: 6%;
   overflow: hidden; z-index: 1;
+  -webkit-mask-image: radial-gradient(ellipse 86% 92% at 50% 44%, #000 68%, rgba(0,0,0,.5) 87%, transparent 100%);
+  mask-image:         radial-gradient(ellipse 86% 92% at 50% 44%, #000 68%, rgba(0,0,0,.5) 87%, transparent 100%);
 }
 .cr-brj-portrait .cr-portrait-img {
   width: 100%; height: 100%;
   object-fit: contain; object-position: center center;
-  filter: saturate(.6) contrast(1.32) brightness(.8);
+  filter: saturate(.6) contrast(1.32) brightness(.9);
   animation:
     cr-brj-portrait-in 1.1s ease .12s both,
     cr-brj-portrait-glitch 11s linear 2s infinite;
@@ -2622,30 +2626,30 @@
 @keyframes cr-brj-portrait-in {
   0%   { opacity: 0; filter: saturate(0) contrast(2) brightness(.12); }
   35%  { opacity: 1; filter: saturate(.2) brightness(.45); }
-  100% { filter: saturate(.6) contrast(1.32) brightness(.8); }
+  100% { filter: saturate(.6) contrast(1.32) brightness(.9); }
 }
 @keyframes cr-brj-portrait-glitch {
-  0%,   9.7%  { transform: none; filter: saturate(.6) contrast(1.32) brightness(.8); }
-  9.9%         { transform: translateX(-5px) scaleX(1.01); filter: saturate(1.5) contrast(1.9) brightness(.95) hue-rotate(28deg); }
+  0%,   9.7%  { transform: none; filter: saturate(.6) contrast(1.32) brightness(.9); }
+  9.9%         { transform: translateX(-5px) scaleX(1.01); filter: saturate(1.5) contrast(1.9) brightness(.9) hue-rotate(28deg); }
   10.15%       { transform: translateX(4px);               filter: saturate(.3) contrast(2.1) brightness(.72) hue-rotate(-22deg); }
-  10.4%        { transform: none; filter: saturate(.6) contrast(1.32) brightness(.8); }
+  10.4%        { transform: none; filter: saturate(.6) contrast(1.32) brightness(.9); }
 
-  37.6%, 37.7% { transform: none; filter: saturate(.6) contrast(1.32) brightness(.8); }
+  37.6%, 37.7% { transform: none; filter: saturate(.6) contrast(1.32) brightness(.9); }
   37.9%         { transform: translateX(7px) translateY(-2px); filter: saturate(1.8) contrast(1.7) brightness(1) hue-rotate(-35deg); }
   38.15%        { transform: translateX(-4px) translateY(1px); filter: saturate(.4) contrast(2) brightness(.78); }
-  38.5%         { transform: none; filter: saturate(.6) contrast(1.32) brightness(.8); }
+  38.5%         { transform: none; filter: saturate(.6) contrast(1.32) brightness(.9); }
 
-  66.7%, 66.8% { transform: none; filter: saturate(.6) contrast(1.32) brightness(.8); }
+  66.7%, 66.8% { transform: none; filter: saturate(.6) contrast(1.32) brightness(.9); }
   67%           { transform: translateX(-8px) scaleX(1.02); filter: saturate(2.1) contrast(1.8) brightness(.88) hue-rotate(42deg); }
   67.2%         { transform: translateX(6px);                filter: saturate(.5) contrast(2.2) brightness(.92) hue-rotate(-28deg); }
   67.45%        { transform: translateX(-2px);               filter: saturate(1.2) contrast(1.6) brightness(.85); }
-  67.7%         { transform: none; filter: saturate(.6) contrast(1.32) brightness(.8); }
+  67.7%         { transform: none; filter: saturate(.6) contrast(1.32) brightness(.9); }
 
-  88.9%, 89%   { transform: none; filter: saturate(.6) contrast(1.32) brightness(.8); }
+  88.9%, 89%   { transform: none; filter: saturate(.6) contrast(1.32) brightness(.9); }
   89.15%        { transform: translateX(3px); filter: saturate(1.3) contrast(1.5) brightness(.9) hue-rotate(18deg); }
-  89.4%         { transform: none; filter: saturate(.6) contrast(1.32) brightness(.8); }
+  89.4%         { transform: none; filter: saturate(.6) contrast(1.32) brightness(.9); }
 
-  100% { transform: none; filter: saturate(.6) contrast(1.32) brightness(.8); }
+  100% { transform: none; filter: saturate(.6) contrast(1.32) brightness(.9); }
 }
 
 /* Fire container — mix-blend-mode:screen makes dark=transparent, bright=additive */
@@ -3294,12 +3298,14 @@
   position: absolute;
   top: 5%; bottom: 26%; left: 20%; right: 20%;
   z-index: 2; overflow: hidden;
+  -webkit-mask-image: radial-gradient(ellipse 86% 92% at 50% 44%, #000 68%, rgba(0,0,0,.5) 87%, transparent 100%);
+  mask-image:         radial-gradient(ellipse 86% 92% at 50% 44%, #000 68%, rgba(0,0,0,.5) 87%, transparent 100%);
   animation: cr-tre-portrait-in 2.6s ease 0.7s both;
 }
 .cr-tre-portrait .cr-portrait-img {
   width: 100%; height: 100%;
   object-fit: contain; object-position: center top;
-  filter: saturate(.78) contrast(1.08) brightness(.88);
+  filter: saturate(.78) contrast(1.08) brightness(.9);
   transform: translateZ(0);
 }
 @keyframes cr-tre-portrait-in {
@@ -3388,7 +3394,7 @@
 .cr-las-portrait .cr-portrait-img {
   width: 100%; height: 100%;
   object-fit: contain; object-position: center top;
-  filter: saturate(.2) brightness(.82) contrast(1.18);
+  filter: saturate(.55) brightness(.9) contrast(1.08);
 }
 @keyframes cr-las-portrait-in {
   from { opacity: 0; }
@@ -3556,12 +3562,14 @@
 .cr-hec-portrait {
   position: absolute; top: 6%; bottom: 22%; left: 19%; right: 19%;
   z-index: 3; overflow: hidden;
+  -webkit-mask-image: radial-gradient(ellipse 86% 92% at 50% 44%, #000 68%, rgba(0,0,0,.5) 87%, transparent 100%);
+  mask-image:         radial-gradient(ellipse 86% 92% at 50% 44%, #000 68%, rgba(0,0,0,.5) 87%, transparent 100%);
   animation: cr-hec-develop 3.4s ease 0.5s both;
 }
 .cr-hec-portrait .cr-portrait-img {
   width: 100%; height: 100%;
   object-fit: contain; object-position: center top;
-  filter: grayscale(.6) brightness(.62) contrast(1.22);
+  filter: grayscale(.5) brightness(.9) contrast(1.12);
   transform-origin: 50% 40%;
   animation: cr-hec-portrait-push 32s cubic-bezier(.12,.66,.2,1) both;
 }
@@ -3644,7 +3652,7 @@
 .cr-tzi-portrait .cr-portrait-img {
   width: 100%; height: 100%;
   object-fit: contain; object-position: center top;
-  filter: saturate(.4) brightness(.97) contrast(1.18) hue-rotate(-8deg);
+  filter: saturate(.4) brightness(.9) contrast(1.18) hue-rotate(-8deg);
 }
 
 /* Flesh cracks radiating from centre */
