@@ -2439,13 +2439,13 @@
 .cr-gan-portrait .cr-portrait-img {
   max-height: 88vh; max-width: 72%; width: auto; height: auto;
   object-fit: contain;
-  filter: saturate(.32) brightness(.68) contrast(1.2);
+  filter: saturate(.5) brightness(.95) contrast(1.12);
   animation: cr-gan-portrait-in 3.4s ease .5s both;
 }
 @keyframes cr-gan-portrait-in {
-  0%   { opacity: 0; filter: saturate(0) brightness(.06) contrast(1.2) blur(10px); }
-  38%  { filter: saturate(.14) brightness(.35) contrast(1.18) blur(3px); }
-  100% { opacity: 1; filter: saturate(.32) brightness(.68) contrast(1.2) blur(0); }
+  0%   { opacity: 0; filter: saturate(0) brightness(.08) contrast(1.2) blur(10px); }
+  38%  { filter: saturate(.22) brightness(.55) contrast(1.16) blur(3px); }
+  100% { opacity: 1; filter: saturate(.5) brightness(.95) contrast(1.12) blur(0); }
 }
 
 /* Drifting ground mist */

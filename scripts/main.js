@@ -395,11 +395,13 @@ async function crShowOverlay(data) {
   // Leone is a drive-through: once the portrait tears away, close on its own
   if (data.style === 'leone') setTimeout(() => { if (el.isConnected) dismiss(); }, 2500);
 
-  // Only the GM can close the overlay
-  el.addEventListener('click', () => {
-    if (typeof game !== 'undefined' && game.user && !game.user.isGM) return;
+  const isGM = !(typeof game !== 'undefined' && game.user && !game.user.isGM);
 
+  // Anyone can close their own overlay (each client has its own copy) —
+  // except Malkavian, whose crack/close two-step only the GM controls.
+  el.addEventListener('click', () => {
     if (el.dataset.style === 'vtm-malkavian') {
+      if (!isGM) return;
       // Malkavian: click 1 = crack, click 2 = close
       if (!el.classList.contains('cr-mal-cracked')) {
         el.querySelector('.cr-vtm-preimage')
