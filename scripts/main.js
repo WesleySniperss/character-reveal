@@ -92,7 +92,9 @@ Hooks.on('getSceneControlButtons', (controls) => {
 // ─── Socket ────────────────────────────────────────────────────────────────────
 Hooks.once('ready', () => {
   game.socket.on(`module.${CR_ID}`, async data => {
-    if (data.action === 'reveal') await crShowOverlay(data);
+    if (data.action === 'reveal')  await crShowOverlay(data);
+    if (data.action === 'crack')   crCrackOverlay();
+    if (data.action === 'dismiss') crDismissOverlay();
   });
 });
 
@@ -339,10 +341,32 @@ function crPlaySound(src) {
   }
 }
 
+// Apply Malkavian's crack to the current overlay on this client (used by
+// the crack socket action so the GM's first click shows on every screen).
+function crCrackOverlay() {
+  const el = document.getElementById('cr-overlay');
+  if (!el || el.dataset.style !== 'vtm-malkavian') return;
+  if (el.classList.contains('cr-mal-cracked')) return;
+  el.querySelector('.cr-vtm-preimage')
+    ?.insertAdjacentHTML('beforeend', CR_MAL_PRECRACK_SVG);
+  el.classList.add('cr-mal-cracked');
+}
+
+// Close the current overlay on this client (used by the dismiss socket
+// action so the GM can clear overlays players can't close themselves).
+function crDismissOverlay() {
+  const el = document.getElementById('cr-overlay');
+  if (!el) return;
+  el._crAbort?.abort();
+  el.classList.remove('cr-visible');
+  setTimeout(() => el.remove(), 500);
+}
+
 async function crShowOverlay(data) {
   crPlaySound(data.soundSrc || null);
 
-  document.getElementById('cr-overlay')?.remove();
+  const existing = document.getElementById('cr-overlay');
+  if (existing) { existing._crAbort?.abort(); existing.remove(); }
 
   // Decode ALL images before overlay appears — prevents mid-animation GPU upload freeze.
   // CSS url() backgrounds load separately from <img> tags; both must be pre-decoded.
@@ -378,6 +402,14 @@ async function crShowOverlay(data) {
     if (el.dataset.style === 'tarantino') crTaRun(el);
   }));
 
+  // Every listener tied to this overlay shares one AbortController, so a
+  // single dismiss() — local or via the dismiss socket action — removes the
+  // click AND document-level keydown handlers together. Prevents the stale
+  // keydown listeners that used to pile up on each reveal.
+  const ac = new AbortController();
+  const { signal } = ac;
+  el._crAbort = ac;
+
   // Mute button — stops propagation so it doesn't close the overlay
   el.querySelector('.cr-mute-btn').addEventListener('click', function(e) {
     e.stopPropagation();
@@ -385,9 +417,10 @@ async function crShowOverlay(data) {
     crSetMuted(muted);
     this.classList.toggle('cr-mute-btn--off', muted);
     this.querySelector('i').className = `fas ${muted ? 'fa-volume-xmark' : 'fa-volume-high'}`;
-  });
+  }, { signal });
 
   const dismiss = () => {
+    ac.abort();
     el.classList.remove('cr-visible');
     setTimeout(() => el.remove(), 500);
   };
@@ -395,30 +428,39 @@ async function crShowOverlay(data) {
   // Leone is a drive-through: once the portrait tears away, close on its own
   if (data.style === 'leone') setTimeout(() => { if (el.isConnected) dismiss(); }, 2500);
 
-  const isGM = !(typeof game !== 'undefined' && game.user && !game.user.isGM);
+  const isGM = !!game?.user?.isGM;
 
-  // Anyone can close their own overlay (each client has its own copy) —
-  // except Malkavian, whose crack/close two-step only the GM controls.
+  // Malkavian's crack/close is GM-only and broadcast to every client, since
+  // players can't dismiss it themselves; every other style closes locally.
+  const closeMalkavian = () => {
+    game.socket.emit(`module.${CR_ID}`, { action: 'dismiss' });
+    dismiss();
+  };
+
   el.addEventListener('click', () => {
     if (el.dataset.style === 'vtm-malkavian') {
       if (!isGM) return;
-      // Malkavian: click 1 = crack, click 2 = close
+      // click 1 = crack (broadcast), click 2 = close (broadcast)
       if (!el.classList.contains('cr-mal-cracked')) {
-        el.querySelector('.cr-vtm-preimage')
-          ?.insertAdjacentHTML('beforeend', CR_MAL_PRECRACK_SVG);
-        el.classList.add('cr-mal-cracked');
+        crCrackOverlay();
+        game.socket.emit(`module.${CR_ID}`, { action: 'crack' });
       } else {
-        dismiss();
+        closeMalkavian();
       }
     } else {
       dismiss();
     }
-  });
+  }, { signal });
 
-  const onKey = e => {
-    if (e.key === 'Escape') { dismiss(); document.removeEventListener('keydown', onKey); }
-  };
-  document.addEventListener('keydown', onKey);
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (el.dataset.style === 'vtm-malkavian') {
+      if (!isGM) return;               // players can't Escape-close Malkavian
+      closeMalkavian();
+    } else {
+      dismiss();
+    }
+  }, { signal });
 }
 
 // ─── Master HTML builder ────────────────────────────────────────────────────────
