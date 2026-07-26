@@ -2,12 +2,13 @@
    CHARACTER REVEAL — reveal.css
    ═══════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bangers&family=Rye&family=Special+Elite&family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700;900&family=IM+Fell+English:ital@0;1&family=UnifrakturMaguntia&family=Caveat:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Uncial+Antiqua&family=Barlow+Condensed:wght@700;800&family=Pirata+One&family=MedievalSharp&family=Playfair+Display:wght@700&family=Great+Vibes&family=Permanent+Marker&family=Rock+Salt&family=Black+Ops+One&family=Sedgwick+Ave+Display&family=Wallpoet&family=Butcherman&display=swap');
-
-/* Cyrillic-capable fallbacks (Ukrainian і ї є ґ) — Latin-only display
-   fonts above have no Cyrillic glyphs, so without these the browser
-   falls back to cursive → Comic Sans on Windows. */
-@import url('https://fonts.googleapis.com/css2?family=Forum&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Ruslan+Display&family=PT+Mono&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;600;700&family=Russo+One&family=Marck+Script&display=swap');
+/* One combined request instead of two: this stylesheet is parsed on every
+   world load, so each extra @import is a blocking round-trip even when the
+   module is never opened. Font binaries themselves stay lazy (display=swap).
+   The second half are Cyrillic-capable fallbacks (Ukrainian і ї є ґ) — the
+   Latin-only display fonts have no Cyrillic glyphs, and without a fallback
+   the browser drops to cursive → Comic Sans on Windows. */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bangers&family=Rye&family=Special+Elite&family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@700;900&family=IM+Fell+English:ital@0;1&family=UnifrakturMaguntia&family=Caveat:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Uncial+Antiqua&family=Barlow+Condensed:wght@700;800&family=Pirata+One&family=MedievalSharp&family=Playfair+Display:wght@700&family=Great+Vibes&family=Permanent+Marker&family=Rock+Salt&family=Black+Ops+One&family=Sedgwick+Ave+Display&family=Wallpoet&family=Butcherman&family=Forum&family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Ruslan+Display&family=PT+Mono&family=PT+Serif:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;600;700&family=Russo+One&family=Marck+Script&display=swap');
 
 /* ─── Base overlay ───────────────────────────────────────────── */
 #cr-overlay {

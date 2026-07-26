@@ -1,9 +1,28 @@
 ﻿// ═══════════════════════════════════════════════════════════════
 // CHARACTER REVEAL — main.js
-// Foundry VTT v13 · no import/export (classic script)
+// Foundry VTT v13–v14 · no import/export (classic script)
 // ═══════════════════════════════════════════════════════════════
 
 const CR_ID = 'character-reveal';
+
+// ─── v13/v14 compatibility shims ──────────────────────────────────────────────
+// v13 moved these classes under the `foundry.*` namespaces and deprecated the
+// bare globals; v14 removes the globals outright. Resolve lazily (at call time,
+// not load time) and prefer the namespaced class, falling back to the global.
+function crAudioHelper() {
+  return foundry.audio?.AudioHelper ?? globalThis.AudioHelper ?? null;
+}
+function crFilePicker() {
+  const ns = foundry.applications?.apps?.FilePicker;
+  return ns?.implementation ?? ns ?? globalThis.FilePicker ?? null;
+}
+
+// Escape untrusted actor data before it goes into innerHTML/attributes —
+// a name or custom line containing " & < > used to break the markup.
+function crEsc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
 
 // Static background assets per style — preloaded before animation to avoid mid-animation GPU freeze
 const CR_BG_ASSETS = {
@@ -108,27 +127,39 @@ function crOpenDialog() {
     ui.notifications.warn('Character Reveal: select a token on the scene first.');
     return;
   }
-  new CRDialog(token.actor).render(true);
+  const Cls = crDialogClass();
+  if (!Cls) {
+    ui.notifications.error('Character Reveal: this Foundry version is not supported.');
+    return;
+  }
+  new Cls(token.actor).render({ force: true });
 }
 
-class CRDialog extends Application {
-  constructor(actor) {
-    super();
+// The V1 `Application` class is removed in v14, so the dialog is an
+// ApplicationV2 (available since v12). Built lazily inside a function rather
+// than at load time: if the base class were ever missing, only the dialog
+// fails instead of the whole module failing to parse.
+let _CRDialog = null;
+function crDialogClass() {
+  if (_CRDialog) return _CRDialog;
+  const AppV2 = foundry.applications?.api?.ApplicationV2;
+  if (!AppV2) return null;
+
+  _CRDialog = class CRDialog extends AppV2 {
+  constructor(actor, options = {}) {
+    super(options);
     this.actor = actor;
   }
 
-  static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {
-      id:        'cr-dialog',
-      title:     'Character Reveal',
-      width:     520,
-      height:    'auto',
-      classes:   ['cr-dialog-app'],
-      resizable: false,
-    });
-  }
+  static DEFAULT_OPTIONS = {
+    id:       'cr-dialog',
+    classes:  ['cr-dialog-app'],
+    tag:      'div',
+    window:   { title: 'Character Reveal', resizable: false },
+    position: { width: 520, height: 'auto' },
+  };
 
-  async _renderInner(_data) {
+  async _renderHTML(_context, _options) {
     const g   = k => game.settings.get(CR_ID, k);
     const cur = g('style');
     const img = this.actor.img || 'icons/svg/mystery-man.svg';
@@ -146,10 +177,10 @@ class CRDialog extends Application {
 
         <div class="cr-top-row">
           <div class="cr-portrait-thumb">
-            <img src="${img}" alt="">
+            <img src="${crEsc(img)}" alt="">
           </div>
           <div class="cr-top-right">
-            <div class="cr-actor-name">${this.actor.name}</div>
+            <div class="cr-actor-name">${crEsc(this.actor.name)}</div>
             <div class="cr-field-label">Style</div>
             <div class="cr-pills">${pillsHtml}</div>
           </div>
@@ -173,7 +204,7 @@ class CRDialog extends Application {
 
         <div class="cr-field-label">Custom text <em>(optional)</em></div>
         <input type="text" name="cr-customText" class="cr-input"
-               value="${g('customText')}"
+               value="${crEsc(g('customText'))}"
                placeholder="e.g. «The legend returns»">
 
         <div class="cr-field-label">Sound</div>
@@ -197,34 +228,44 @@ class CRDialog extends Application {
       </div>
     `;
 
-    return $(html);
+    return html;
   }
 
-  activateListeners(html) {
-    super.activateListeners(html);
-
-    // Style pills
-    html.find('.cr-pill').on('click', function () {
-      html.find('.cr-pill').removeClass('cr-pill--active');
-      $(this).addClass('cr-pill--active');
-      $(this).find('input').prop('checked', true);
-      const sv = $(this).find('input').val();
-      html.find('.cr-toggle--class').toggle(!sv.startsWith('vtm'));
-      html.find('.cr-toggle--clan').toggle(sv.startsWith('vtm'));
-    });
-
-    html.find('.cr-btn--cancel').on('click', () => this.close());
-    html.find('.cr-btn--reveal').on('click', () => this._doReveal(html));
+  _replaceHTML(result, content, _options) {
+    content.innerHTML = result;
   }
 
-  async _doReveal(html) {
+  // ApplicationV2 hands us plain DOM — no jQuery, which v14 drops from core.
+  _onRender(_context, _options) {
+    const root  = this.element;
+    const pills = root.querySelectorAll('.cr-pill');
+
+    pills.forEach(pill => pill.addEventListener('click', () => {
+      pills.forEach(p => p.classList.remove('cr-pill--active'));
+      pill.classList.add('cr-pill--active');
+      const input = pill.querySelector('input');
+      if (!input) return;
+      input.checked = true;
+      const isVtm = input.value.startsWith('vtm');
+      root.querySelectorAll('.cr-toggle--class')
+        .forEach(e => { e.style.display = isVtm ? 'none' : ''; });
+      root.querySelectorAll('.cr-toggle--clan')
+        .forEach(e => { e.style.display = isVtm ? '' : 'none'; });
+    }));
+
+    root.querySelector('.cr-btn--cancel')?.addEventListener('click', () => this.close());
+    root.querySelector('.cr-btn--reveal')?.addEventListener('click', () => this._doReveal());
+  }
+
+  async _doReveal() {
     const root       = this.element;
-    const style      = root.find('[name="cr-style"]:checked').val() || 'minimal';
-    const showName   = root.find('[name="cr-showName"]').is(':checked');
-    const showClass  = root.find('[name="cr-showClass"]').is(':checked');
-    const showClan   = root.find('[name="cr-showClan"]').is(':checked');
-    const customText = root.find('[name="cr-customText"]').val().trim();
-    const playSound  = root.find('[name="cr-playSound"]').is(':checked');
+    const q          = sel => root.querySelector(sel);
+    const style      = q('[name="cr-style"]:checked')?.value || 'minimal';
+    const showName   = !!q('[name="cr-showName"]')?.checked;
+    const showClass  = !!q('[name="cr-showClass"]')?.checked;
+    const showClan   = !!q('[name="cr-showClan"]')?.checked;
+    const customText = (q('[name="cr-customText"]')?.value ?? '').trim();
+    const playSound  = !!q('[name="cr-playSound"]')?.checked;
 
     await Promise.all([
       game.settings.set(CR_ID, 'style',      style),
@@ -261,6 +302,9 @@ class CRDialog extends Application {
     crShowOverlay(payload);
     this.close();
   }
+  };
+
+  return _CRDialog;
 }
 
 // ─── Helpers to get class info across systems ──────────────────────────────────
@@ -317,9 +361,11 @@ function crSetMuted(v) { localStorage.setItem('cr-muted', v ? '1' : '0'); }
 
 async function crResolveSoundSrc(style) {
   const folder   = `modules/${CR_ID}/sounds/`;
-  const audioExt = new Set(['mp3', 'ogg', 'wav', 'flac', 'webm', 'm4a', 'aac']);
+  const audioExt = new Set(['mp3', 'ogg', 'wav', 'flac', 'webm', 'm4a', 'aac', 'opus']);
   try {
-    const result = await FilePicker.browse('data', folder);
+    const FP = crFilePicker();
+    if (!FP) return null;
+    const result = await FP.browse('data', folder);
     const files  = result.files.filter(f => audioExt.has(f.split('.').pop().toLowerCase()));
     const match  = files.find(f => f.split('/').pop().replace(/\.[^.]+$/, '').toLowerCase() === style);
     return match || files[0] || null;
@@ -333,7 +379,9 @@ function crPlaySound(src) {
   if (!src || crIsMuted()) return;
   console.log(`${CR_ID} | Playing: ${src}`);
   try {
-    AudioHelper.play({ src, volume: 0.8, autoplay: true, loop: false }, false);
+    const AH = crAudioHelper();
+    if (!AH) throw new Error('AudioHelper unavailable');
+    AH.play({ src, volume: 0.8, autoplay: true, loop: false }, false);
   } catch (e) {
     const a = new Audio(src);
     a.volume = 0.8;
@@ -419,7 +467,12 @@ async function crShowOverlay(data) {
     this.querySelector('i').className = `fas ${muted ? 'fa-volume-xmark' : 'fa-volume-high'}`;
   }, { signal });
 
+  // Holds a scheduled Malkavian crack (see click handler); cleared on close
+  // so it can never fire onto an already-dismissed overlay.
+  let malkCrackTimer = null;
+
   const dismiss = () => {
+    if (malkCrackTimer) { clearTimeout(malkCrackTimer); malkCrackTimer = null; }
     ac.abort();
     el.classList.remove('cr-visible');
     setTimeout(() => el.remove(), 500);
@@ -430,8 +483,8 @@ async function crShowOverlay(data) {
 
   const isGM = !!game?.user?.isGM;
 
-  // Malkavian's crack/close is GM-only and broadcast to every client, since
-  // players can't dismiss it themselves; every other style closes locally.
+  // Malkavian is GM-only and broadcast to every client, since players can't
+  // dismiss it themselves; every other style closes the local copy.
   const closeMalkavian = () => {
     game.socket.emit(`module.${CR_ID}`, { action: 'dismiss' });
     dismiss();
@@ -440,13 +493,22 @@ async function crShowOverlay(data) {
   el.addEventListener('click', () => {
     if (el.dataset.style === 'vtm-malkavian') {
       if (!isGM) return;
-      // click 1 = crack (broadcast), click 2 = close (broadcast)
-      if (!el.classList.contains('cr-mal-cracked')) {
+      // Already shattered → this click closes it for everyone.
+      if (el.classList.contains('cr-mal-cracked')) { closeMalkavian(); return; }
+      // Quick second click (before the crack fires) means "just close" —
+      // cancel the pending crack so it closes everywhere with no shatter.
+      if (malkCrackTimer) {
+        clearTimeout(malkCrackTimer);
+        malkCrackTimer = null;
+        closeMalkavian();
+        return;
+      }
+      // First click: hold briefly; without a fast second click, crack all.
+      malkCrackTimer = setTimeout(() => {
+        malkCrackTimer = null;
         crCrackOverlay();
         game.socket.emit(`module.${CR_ID}`, { action: 'crack' });
-      } else {
-        closeMalkavian();
-      }
+      }, 280);
     } else {
       dismiss();
     }
@@ -454,6 +516,7 @@ async function crShowOverlay(data) {
 
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    // Escape always closes (Malkavian: GM only, broadcast, no shatter).
     if (el.dataset.style === 'vtm-malkavian') {
       if (!isGM) return;               // players can't Escape-close Malkavian
       closeMalkavian();
@@ -465,13 +528,16 @@ async function crShowOverlay(data) {
 
 // ─── Master HTML builder ────────────────────────────────────────────────────────
 function crBuildHTML(data) {
-  const { style, showName, showClass, showClan, customText, actorImg, actorName,
-          actorClass, actorSubclass, actorRace, actorIsNPC, actorCR, actorAlignment,
-          actorClan } = data;
+  const { style, showName, showClass, showClan, customText, actorName,
+          actorClass, actorSubclass, actorRace, actorIsNPC, actorCR, actorAlignment } = data;
 
-  const name   = showName  ? (actorName  || '') : '';
-  const custom = customText || '';
-  const img    = `<img class="cr-portrait-img" src="${actorImg}" alt="${actorName}" decoding="async">`;
+  // Single choke point: everything below is interpolated straight into innerHTML
+  // by the per-style builders, so escape actor-supplied text exactly once here.
+  const actorImg  = crEsc(data.actorImg);
+  const actorClan = crEsc(data.actorClan);
+  const name   = crEsc(showName ? (actorName || '') : '');
+  const custom = crEsc(customText || '');
+  const img    = `<img class="cr-portrait-img" src="${actorImg}" alt="${crEsc(actorName)}" decoding="async">`;
 
   // Build secondary info line
   let cls = '';
@@ -486,6 +552,7 @@ function crBuildHTML(data) {
       // fallback to alignment if nothing found
       if (!cls) cls = actorAlignment || '';
     }
+    cls = crEsc(cls);
   }
 
   switch (style) {
