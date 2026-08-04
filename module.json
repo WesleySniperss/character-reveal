@@ -2,7 +2,7 @@
   "id": "character-reveal",
   "title": "Character Reveal",
   "description": "Cinematic character reveal effects for players. Integrates with the VTools toolbar when present, otherwise adds a native token-controls button.",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "compatibility": {
     "minimum": "13",
     "verified": "14"

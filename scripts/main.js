@@ -24,15 +24,14 @@ function crEsc(v) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
 
-// Static background assets per style — preloaded before animation to avoid mid-animation GPU freeze
+// Backdrops attached via CSS url() — these are the only assets crShowOverlay
+// can't discover by scanning the built markup for <img> tags, so they must be
+// listed by hand to get preloaded. Names stay percent-encoded exactly as the
+// stylesheet writes them, otherwise the preload resolves to a different URL
+// than the CSS request and the file is fetched twice.
 const CR_BG_ASSETS = {
-  'vtm-toreador':  'Toreador1.webp',
-  'vtm-ventrue':   'Ventrue back.webp',
-  'vtm-nosferatu': null,
-  'vtm-gangrel':   null,
-  'vtm-brujah':    null,
-  'vtm-malkavian': null,
-  'vtm-tremere':   null,
+  'vtm-ventrue': 'Ventrue%20back.webp',
+  'vtm-gangrel': ['pngwing.com%20%282%29.webp', 'pngwing.com%20%284%29.webp'],
 };
 
 const CR_STYLES = [
@@ -45,6 +44,8 @@ const CR_STYLES = [
   { id: 'manuscript',  label: 'Manuscript',  icon: 'fa-book-open' },
   { id: 'spotlight',   label: 'Spotlight',   icon: 'fa-star' },
   { id: 'leone',        label: 'Leone',        icon: 'fa-eye' },
+  { id: 'duel',         label: 'Duel',         icon: 'fa-crosshairs' },
+  { id: 'persona',      label: 'Persona',      icon: 'fa-mask' },
   { id: 'vtm-ventrue',   label: 'VTM Ventrue',   icon: 'fa-crown' },
   { id: 'vtm-malkavian', label: 'VTM Malkavian', icon: 'fa-brain' },
   { id: 'vtm-toreador',  label: 'VTM Toreador',  icon: 'fa-palette' },
@@ -70,7 +71,6 @@ Hooks.once('init', () => {
   reg('showClass',  true,  Boolean);
   reg('showClan',   true,  Boolean);
   reg('customText', '');
-  reg('soundFile',  '');
   reg('playSound',  true, Boolean);
 });
 
@@ -292,8 +292,6 @@ function crDialogClass() {
       actorRace:      crGetRace(actor),
       actorCR:        actor.system?.details?.cr ?? '',
       actorAlignment: actor.system?.details?.alignment || '',
-      actorLevel:     actor.system?.details?.level || null,
-      actorHpMax:     actor.system?.attributes?.hp?.max || null,
       actorClan:      crGetClan(actor),
     };
 
@@ -416,19 +414,10 @@ async function crShowOverlay(data) {
   const existing = document.getElementById('cr-overlay');
   if (existing) { existing._crAbort?.abort(); existing.remove(); }
 
-  // Decode ALL images before overlay appears — prevents mid-animation GPU upload freeze.
-  // CSS url() backgrounds load separately from <img> tags; both must be pre-decoded.
-  const bgFile = CR_BG_ASSETS[data.style];
-  const srcs = [
-    data.actorImg,
-    bgFile ? `modules/${CR_ID}/assets/${bgFile}` : null,
-  ].filter(Boolean);
-  await Promise.all(srcs.map(src => {
-    const img = new Image();
-    img.src = src;
-    return img.decode().catch(() => {});
-  }));
-
+  // Build the overlay detached first: setting innerHTML already kicks off the
+  // image fetches, and querying it gives us every <img> the style actually
+  // uses (portrait, backdrop, crest, shards…) without a hand-kept list that
+  // silently goes stale when a style gains an asset.
   const el = document.createElement('div');
   el.id = 'cr-overlay';
   el.dataset.style = data.style;
@@ -437,6 +426,22 @@ async function crShowOverlay(data) {
     `<button class="cr-mute-btn ${crIsMuted() ? 'cr-mute-btn--off' : ''}" title="Toggle sound">
        <i class="fas ${crIsMuted() ? 'fa-volume-xmark' : 'fa-volume-high'}"></i>
      </button>`;
+
+  // Decode ALL images before the overlay appears — prevents a mid-animation
+  // GPU upload freeze. CSS url() backdrops aren't <img> tags and can't be
+  // discovered this way, so those stay listed in CR_BG_ASSETS.
+  const cssBg = CR_BG_ASSETS[data.style] ?? [];
+  const srcs = new Set([
+    ...[...el.querySelectorAll('img')].map(i => i.getAttribute('src')),
+    ...(Array.isArray(cssBg) ? cssBg : [cssBg])
+      .map(f => `modules/${CR_ID}/assets/${f}`),
+  ].filter(Boolean));
+
+  await Promise.all([...srcs].map(src => {
+    const img = new Image();
+    img.src = src;
+    return img.decode().catch(() => {});
+  }));
 
   document.body.appendChild(el);
   // Double rAF: frame 1 = layout+composite (GPU uploads via will-change on #cr-overlay),
@@ -564,6 +569,8 @@ function crBuildHTML(data) {
     case 'manuscript':  return crHtmlManuscript(img, name, cls, custom);
     case 'spotlight':   return crHtmlSpotlight(img, name, cls, custom);
     case 'leone':         return crHtmlLeone(img, name, cls, custom);
+    case 'duel':          return crHtmlDuel(name, cls, custom, actorImg);
+    case 'persona':       return crHtmlPersona(img, name, cls, custom);
     case 'vtm-ventrue':   return crHtmlVtmVentrue(img, name, cls, custom, showClan, actorClan);
     case 'vtm-malkavian': return crHtmlVtmMalkavian(img, name, cls, custom, actorImg, showClan, actorClan);
     case 'vtm-toreador':  return crHtmlVtmToreador(img, name, cls, custom, showClan, actorClan);
@@ -838,6 +845,54 @@ function crHtmlLeone(img, name, cls, custom) {
       <div class="cr-lo-rule"></div>
       ${name ? `<div class="cr-lo-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-lo-sub">— ${sub} —</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Style: Duel ───────────────────────────────────────────────────────────────
+// Leone's finale: the frame splits into three panels holding the same face at
+// widening magnification, then the cuts between them tighten like a heartbeat.
+function crHtmlDuel(name, cls, custom, actorImg) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const panels = ['a', 'b', 'c'].map(p => `
+    <div class="cr-du-panel cr-du-panel--${p}">
+      <img class="cr-du-img" src="${actorImg}" alt="" decoding="async">
+      <div class="cr-du-flare"></div>
+      <div class="cr-du-panel-vig"></div>
+    </div>`).join('');
+
+  return `
+    <div class="cr-du-bg"></div>
+    <div class="cr-du-stage">${panels}</div>
+    <div class="cr-du-dust"></div>
+    <div class="cr-du-grain"></div>
+    <div class="cr-du-vignette"></div>
+    <div class="cr-du-text">
+      ${name ? `<div class="cr-du-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-du-sub">— ${sub} —</div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Style: Persona ────────────────────────────────────────────────────────────
+// Red/black comic slam: halftone field, angular shards, the portrait and the
+// name slab crashing in from opposite sides.
+function crHtmlPersona(img, name, cls, custom) {
+  const shards   = Array.from({ length: 14 }, (_, i) =>
+    `<div class="cr-ps-shard cr-ps-shard--${i + 1}"></div>`).join('');
+  const streaks  = Array.from({ length: 7 }, (_, i) =>
+    `<span class="cr-ps-streak cr-ps-streak--${i + 1}"></span>`).join('');
+
+  return `
+    <div class="cr-ps-bg"></div>
+    <div class="cr-ps-halftone"></div>
+    <div class="cr-ps-streaks">${streaks}</div>
+    <div class="cr-ps-portrait">${img}</div>
+    <div class="cr-ps-shards">${shards}</div>
+    <div class="cr-ps-text">
+      ${name ? `<div class="cr-ps-slab"><span class="cr-ps-name">${name}</span></div>` : ''}
+      ${cls  ? `<div class="cr-ps-sub">${cls}</div>`   : ''}
+      ${custom ? `<div class="cr-ps-desc">${custom}</div>` : ''}
     </div>
   `;
 }
