@@ -37,14 +37,14 @@ const CR_BG_ASSETS = {
 const CR_STYLES = [
   { id: 'minimal',     label: 'Minimal',     icon: 'fa-circle-half-stroke' },
   { id: 'tarantino',   label: 'Tarantino',   icon: 'fa-film' },
-  { id: 'wantedpost',  label: 'One Piece',   icon: 'fa-scroll' },
+  { id: 'wantedpost',  label: 'Wanted',      icon: 'fa-scroll' },
   { id: 'borderlands', label: 'Borderlands', icon: 'fa-bomb' },
   { id: 'heraldry',    label: 'Heraldry',    icon: 'fa-shield-halved' },
   { id: 'darksouls',   label: 'Dark Souls',  icon: 'fa-skull' },
   { id: 'manuscript',  label: 'Manuscript',  icon: 'fa-book-open' },
   { id: 'spotlight',   label: 'Spotlight',   icon: 'fa-star' },
   { id: 'leone',        label: 'Leone',        icon: 'fa-eye' },
-  { id: 'duel',         label: 'Duel',         icon: 'fa-crosshairs' },
+  { id: 'triptych',     label: 'Triptych',     icon: 'fa-table-columns' },
   { id: 'persona',      label: 'Persona',      icon: 'fa-mask' },
   { id: 'vtm-ventrue',   label: 'VTM Ventrue',   icon: 'fa-crown' },
   { id: 'vtm-malkavian', label: 'VTM Malkavian', icon: 'fa-brain' },
@@ -122,8 +122,10 @@ Hooks.once('ready', () => {
 // ═══════════════════════════════════════════════════════════════
 
 function crOpenDialog() {
-  const token = canvas.tokens?.controlled[0];
-  if (!token) {
+  // Every controlled token, not just the first — Leone turns a multi-token
+  // selection into a stand-off between them.
+  const actors = (canvas.tokens?.controlled ?? []).map(t => t.actor).filter(Boolean);
+  if (!actors.length) {
     ui.notifications.warn('Character Reveal: select a token on the scene first.');
     return;
   }
@@ -132,7 +134,7 @@ function crOpenDialog() {
     ui.notifications.error('Character Reveal: this Foundry version is not supported.');
     return;
   }
-  new Cls(token.actor).render({ force: true });
+  new Cls(actors).render({ force: true });
 }
 
 // The V1 `Application` class is removed in v14, so the dialog is an
@@ -146,9 +148,10 @@ function crDialogClass() {
   if (!AppV2) return null;
 
   _CRDialog = class CRDialog extends AppV2 {
-  constructor(actor, options = {}) {
+  constructor(actors, options = {}) {
     super(options);
-    this.actor = actor;
+    this.actors = Array.isArray(actors) ? actors : [actors];
+    this.actor  = this.actors[0];   // the one the preview and non-duel styles use
   }
 
   static DEFAULT_OPTIONS = {
@@ -160,9 +163,10 @@ function crDialogClass() {
   };
 
   async _renderHTML(_context, _options) {
-    const g   = k => game.settings.get(CR_ID, k);
-    const cur = g('style');
-    const img = this.actor.img || 'icons/svg/mystery-man.svg';
+    const g     = k => game.settings.get(CR_ID, k);
+    const cur   = g('style');
+    const img   = this.actor.img || 'icons/svg/mystery-man.svg';
+    const multi = this.actors.length > 1;
 
     const pillsHtml = CR_STYLES.map(s => `
       <label class="cr-pill ${s.id === cur ? 'cr-pill--active' : ''}" data-style="${s.id}">
@@ -180,10 +184,19 @@ function crDialogClass() {
             <img src="${crEsc(img)}" alt="">
           </div>
           <div class="cr-top-right">
-            <div class="cr-actor-name">${crEsc(this.actor.name)}</div>
+            <div class="cr-actor-name">${crEsc(this.actor.name)}${
+              multi ? ` <span class="cr-actor-more">+${this.actors.length - 1}</span>` : ''}</div>
             <div class="cr-field-label">Style</div>
             <div class="cr-pills">${pillsHtml}</div>
           </div>
+        </div>
+
+        <div class="cr-duel-hint ${multi ? 'cr-duel-hint--on' : ''}"
+             ${cur === 'leone' ? '' : 'style="display:none"'}>
+          <i class="fas fa-users-viewfinder"></i>
+          ${multi
+            ? `<b>Duel ready — ${this.actors.length} tokens selected.</b> They ride through one by one, then face off together in a split-screen stand-off.`
+            : `<b>Select several tokens</b> to turn this into a duel — each rides through alone, then they face off together in a split-screen stand-off.`}
         </div>
 
         <div class="cr-field-label" style="margin-top:12px">Show</div>
@@ -251,6 +264,9 @@ function crDialogClass() {
         .forEach(e => { e.style.display = isVtm ? 'none' : ''; });
       root.querySelectorAll('.cr-toggle--clan')
         .forEach(e => { e.style.display = isVtm ? '' : 'none'; });
+      // Duel is a Leone-only trick, so its note only belongs on Leone
+      const duelHint = root.querySelector('.cr-duel-hint');
+      if (duelHint) duelHint.style.display = input.value === 'leone' ? '' : 'none';
     }));
 
     root.querySelector('.cr-btn--cancel')?.addEventListener('click', () => this.close());
@@ -293,7 +309,17 @@ function crDialogClass() {
       actorCR:        actor.system?.details?.cr ?? '',
       actorAlignment: actor.system?.details?.alignment || '',
       actorClan:      crGetClan(actor),
+      userColor:      crActorColor(actor),
     };
+
+    // Leone with more than one token selected becomes a stand-off; every other
+    // style still reveals just the first token.
+    payload.duel = (style === 'leone' && this.actors.length > 1)
+      ? this.actors.map(a => ({
+          img:  a.img  || 'icons/svg/mystery-man.svg',
+          name: showName ? (a.name || '') : '',
+        }))
+      : null;
 
     payload.soundSrc = playSound ? await crResolveSoundSrc(style) : null;
     game.socket.emit(`module.${CR_ID}`, payload);
@@ -341,6 +367,18 @@ function crGetRace(actor) {
   if (typeof r === 'string' && r) return r;
   if (r && typeof r === 'object' && r.name) return r.name;
   return actor.items?.find(i => i.type === 'race')?.name || '';
+}
+
+// Profile colour of whoever owns this actor — an active player first, then any
+// owner, then the GM firing the reveal. Foundry hands back a Color object in
+// v13+, a plain string in older builds, so normalise to CSS.
+function crActorColor(actor) {
+  const users = game.users?.contents ?? [];
+  const owns  = u => !u.isGM && actor?.testUserPermission?.(u, 'OWNER');
+  const owner = users.find(u => u.active && owns(u)) ?? users.find(owns);
+  const c = owner?.color ?? game.user?.color;
+  if (!c) return null;
+  return typeof c === 'string' ? c : (c.css ?? String(c));
 }
 
 function crGetClan(actor) {
@@ -421,6 +459,11 @@ async function crShowOverlay(data) {
   const el = document.createElement('div');
   el.id = 'cr-overlay';
   el.dataset.style = data.style;
+  // Styles that key off the owning player's colour read this; only accept a
+  // plain CSS colour so a crafted payload can't inject arbitrary declarations.
+  if (typeof data.userColor === 'string' && /^#[0-9a-f]{3,8}$/i.test(data.userColor)) {
+    el.style.setProperty('--cr-user', data.userColor);
+  }
   el.innerHTML = crBuildHTML(data) +
     '<div class="cr-dismiss-hint">click anywhere to close</div>' +
     `<button class="cr-mute-btn ${crIsMuted() ? 'cr-mute-btn--off' : ''}" title="Toggle sound">
@@ -483,8 +526,13 @@ async function crShowOverlay(data) {
     setTimeout(() => el.remove(), 500);
   };
 
-  // Leone is a drive-through: once the portrait tears away, close on its own
-  if (data.style === 'leone') setTimeout(() => { if (el.isConnected) dismiss(); }, 2500);
+  // Leone is a drive-through: once the portrait tears away, close on its own.
+  // A duel first rides every fighter past, then holds the stand-off.
+  if (data.style === 'leone') {
+    const n  = Array.isArray(data.duel) ? data.duel.length : 0;
+    const ms = n > 1 ? n * CR_DUEL_SOLO_MS + 5600 : 2500;
+    setTimeout(() => { if (el.isConnected) dismiss(); }, ms);
+  }
 
   const isGM = !!game?.user?.isGM;
 
@@ -568,8 +616,10 @@ function crBuildHTML(data) {
     case 'darksouls':   return crHtmlDarkSouls(img, name, cls, custom);
     case 'manuscript':  return crHtmlManuscript(img, name, cls, custom);
     case 'spotlight':   return crHtmlSpotlight(img, name, cls, custom);
-    case 'leone':         return crHtmlLeone(img, name, cls, custom);
-    case 'duel':          return crHtmlDuel(name, cls, custom, actorImg);
+    case 'leone':         return (Array.isArray(data.duel) && data.duel.length > 1)
+                            ? crHtmlLeoneDuel(data.duel)
+                            : crHtmlLeone(img, name, cls, custom);
+    case 'triptych':      return crHtmlTriptych(name, cls, custom, actorImg);
     case 'persona':       return crHtmlPersona(img, name, cls, custom);
     case 'vtm-ventrue':   return crHtmlVtmVentrue(img, name, cls, custom, showClan, actorClan);
     case 'vtm-malkavian': return crHtmlVtmMalkavian(img, name, cls, custom, actorImg, showClan, actorClan);
@@ -831,6 +881,40 @@ function crHtmlSpotlight(img, name, cls, custom) {
 
 
 // ─── Style: Leone ──────────────────────────────────────────────────────────────
+// Multi-token Leone: every fighter rides through alone, then they all hold the
+// frame together in a split-screen stand-off. `--i` / `--n` drive the timing
+// entirely from CSS, so each client runs the same sequence off its own clock.
+const CR_DUEL_SOLO_MS = 2000;   // one rider's pass; mirrored in crShowOverlay
+function crHtmlLeoneDuel(fighters) {
+  const n = fighters.length;
+
+  const solos = fighters.map((f, i) => `
+    <div class="cr-lo-solo" style="--i:${i}">
+      <img class="cr-portrait-img" src="${crEsc(f.img)}" alt="" decoding="async">
+      ${f.name ? `<div class="cr-lo-solo-name">${crEsc(f.name)}</div>` : ''}
+    </div>`).join('');
+
+  const cells = fighters.map((f, i) => `
+    <div class="cr-lo-cell" style="--i:${i}">
+      <img class="cr-portrait-img" src="${crEsc(f.img)}" alt="" decoding="async">
+      <div class="cr-lo-cell-vig"></div>
+      ${f.name ? `<div class="cr-lo-cell-name">${crEsc(f.name)}</div>` : ''}
+    </div>`).join('');
+
+  return `
+    <div class="cr-lo-duel" style="--n:${n}">
+      ${solos}
+      <div class="cr-lo-standoff">${cells}</div>
+    </div>
+    <div class="cr-lo-grain"></div>
+    <div class="cr-lo-vignette"></div>
+    <div class="cr-lo-fog"></div>
+    <div class="cr-lo-bar-top"></div>
+    <div class="cr-lo-bar-bot"></div>
+    <div class="cr-lo-dustline"></div>
+  `;
+}
+
 function crHtmlLeone(img, name, cls, custom) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
   return `
@@ -849,27 +933,29 @@ function crHtmlLeone(img, name, cls, custom) {
   `;
 }
 
-// ─── Style: Duel ───────────────────────────────────────────────────────────────
+// ─── Style: Triptych ───────────────────────────────────────────────────────────
+// One face across three panels at widening magnification, Leone-finale style.
+// The name `duel` stays reserved for a real two-portrait stand-off.
 // Leone's finale: the frame splits into three panels holding the same face at
 // widening magnification, then the cuts between them tighten like a heartbeat.
-function crHtmlDuel(name, cls, custom, actorImg) {
+function crHtmlTriptych(name, cls, custom, actorImg) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
   const panels = ['a', 'b', 'c'].map(p => `
-    <div class="cr-du-panel cr-du-panel--${p}">
-      <img class="cr-du-img" src="${actorImg}" alt="" decoding="async">
-      <div class="cr-du-flare"></div>
-      <div class="cr-du-panel-vig"></div>
+    <div class="cr-tri-panel cr-tri-panel--${p}">
+      <img class="cr-tri-img" src="${actorImg}" alt="" decoding="async">
+      <div class="cr-tri-flare"></div>
+      <div class="cr-tri-panel-vig"></div>
     </div>`).join('');
 
   return `
-    <div class="cr-du-bg"></div>
-    <div class="cr-du-stage">${panels}</div>
-    <div class="cr-du-dust"></div>
-    <div class="cr-du-grain"></div>
-    <div class="cr-du-vignette"></div>
-    <div class="cr-du-text">
-      ${name ? `<div class="cr-du-name">${name}</div>` : ''}
-      ${sub  ? `<div class="cr-du-sub">— ${sub} —</div>` : ''}
+    <div class="cr-tri-bg"></div>
+    <div class="cr-tri-stage">${panels}</div>
+    <div class="cr-tri-dust"></div>
+    <div class="cr-tri-grain"></div>
+    <div class="cr-tri-vignette"></div>
+    <div class="cr-tri-text">
+      ${name ? `<div class="cr-tri-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-tri-sub">— ${sub} —</div>` : ''}
     </div>
   `;
 }
@@ -883,10 +969,19 @@ function crHtmlPersona(img, name, cls, custom) {
   const streaks  = Array.from({ length: 7 }, (_, i) =>
     `<span class="cr-ps-streak cr-ps-streak--${i + 1}"></span>`).join('');
 
+  // Two identical runs side by side so translating the track by exactly -50%
+  // loops without a seam.
+  const word  = (name || 'PERSONA').toUpperCase();
+  const run   = Array.from({ length: 6 }, () => word).join(' &#10022; ') + ' &#10022; ';
+  const track = `<span class="cr-ps-run">${run}</span><span class="cr-ps-run">${run}</span>`;
+
   return `
     <div class="cr-ps-bg"></div>
     <div class="cr-ps-halftone"></div>
+    <div class="cr-ps-burst"></div>
     <div class="cr-ps-streaks">${streaks}</div>
+    <div class="cr-ps-marquee cr-ps-marquee--hi"><div class="cr-ps-track">${track}</div></div>
+    <div class="cr-ps-marquee cr-ps-marquee--lo"><div class="cr-ps-track">${track}</div></div>
     <div class="cr-ps-portrait">${img}</div>
     <div class="cr-ps-shards">${shards}</div>
     <div class="cr-ps-text">
@@ -1290,8 +1385,8 @@ function crHtmlVtmTremere(img, name, cls, custom, showClan, clan) {
         r.x0 < b.x1 + 1.5 && r.x1 > b.x0 - 1.5 && r.y0 < b.y1 + 1.5 && r.y1 > b.y0 - 1.5);
       if (hit) continue;
       occupied.push(r);
-      const del = rnd(0, 7).toFixed(1);
-      const dur = rnd(4, 9).toFixed(1);
+      const del = rnd(0, 12).toFixed(1);
+      const dur = rnd(11, 21).toFixed(1);   // slow, ritual breathing — not a strobe
       const rot = rnd(-18, 18).toFixed(0);
       return `<span class="cr-tre-rune" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;--sz:${sz.toFixed(2)}rem;--del:${del}s;--dur:${dur}s;--rot:${rot}deg">`
            + `<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">${sg}</svg></span>`;
@@ -1574,8 +1669,11 @@ function crHtmlVtmLasombra(img, name, cls, custom, showClan, clan) {
   // wave runs along it and it writhes as a single continuous shape — cheap
   // (8 paths, not 100+ divs), smooth, and clearly a tentacle, not grass.
   // Coords are in a 0–100 viewBox stretched to the screen (≈ percent).
+  // N is the rib count per ribbon. Every rib is two points that SMIL has to
+  // interpolate on the main thread each frame, for every tentacle at once —
+  // the dominant cost of this style, so keep it as low as still looks smooth.
   const tentPath = (bx, by, ang, len, wid, phase, waves, curl) => {
-    const N = 16, a = ang * Math.PI / 180, pa = a + Math.PI / 2;
+    const N = 11, a = ang * Math.PI / 180, pa = a + Math.PI / 2;
     const dx = Math.cos(a), dy = Math.sin(a), px = Math.cos(pa), py = Math.sin(pa);
     const Lp = [], Rp = [];
     for (let i = 0; i <= N; i++) {
@@ -1597,7 +1695,7 @@ function crHtmlVtmLasombra(img, name, cls, custom, showClan, clan) {
   // across the bottom edge and the two sides, each with its own length, width,
   // speed, wave count, curl and starting phase.
   const TWO_PI = Math.PI * 2;
-  const tentDefs = Array.from({ length: 36 }, () => {
+  const tentDefs = Array.from({ length: 22 }, () => {
     const r = Math.random();
     let bx, by, ang;
     if (r < 0.62) {                 // up from the bottom edge
