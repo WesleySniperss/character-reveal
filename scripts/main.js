@@ -685,6 +685,15 @@ function crTaRun(el) {
     card.style.transition = 'none';
     card.style.opacity = '0';
     card.style.transform = 'translateY(12px)';
+    // Rewind the slow zoom so this line starts from scale 1 like the last one.
+    // Reading offsetWidth between the two assignments forces the style flush
+    // that makes the browser treat it as a fresh animation rather than a no-op.
+    const val = card.querySelector('.cr-ta-card-val');
+    if (val) {
+      val.style.animation = 'none';
+      void val.offsetWidth;
+      val.style.animation = '';
+    }
     await sleep(16);
     card.style.transition = 'opacity 0.08s linear, transform 0.12s cubic-bezier(0.2,0,0.4,1)';
     card.style.opacity = '1';
