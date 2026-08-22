@@ -464,6 +464,12 @@ async function crShowOverlay(data) {
   if (typeof data.userColor === 'string' && /^#[0-9a-f]{3,8}$/i.test(data.userColor)) {
     el.style.setProperty('--cr-user', data.userColor);
   }
+  // Fighter count drives the duel's CSS timing. It lives on the root so the
+  // letterbox bars can read it too — they're siblings of .cr-lo-duel, and
+  // custom properties only inherit downwards.
+  if (Array.isArray(data.duel) && data.duel.length > 1) {
+    el.style.setProperty('--n', String(data.duel.length));
+  }
   el.innerHTML = crBuildHTML(data) +
     '<div class="cr-dismiss-hint">click anywhere to close</div>' +
     `<button class="cr-mute-btn ${crIsMuted() ? 'cr-mute-btn--off' : ''}" title="Toggle sound">
@@ -893,7 +899,7 @@ function crHtmlSpotlight(img, name, cls, custom) {
 // Multi-token Leone: every fighter rides through alone, then they all hold the
 // frame together in a split-screen stand-off. `--i` / `--n` drive the timing
 // entirely from CSS, so each client runs the same sequence off its own clock.
-const CR_DUEL_SOLO_MS = 2000;   // one rider's pass; mirrored in crShowOverlay
+const CR_DUEL_SOLO_MS = 2800;   // one rider's pass; mirrored in crShowOverlay
 function crHtmlLeoneDuel(fighters) {
   const n = fighters.length;
 
@@ -911,7 +917,7 @@ function crHtmlLeoneDuel(fighters) {
     </div>`).join('');
 
   return `
-    <div class="cr-lo-duel" style="--n:${n}">
+    <div class="cr-lo-duel">
       ${solos}
       <div class="cr-lo-standoff">${cells}</div>
     </div>
@@ -947,8 +953,32 @@ function crHtmlLeone(img, name, cls, custom) {
 // The name `duel` stays reserved for a real two-portrait stand-off.
 // Leone's finale: the frame splits into three panels holding the same face at
 // widening magnification, then the cuts between them tighten like a heartbeat.
+// The stylesheet leaves four shots able to carry an inversion — shots 5, 7, 9
+// and 11, which are pairwise non-adjacent, so any three of them can be lit
+// without ever placing two inversions back to back. The first composed shot is
+// deliberately not among them: with most slots lit it was nearly always an
+// inversion, which read as the montage opening on one.
+//
+// Choosing here rather than in CSS means a different three each time, and it
+// costs nothing while it plays: these are custom properties resolved once at
+// style time, on tracks that step rather than interpolate. An unlit slot falls
+// back to the washed-out plate the stylesheet defines.
+const CR_TRI_SLOTS = ['--tri-i4', '--tri-i6', '--tri-i8', '--tri-i10'];
+const CR_TRI_NEGATIVES = 3;
+
+function crTriptychInversions() {
+  const pool = CR_TRI_SLOTS.slice();
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, CR_TRI_NEGATIVES)
+             .map(v => `${v}: var(--tri-neg);`).join(' ');
+}
+
 function crHtmlTriptych(name, cls, custom, actorImg) {
   const sub = [cls, custom].filter(Boolean).join(' · ');
+  // Three cards, each holding one rendering of the same portrait.
   const panels = ['a', 'b', 'c'].map(p => `
     <div class="cr-tri-panel cr-tri-panel--${p}">
       <img class="cr-tri-img" src="${actorImg}" alt="" decoding="async">
@@ -958,7 +988,8 @@ function crHtmlTriptych(name, cls, custom, actorImg) {
 
   return `
     <div class="cr-tri-bg"></div>
-    <div class="cr-tri-stage">${panels}</div>
+    <div class="cr-tri-back"><img class="cr-tri-back-img" src="${actorImg}" alt="" decoding="async"></div>
+    <div class="cr-tri-stage" style="${crTriptychInversions()}">${panels}</div>
     <div class="cr-tri-dust"></div>
     <div class="cr-tri-grain"></div>
     <div class="cr-tri-vignette"></div>

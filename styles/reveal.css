@@ -1547,36 +1547,52 @@
   gap: 4px;
 }
 
-.cr-lo-rule { display: none; }
 
+/* Rye has no Cyrillic, so those names silently became PT Serif — a different
+   typeface from the Latin ones, which is what made this look off. Oswald
+   carries both, and a title card wants weight and tracking rather than a
+   white keyline and a stack of hard offsets. */
 .cr-lo-name {
-  font-family: 'Rye', 'PT Serif', serif;
-  font-weight: 400;
-  font-size: clamp(1.8rem, 4.5vw, 4rem);
-  color: #d4b060;
-  letter-spacing: .14em;
+  font-family: 'Oswald', 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.9rem, 5vw, 4.4rem);
+  color: #e8cf9a;
+  letter-spacing: .17em;
   line-height: 1;
-  -webkit-text-stroke: 1px rgba(255,255,255,.7);
-  text-shadow:
-    2px  2px  0   rgba(0,0,0,.9),
-    4px  4px  0   rgba(0,0,0,.7),
-    6px  6px  0   rgba(0,0,0,.5),
-    0    0    24px rgba(0,0,0,1),
-    0    0    48px rgba(0,0,0,.8);
-  animation: cr-lo-name-in .7s ease .4s both;
+  text-transform: uppercase;
+  text-shadow: 0 3px 0 rgba(0,0,0,.9), 0 0 30px rgba(0,0,0,1);
+  animation: cr-lo-name-in .8s cubic-bezier(.2,.92,.24,1) .35s both;
 }
+/* Comes in against the portrait, which rides left to right here, and settles.
+   No letter-spacing tween — that reflowed the line every frame and read as the
+   text falling open. */
 @keyframes cr-lo-name-in {
-  from { opacity: 0; letter-spacing: .4em; }
-  to   { opacity: 1; letter-spacing: .2em; }
+  0%   { opacity: 0; transform: translateX(44%); }
+  55%  { opacity: 1; }
+  100% { opacity: 1; transform: translateX(0); }
+}
+/* Hairline wiping in from the same side as the name */
+.cr-lo-rule {
+  display: block; height: 1px; width: 100%;
+  margin-bottom: .4em;
+  background: linear-gradient(270deg,
+    rgba(232,207,154,.9) 0%, rgba(232,207,154,.25) 62%, transparent 100%);
+  transform-origin: right center;
+  animation: cr-lo-rule-in .7s cubic-bezier(.2,.92,.24,1) .28s both;
+}
+@keyframes cr-lo-rule-in {
+  from { opacity: 0; transform: scaleX(0); }
+  to   { opacity: 1; transform: scaleX(1); }
 }
 
+/* PT Mono outright rather than Special Elite falling back to it: PT Mono has
+   both alphabets, so the typewriter line looks the same whichever is used. */
 .cr-lo-sub {
-  font-family: 'Special Elite', 'PT Mono', serif;
+  font-family: 'PT Mono', monospace;
   font-weight: 400;
-  font-size: clamp(.7rem, 1.3vw, 1rem);
-  color: rgba(240,236,232,.45);
-  letter-spacing: .3em;
-  -webkit-text-stroke: .5px rgba(255,255,255,.2);
+  font-size: clamp(.66rem, 1.2vw, .95rem);
+  color: rgba(240,236,232,.5);
+  letter-spacing: .28em; text-transform: uppercase;
   text-shadow: 1px 1px 4px rgba(0,0,0,.9), 0 0 16px rgba(0,0,0,.8);
   animation: cr-fade-in .5s ease .75s both;
 }
@@ -1584,7 +1600,7 @@
 /* ─── Leone duel — several tokens ride past, then hold a stand-off ───────────
    Timing is pure CSS off --i (this fighter's slot) and --n (how many there
    are), so every client plays the same sequence from its own clock with
-   nothing to keep in sync. One pass = 2s, matching CR_DUEL_SOLO_MS. */
+   nothing to keep in sync. One pass = 2.8s, matching CR_DUEL_SOLO_MS. */
 .cr-lo-duel { position: absolute; inset: 0; }
 
 /* Each rider takes a different route through the frame so the sequence never
@@ -1593,7 +1609,7 @@
    off-screen before its turn and after it, so no extra hiding is needed. */
 .cr-lo-solo {
   position: absolute; inset: 0;
-  animation: cr-lo-ride 2s linear calc(var(--i) * 2s) both;
+  animation: cr-lo-ride 2.8s linear calc(var(--i) * 2.8s) both;
 }
 .cr-lo-solo:nth-child(3n+2) { animation-name: cr-lo-ride-rev; }
 .cr-lo-solo:nth-child(3n)   { animation-name: cr-lo-ride-up;  }
@@ -1618,19 +1634,42 @@
   filter: contrast(1.12) brightness(.9) saturate(.75);
 }
 .cr-lo-solo-name {
-  position: absolute; left: 0; right: 0; bottom: 16%;
+  /* Above the letterbox: the bottom bar is 26% tall and paints over this
+     layer, which was hiding the name entirely. */
+  position: absolute; left: 0; right: 0; bottom: 31%;
   text-align: center;
-  font-family: 'Rye', 'PT Serif', serif;
-  font-size: clamp(1.3rem, 3.4vw, 2.8rem);
-  color: #d4b060; letter-spacing: .12em;
-  text-shadow: 2px 2px 0 rgba(0,0,0,.9), 0 0 26px rgba(0,0,0,1);
-  animation: cr-lo-solo-name .8s ease calc(var(--i) * 2s + .5s) both;
+  font-family: 'Oswald', 'Barlow Condensed', sans-serif;
+  font-weight: 700; text-transform: uppercase;
+  font-size: clamp(1.3rem, 3.6vw, 3rem);
+  color: #e8cf9a; letter-spacing: .17em;
+  text-shadow: 0 3px 0 rgba(0,0,0,.9), 0 0 26px rgba(0,0,0,1);
+  /* Held for most of the pass. It used to fade in and back out inside .8s,
+     which barely gave the eye time to land on it. */
+  animation: cr-lo-name-from-r 2.3s ease calc(var(--i) * 2.8s + .3s) both;
 }
-@keyframes cr-lo-solo-name {
-  0%   { opacity: 0; transform: translateY(10px); }
-  30%  { opacity: 1; transform: translateY(0); }
-  75%  { opacity: 1; }
-  100% { opacity: 0; }
+/* The name enters from the side the rider is heading towards and leaves the
+   way the rider came, so the two sweep past each other. Riders alternate
+   left / right / up (see cr-lo-ride above), and these follow the same
+   nth-child pattern so each name opposes its own rider. */
+.cr-lo-solo:nth-child(3n+2) .cr-lo-solo-name { animation-name: cr-lo-name-from-l; }
+.cr-lo-solo:nth-child(3n)   .cr-lo-solo-name { animation-name: cr-lo-name-from-t; }
+@keyframes cr-lo-name-from-r {
+  0%   { opacity: 0; transform: translateX(52%); }
+  12%  { opacity: 1; transform: translateX(0); }
+  84%  { opacity: 1; transform: translateX(-4%); }
+  100% { opacity: 0; transform: translateX(-24%); }
+}
+@keyframes cr-lo-name-from-l {
+  0%   { opacity: 0; transform: translateX(-52%); }
+  12%  { opacity: 1; transform: translateX(0); }
+  84%  { opacity: 1; transform: translateX(4%); }
+  100% { opacity: 0; transform: translateX(24%); }
+}
+@keyframes cr-lo-name-from-t {
+  0%   { opacity: 0; transform: translateY(-46%); }
+  12%  { opacity: 1; transform: translateY(0); }
+  84%  { opacity: 1; transform: translateY(4%); }
+  100% { opacity: 0; transform: translateY(22%); }
 }
 
 /* The stand-off: everyone at once, framed tight on the eyes */
@@ -1642,19 +1681,32 @@
    Side-by-side columns made every cell a tall sliver — the narrower the strip,
    the harder `cover` crops inward, so the face was already sliced to a ribbon
    before any zoom was applied. */
-/* Held inside the letterbox window. The solo layout's bottom bar is 26% deep
-   because that is where its name block lives; the duel names sit inside each
-   band instead, so that bar was simply eating the last fighter whole. */
-.cr-lo-duel ~ .cr-lo-bar-bot  { height: 11%; }
+/* The letterbox belongs to the ride, not to the stand-off — holding it through
+   the final frame only crops the fighters, and the solo layout's bottom bar is
+   26% deep because that is where its name block lives. So the bars slide back
+   out as the stand-off lands, and it plays full-bleed. (--n is set on the
+   overlay root rather than on .cr-lo-duel: the bars are its siblings, and
+   custom properties inherit down, not sideways.) */
 .cr-lo-duel ~ .cr-lo-dustline { display: none; }
+.cr-lo-duel ~ .cr-lo-bar-top {
+  animation: cr-lo-bar-t-in .5s ease both,
+             cr-lo-bar-t-out .45s ease calc(var(--n) * 2.8s) forwards;
+}
+.cr-lo-duel ~ .cr-lo-bar-bot {
+  animation: cr-lo-bar-b-in .5s ease both,
+             cr-lo-bar-b-out .45s ease calc(var(--n) * 2.8s) forwards;
+}
+@keyframes cr-lo-bar-t-out { to { transform: translateY(-100%); } }
+@keyframes cr-lo-bar-b-out { to { transform: translateY(100%);  } }
+
 .cr-lo-standoff {
-  position: absolute; top: 11%; bottom: 11%; left: 0; right: 0;
+  position: absolute; inset: 0;
   display: flex; flex-direction: column; gap: 2px;
 }
 .cr-lo-cell {
   position: relative; flex: 1 1 0; overflow: hidden; background: #000;
   animation: cr-lo-cell-in .5s cubic-bezier(.16,.86,.3,1)
-             calc(var(--n) * 2s + var(--i) * .14s) both;
+             calc(var(--n) * 2.8s + var(--i) * .14s) both;
 }
 .cr-lo-cell:nth-child(odd)  { --from: -100%; }
 .cr-lo-cell:nth-child(even) { --from:  100%; }
@@ -1671,7 +1723,7 @@
   transform-origin: 50% 22%;
   filter: contrast(1.18) brightness(.88) saturate(.7);
   /* slow creep inward — the squint before the draw */
-  animation: cr-lo-cell-push 5.4s ease-out calc(var(--n) * 2s) both;
+  animation: cr-lo-cell-push 5.4s ease-out calc(var(--n) * 2.8s) both;
 }
 @keyframes cr-lo-cell-push {
   from { transform: scale(1);    }
@@ -1690,7 +1742,7 @@
   letter-spacing: .22em; text-transform: uppercase;
   color: rgba(240,236,232,.72);
   text-shadow: 1px 1px 4px #000, 0 0 14px #000;
-  animation: cr-fade-in .6s ease calc(var(--n) * 2s + var(--i) * .14s + .45s) both;
+  animation: cr-fade-in .6s ease calc(var(--n) * 2.8s + var(--i) * .14s + .45s) both;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2917,8 +2969,10 @@
   bottom: 18%; left: var(--x);
   width: var(--sz); height: var(--sz);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(38,28,22,.48) 0%, rgba(28,20,16,.14) 55%, transparent 80%);
-  filter: blur(20px);
+  /* The gradient is already feathered to nothing by 80%, so no blur filter is
+     needed — and without one these can be scaled for free. A blurred layer has
+     to be re-rastered and re-blurred at every new scale, every frame. */
+  background: radial-gradient(circle, rgba(38,28,22,.42) 0%, rgba(28,20,16,.16) 45%, transparent 72%);
   opacity: 0;
   transform: translateX(-50%);
   animation: cr-brj-smoke-rise ease-out infinite;
@@ -3917,166 +3971,472 @@
   background: radial-gradient(ellipse 130% 95% at 50% 42%, #5c5750 0%, #2b2724 52%, #0a0908 100%);
 }
 
-.cr-tri-stage {
-  position: absolute; inset: 0; z-index: 2;
-  background: #000;
+/* ── Triptych ────────────────────────────────────────────────────────────────
+   One portrait, several renderings of it — film, duotone, stencil, negative,
+   and flat-colour silhouette plates in the manner of a jazz title sequence —
+   cut together as a montage that loops.
+
+   It used to resolve onto a held final frame, which simply sat there. The
+   phrase now runs 15s and repeats: the loop point falls where that final cut
+   used to be, so the wrap is itself a cut and nothing has to fade or jump.
+
+   RHYTHM — grouped, not gridded:
+
+     ▸────    ●●   ●●     ····     ●      ·····     ···      ······     ····   ····
+      1.10   .60  .60     1.40    .60     1.70     1.20       2.20      1.60   1.40
+      intro   two hits    rest    hit     rest     rest       hold      rest   close
+
+   Never more than two cuts inside any one second. Divisions fall on third
+   lines. Complexity follows the tempo — a 0.6s shot is a single plate, layered
+   compositions only land on rests of 1.4s or more.
+
+   The whole block is generated from one shot table and checked against every
+   rule below before it is written; the checker is in the scratchpad as
+   build-triptych.js. Editing these keyframes by hand is how contradictions
+   kept creeping back in.
+
+   FITTING is by height in every shot. `contain` and `cover` fit by different
+   edges depending on how the card's proportion compares with the picture's, so
+   the value is picked per shot to make height the governing edge each time.
+   Zoom then tracks the card's role: the plate carrying a composition stays
+   loose, the tighter supporting cards push in.
+
+   MOVEMENT. The opening plate is completely still. After that each card holds
+   ONE direction for the whole of a cut — a straight line, never a change of
+   mind mid-shot — and the cards are set against each other so a composition
+   is counterpoised rather than leaning. Anything too small to read as movement
+   is worse than none at all, so a card is either still or genuinely travelling.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.cr-tri-back { position: absolute; inset: 0; z-index: 1; overflow: hidden; }
+.cr-tri-back-img {
+  position: absolute; inset: -6%;
+  width: 112%; height: 112%;
+  object-fit: cover; object-position: 50% 30%;
+  filter: grayscale(.55) brightness(.5) contrast(1.05) blur(9px);
+  transform: scale(1.08);
+  animation: cr-tri-back-push 15s linear 0s infinite both;
 }
-/* Panels are free rectangles, not fixed thirds: each cut re-tiles the frame
-   into a new arrangement. Resizing a panel is the one genuinely costly moment
-   here — it relayouts the panel and re-rasterises the portrait inside it at a
-   new size — so two things keep it cheap. The three layout tracks share one
-   delay, so a cut costs a single layout pass instead of three staggered ones
-   (only the flares stay offset, which is what gives the cut its ripple). And
-   there are four cuts per 8s rather than six per 7s, roughly halving how often
-   that pass happens while still reading as a montage. */
+@keyframes cr-tri-back-push {
+  0%     { translate: 0 0;       }
+  100%       { translate: 2.4% 1.5%; }
+}
+
+/* The board travels one way across the phrase and snaps back on the loop —
+   which is a cut, so the reset is covered.
+
+   Nothing here is delayed any more. Every track used to start 1.4s late, and
+   with `both` fill that meant the opening keyframe was held for those 1.4s —
+   so the establishing plate sat frozen and only then began to push in. The
+   opening shot is long enough (2.45s) to carry the settle on its own, and the
+   stage still fades up over it. */
+/* The four treatments, and the four slots that may carry an inversion.
+
+   Which shots invert is decided once, in JS, when the overlay is built — it
+   lights three of the four slots and leaves the fourth washed out. That costs
+   nothing while the animation runs: a custom property is resolved at style
+   time, and every one of these tracks is `step-end`, so nothing interpolates.
+
+   The slots sit on shots 4, 6, 8 and 10, which are pairwise non-adjacent, so
+   any three of them can be chosen without ever putting two inversions in a
+   row. None of them is the card holding the centre of the screen, and none is
+   in the opening three shots — the plain photograph establishes itself first.
+
+   `wash` is the fallback for a slot that is not lit: a blown-out high-key
+   plate. Without a fourth treatment an unlit slot would have to repeat one of
+   the other cards in its shot. */
+.cr-tri-stage {
+  --tri-plain: saturate(.62) contrast(1.12) brightness(1);
+  --tri-dark:  saturate(.32) contrast(1.3) brightness(.5);
+  --tri-neg:   invert(1) saturate(1.06) contrast(1.04);
+  /* A lifted plate, not a fourth kind of shock. It used to run at
+     brightness(1.28) contrast(1.5), which blows a dark portrait out to nearly
+     white — close enough to an inversion that the montage read as carrying one
+     more than it does. */
+  --tri-wash:  saturate(.5) contrast(1.12) brightness(1.16);
+  --tri-i4: var(--tri-wash);
+  --tri-i6: var(--tri-wash);
+  --tri-i8: var(--tri-wash);
+  --tri-i10: var(--tri-wash);
+
+  position: absolute; inset: 0; z-index: 2;
+  transform: scale(1.14);
+  animation: cr-tri-board 15s linear 0s infinite both,
+             cr-tri-open 1.1s cubic-bezier(.2,.85,.3,1) .2s both;
+}
+@keyframes cr-tri-board {
+  0%     { translate: 0 0;      }
+  100%       { translate: 5.5% 3%;  }
+}
+@keyframes cr-tri-open { from { opacity: 0; } to { opacity: 1; } }
+
 .cr-tri-panel {
-  position: absolute;
-  overflow: hidden; background: #0a0705;
-  outline: 1px solid #000;
+  position: absolute; inset: 0;
+  box-sizing: border-box;
+  border: clamp(3px, .45vw, 9px) solid transparent;  /* the gap between cards */
+  overflow: hidden; background-clip: padding-box;
   contain: paint;
 }
-.cr-tri-panel--a {
-  animation: cr-tri-slide-l .8s cubic-bezier(.16,.86,.3,1) .15s both,
-             cr-tri-lay-a 8s step-end 1.7s infinite;
-}
-.cr-tri-panel--b {
-  animation: cr-tri-slide-u .8s cubic-bezier(.16,.86,.3,1) .42s both,
-             cr-tri-lay-b 8s step-end 1.7s infinite;
-}
-.cr-tri-panel--c {
-  animation: cr-tri-slide-r .8s cubic-bezier(.16,.86,.3,1) .69s both,
-             cr-tri-lay-c 8s step-end 1.7s infinite;
-}
-@keyframes cr-tri-slide-l { from { transform: translateX(-102%); } to { transform: none; } }
-@keyframes cr-tri-slide-u { from { transform: translateY(102%);  } to { transform: none; } }
-@keyframes cr-tri-slide-r { from { transform: translateX(102%);  } to { transform: none; } }
+.cr-tri-panel--a { z-index: 1; }
+.cr-tri-panel--b { z-index: 2; }
+.cr-tri-panel--c { z-index: 3; }
+.cr-tri-panel--b,
+.cr-tri-panel--c { opacity: 0; }
 
-/* Six tilings, one per cut, every one asymmetric. Equal parallel strips are
-   gone on purpose: three same-shaped panels of the same portrait framed the
-   same slice three times over, which just looked like a repeated image. */
+.cr-tri-panel--a { animation: cr-tri-lay-a 15s step-end 0s infinite both,
+                              cr-tri-field-a 15s step-end 0s infinite both; }
+.cr-tri-panel--b { animation: cr-tri-lay-b 15s step-end 0s infinite both,
+                              cr-tri-field-b 15s step-end 0s infinite both; }
+.cr-tri-panel--c { animation: cr-tri-lay-c 15s step-end 0s infinite both,
+                              cr-tri-field-c 15s step-end 0s infinite both; }
+
+/* Colour is a property of a composition, not of one card. It appears only when
+   more than one card is on screen, and then every card on screen carries it —
+   a single plate on a colour field just looked like that card had been tinted
+   by mistake. The four shared shots use it and nothing else does.
+
+   No two fields inside one shot may sit within 60 of each other in RGB, which
+   is what separated the rust from the red that read as one wash.
+
+   The photograph is darkened on those shots so the field reads through and
+   around it, which is what makes a colour plate work. */
+@keyframes cr-tri-field-a {
+  0%     { background-color: transparent; }
+  32.33% { background-color: transparent; }
+  38.33% { background-color: #6b5011; }
+  55%    { background-color: #8a3616; }
+  71%    { background-color: #8e2318; }
+  90.33% { background-color: #14494b; }
+}
+@keyframes cr-tri-field-b {
+  0%     { background-color: transparent; }
+  22.33% { background-color: #22356b; }
+  48.67% { background-color: transparent; }
+  65%    { background-color: transparent; }
+  71%    { background-color: #4a2160; }
+}
+@keyframes cr-tri-field-c {
+  0%     { background-color: transparent; }
+  16.33% { background-color: transparent; }
+  22.33% { background-color: #8a3616; }
+  38.33% { background-color: #22356b; }
+  55%    { background-color: #14494b; }
+  71%    { background-color: #14494b; }
+  84.67% { background-color: transparent; }
+  90.33% { background-color: #6b5011; }
+}
+
+/* Treatment is the third axis. No two cards in a shot may match, no card may
+   repeat its own last appearance, and — the rule that keeps getting broken —
+   NO TWO CONSECUTIVE SHOTS MAY BOTH CARRY A NEGATIVE, across the loop join as
+   well as inside the phrase.
+
+   The photograph is the base. Inversion is what sets one card apart from the
+   others in a composition, so it appears ONLY on shared shots, on exactly one
+   card, and never on a shot standing alone — a full screen of negative was
+   reading as the montage being built out of inversions:
+
+     shot 4  C negative     shot 6  A negative
+     shot 8  B negative     shot 10 A negative
+
+   Darkening lets a colour field read around the figure. */
+.cr-tri-panel--a .cr-tri-img,
+.cr-tri-panel--b .cr-tri-img,
+.cr-tri-panel--c .cr-tri-img { filter: var(--tri-plain); }
+@keyframes cr-tri-treat-a {
+  0%     { filter: var(--tri-plain); }
+  32.33% { filter: var(--tri-dark);      }  /* dark */
+  38.33% { filter: var(--tri-dark);      }  /* dark */
+  55%    { filter: var(--tri-i6);        }  /* inversion slot */
+  71%    { filter: var(--tri-dark);      }  /* dark */
+  90.33% { filter: var(--tri-i10);       }  /* inversion slot */
+}
+@keyframes cr-tri-treat-b {
+  0%     { filter: var(--tri-plain); }
+  22.33% { filter: var(--tri-plain);     }  /* plain */
+  48.67% { filter: var(--tri-dark);      }  /* dark */
+  65%    { filter: var(--tri-plain);     }  /* plain */
+  71%    { filter: var(--tri-plain);     }  /* plain */
+}
+@keyframes cr-tri-treat-c {
+  0%     { filter: var(--tri-plain); }
+  16.33% { filter: var(--tri-dark);      }  /* dark */
+  22.33% { filter: var(--tri-dark);      }  /* dark */
+  38.33% { filter: var(--tri-i4);        }  /* inversion slot */
+  55%    { filter: var(--tri-dark);      }  /* dark */
+  71%    { filter: var(--tri-i8);        }  /* inversion slot */
+  84.67% { filter: var(--tri-dark);      }  /* dark */
+  90.33% { filter: var(--tri-dark);      }  /* dark */
+}
+
+/* Ten shots. Every card runs the full height; the screen is only ever divided
+   vertically.
+
+   A shot with ONE card is either the full frame or a centred column — never a
+   column pushed to one side, which left the middle of the screen empty with
+   the picture adrift at the edge. Off-centre shapes are for shared shots,
+   where the other cards fill what they leave.
+
+   No card may land in the same box twice running either: A sat in the left
+   third for three shots out of five and the montage looked static however much
+   changed around it.
+
+     0.00 ▸  A  full frame        100 mid   plain   — still
+     1.10 ●  C  centre column     210 top   dark
+     1.70 ●  B  full frame        150 bot   plain
+     2.30 ●  A left 2/3           210 mid   dark
+             C right 1/3          100 top   NEG
+     3.70 ●  A  full frame        150 bot   plain
+     4.30 ●  A left 1/3           100 top   NEG
+             C right 2/3          210 mid   dark
+     6.00 ●  B  centre column     100 mid   plain
+     7.20 ●  C | A | B  thirds    100/210/150, sliding within themselves
+     9.40 ●  C  centre column     150 bot   dark
+    11.00 ●  A left 2/3           150 mid   NEG
+             C right 1/3          210 bot   plain */
 @keyframes cr-tri-lay-a {
-  0%   { inset: 0 45% 0 0; }      /* tall left plate */
-  8%   { inset: 0 0 45% 0; }      /* wide top plate */
-  36%  { inset: 0 0 0 46%; }      /* tall right plate */
-  62%  { inset: 42% 0 0 0; }      /* wide bottom plate */
-  84%  { inset: 0 38% 34% 0; }    /* upper-left block */
+  0%     { inset: 0% 0% 0% 0%;            opacity: 1; visibility: visible; }
+  16.33% { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
+  32.33% { inset: 0% 33% 0% 33%;          opacity: 1; visibility: visible; }
+  38.33% { inset: 0% 33% 0% 0%;           opacity: 1; visibility: visible; }
+  48.67% { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
+  55%    { inset: 0% 67% 0% 0%;           opacity: 1; visibility: visible; }
+  65%    { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
+  71%    { inset: 0% 33% 0% 0%;           opacity: 1; visibility: visible; }
+  84.67% { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
+  90.33% { inset: 0% 67% 0% 0%;           opacity: 1; visibility: visible; }
 }
 @keyframes cr-tri-lay-b {
-  0%   { inset: 0 0 50% 55%; }
-  8%   { inset: 55% 50% 0 0; }
-  36%  { inset: 0 54% 55% 0; }
-  62%  { inset: 0 52% 58% 0; }
-  84%  { inset: 0 0 0 62%; }
+  0%     { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
+  22.33% { inset: 0% 67% 0% 0%;           opacity: 1; visibility: visible; }
+  32.33% { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
+  48.67% { inset: 0% 0% 0% 0%;            opacity: 1; visibility: visible; }
+  55%    { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
+  65%    { inset: 0% 33% 0% 33%;          opacity: 1; visibility: visible; }
+  71%    { inset: 0% 0% 50% 67%;          opacity: 1; visibility: visible; }
+  84.67% { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
 }
 @keyframes cr-tri-lay-c {
-  0%   { inset: 50% 0 0 55%; }
-  8%   { inset: 55% 0 0 50%; }
-  36%  { inset: 45% 54% 0 0; }
-  62%  { inset: 0 0 58% 48%; }
-  84%  { inset: 66% 38% 0 0; }
+  0%     { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
+  16.33% { inset: 0% 33% 0% 33%;          opacity: 1; visibility: visible; }
+  22.33% { inset: 0% 0% 0% 33%;           opacity: 1; visibility: visible; }
+  32.33% { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
+  38.33% { inset: 0% 0% 0% 67%;           opacity: 1; visibility: visible; }
+  48.67% { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
+  55%    { inset: 0% 0% 0% 33%;           opacity: 1; visibility: visible; }
+  65%    { inset: 50% 50% 50% 50%; opacity: 0; visibility: hidden; }
+  71%    { inset: 50% 0% 0% 67%;          opacity: 1; visibility: visible; }
+  84.67% { inset: 0% 0% 0% 0%;            opacity: 1; visibility: visible; }
+  90.33% { inset: 0% 0% 0% 33%;           opacity: 1; visibility: visible; }
 }
 
-/* One portrait, three magnifications: full figure → chest → eyes */
+/* The stepped size lives on the `scale` property and the slow push on
+   `transform`, which compose instead of overwriting each other — one animation
+   can then own the discrete cuts while another owns the continuous zoom.
+
+   `will-change` matters here: the picture carries a filter, and rescaling a
+   filtered bitmap re-rasterises it every frame, which is what made this style
+   crawl before. Promoted to its own layer it is rasterised once per cut and
+   the zoom is composited. */
 .cr-tri-img {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
-  object-fit: cover;
-  filter: grayscale(.3) saturate(.85) contrast(1.26) brightness(.9);
-  /* Own compositor layer, so the continuous push between cuts stays a GPU
-     transform instead of repainting the filtered bitmap each frame. */
-  will-change: transform;
-}
-
-/* Three genuinely different framings — the point of a triptych. A holds the
-   whole figure so the montage always carries a sense of scale; B is head and
-   shoulders; C is tight on the face. Each pivots its zoom on the point it is
-   framed around, so pushing in tightens there instead of drifting off. */
-.cr-tri-panel--a .cr-tri-img {
-  object-fit: contain; object-position: 50% 50%;
+  object-fit: contain;
   transform-origin: 50% 50%;
-}
-.cr-tri-panel--b .cr-tri-img {
-  object-position: 43% 17%;
-  transform-origin: 43% 17%;
-}
-.cr-tri-panel--c .cr-tri-img {
-  object-position: 56% 8%;
-  transform-origin: 56% 8%;
+  will-change: transform, translate;
 }
 
-/* Each panel re-cuts instead of holding one crop: the transform jumps to a new
-   framing on the exact frame the flare fires (same 7s cycle and delay as
-   cr-tri-cut), then drifts slowly until the next cut. Panels keep their own
-   magnification band — wide / chest / eyes — so the triptych still escalates
-   left to right while the montage keeps moving. */
-.cr-tri-panel--a .cr-tri-img { animation: cr-tri-frame-a 8s ease-out 1.7s infinite; }
-.cr-tri-panel--b .cr-tri-img { animation: cr-tri-frame-b 8s ease-out 1.7s infinite; }
-.cr-tri-panel--c .cr-tri-img { animation: cr-tri-frame-c 8s ease-out 1.7s infinite; }
+/* Three sizes, three crop positions, nothing in between.
 
-/* Modest magnifications. The previous 3.6–4.4× on a third-width panel zoomed
-   far past the head and landed on empty background. Each panel keeps its own
-   band — whole figure / medium / close — and drifts a little between cuts.
-   A stays near 1: it is fitted with `contain`, so anything above that starts
-   cropping the very thing it exists to show. */
+   SIZE  100 / 150 / 210 percent of screen height.
+   CROP  top / middle / bottom — object-position 15%, 50%, 85% and no other
+         value, since 24% or 46% is not a fourth position, only the middle
+         nudged, which is what made crops look alike.
+
+   The opening shot is the whole figure at 100% on the full frame: it is the
+   establishing plate and had been zoomed to 150% on a narrow column, which
+   showed a slice of the middle instead of the character.
+
+   Sizes alternate rather than climb — 100, 210, 150, 210, 150, 210, 100, 210,
+   150, 210 — so no three shots running read as a gradual push in.
+
+   Reaching a size depends on the card, as the two fits measure from different
+   edges:
+     narrow column (1/3)  cover x1 / x1.5 / x2.1
+     wide 2/3 column      contain x1 / x1.5
+     full frame           contain x1 / x1.5 */
 @keyframes cr-tri-frame-a {
-  0%,   7.9%  { transform: scale(1);    }
-  8%,  35.9%  { transform: scale(1.05); }
-  36%, 61.9%  { transform: scale(1);    }
-  62%, 83.9%  { transform: scale(1.06); }
-  84%, 100%   { transform: scale(1.02); }
+  0%     { object-fit: contain;  object-position: 50% 50%; transform-origin: 50% 50%; scale: 1; }  /* 100 mid */
+  32.33% { object-fit: cover;    object-position: 52% 15%; transform-origin: 52% 15%; scale: 2.1; }  /* 210 top */
+  38.33% { object-fit: contain;  object-position: 36% 85%; transform-origin: 36% 85%; scale: 1.5; }  /* 150 bot */
+  55%    { object-fit: contain;  object-position: 30% 85%; transform-origin: 30% 85%; scale: 1.705; }  /* 100 bot */
+  71%    { object-fit: contain;  object-position: 38% 50%; transform-origin: 38% 50%; scale: 2.1; }  /* 210 mid */
+  90.33% { object-fit: contain;  object-position: 32% 85%; transform-origin: 32% 85%; scale: 2.557; }  /* 150 bot */
 }
 @keyframes cr-tri-frame-b {
-  0%,   7.9%  { transform: scale(1.4);  }
-  8%,  35.9%  { transform: scale(1.58) translateY(-2%); }
-  36%, 61.9%  { transform: scale(1.44) translateX(2%); }
-  62%, 83.9%  { transform: scale(1.66) translateY(-3%); }
-  84%, 100%   { transform: scale(1.5)  translateX(-2%); }
+  22.33% { object-fit: contain;  object-position: 28% 85%; transform-origin: 28% 85%; scale: 1.705; }  /* 100 bot */
+  48.67% { object-fit: contain;  object-position: 48% 50%; transform-origin: 48% 50%; scale: 1; }  /* 100 mid */
+  65%    { object-fit: contain;  object-position: 46% 15%; transform-origin: 46% 15%; scale: 1.654; }  /* 100 top */
+  71%    { object-fit: cover;    object-position: 74% 85%; transform-origin: 74% 85%; scale: 2.557; }  /* 150 bot */
 }
 @keyframes cr-tri-frame-c {
-  0%,   7.9%  { transform: scale(1.95); }
-  8%,  35.9%  { transform: scale(2.2)  translateY(-1.5%); }
-  36%, 61.9%  { transform: scale(2.02) translateX(-2%); }
-  62%, 83.9%  { transform: scale(2.32) translateY(-2%); }
-  84%, 100%   { transform: scale(2.1)  translateX(2%); }
+  16.33% { object-fit: cover;    object-position: 44% 15%; transform-origin: 44% 15%; scale: 2.1; }  /* 210 top */
+  22.33% { object-fit: contain;  object-position: 62% 50%; transform-origin: 62% 50%; scale: 1.5; }  /* 150 mid */
+  38.33% { object-fit: contain;  object-position: 72% 15%; transform-origin: 72% 15%; scale: 1.705; }  /* 100 top */
+  55%    { object-fit: contain;  object-position: 64% 50%; transform-origin: 64% 50%; scale: 2.1; }  /* 210 mid */
+  71%    { object-fit: contain;  object-position: 70% 15%; transform-origin: 70% 15%; scale: 2; }  /* 100 top */
+  84.67% { object-fit: contain;  object-position: 54% 50%; transform-origin: 54% 50%; scale: 1; }  /* 100 mid */
+  90.33% { object-fit: contain;  object-position: 66% 15%; transform-origin: 66% 15%; scale: 2.1; }  /* 210 top */
 }
 
-/* The cut rhythm — flashes with shrinking gaps, the stand-off tightening */
-/* Plain overlay, no blend mode. `screen` forced the compositor to read the
-   backdrop back for three full-panel layers on every frame they were animating;
-   a flat warm wash at these opacities reads the same against dark footage.
-   These keep their stagger — that offset is what makes a cut ripple. */
+/* One appearance, one direction. A card travels in a single straight line for
+   the whole time it is on screen; it may only take a new heading after it has
+   left and come back. That is stricter than tying turns to cuts, and it
+   removes any chance of a card appearing to change its mind mid-shot.
+
+   Mechanically: an appearance gets exactly TWO keyframes, its first frame and
+   its last, so a turn part-way through cannot be expressed. The old block had
+   A running to 4.2% and then back to 0.6% while still on screen, and C
+   reversing vertically the same way — that pair of turns was the curved drift.
+   While a card is hidden the value is simply held, so it neither creeps nor
+   arrives anywhere it should not.
+
+   Across cards the headings oppose, so a composition is counterpoised rather
+   than leaning: on the three-card shot A and B both pull left while C, midway
+   through its long stay, carries the other way. */
+@keyframes cr-tri-pan-a {
+  0%     { translate: 0.0% 0.0%; }
+  16.33% { translate: 0.0% 0.0%; }
+  32.33% { translate: 0.0% 0.0%; }
+  48.67% { translate: -3.4% 2.2%; }
+  55%    { translate: -3.4% 2.2%; }
+  65%    { translate: -0.4% -0.2%; }
+  71%    { translate: -0.4% -0.2%; }
+  84.67% { translate: -4.0% -2.2%; }
+  90.33% { translate: -4.0% -2.2%; }
+  100%   { translate: -7.2% 0.2%; }
+}
+
+@keyframes cr-tri-push-a {
+  0%     { transform: scale(1); }
+  16.33% { transform: scale(1.070); }
+  32.33% { transform: scale(1); }
+  48.67% { transform: scale(1.000); }
+  55%    { transform: scale(1); }
+  65%    { transform: scale(1.000); }
+  71%    { transform: scale(1); }
+  84.67% { transform: scale(1.040); }
+  90.33% { transform: scale(1); }
+  100%   { transform: scale(1.000); }
+}
+@keyframes cr-tri-pan-b {
+  0%     { translate: 0% 0%; }
+  22.33% { translate: 0.0% 0.0%; }
+  32.33% { translate: 2.6% -1.8%; }
+  48.67% { translate: 2.6% -1.8%; }
+  55%    { translate: 2.6% -1.8%; }
+  65%    { translate: 2.6% -1.8%; }
+  84.67% { translate: -1.8% 0.2%; }
+  100%   { translate: -1.8% 0.2%; }
+}
+
+@keyframes cr-tri-push-b {
+  0%     { transform: scale(1); }
+  22.33% { transform: scale(1); }
+  32.33% { transform: scale(1.000); }
+  48.67% { transform: scale(1); }
+  55%    { transform: scale(0.950); }
+  65%    { transform: scale(1); }
+  84.67% { transform: scale(1.000); }
+  100%   { transform: scale(1); }
+}
+@keyframes cr-tri-pan-c {
+  0%     { translate: 0% 0%; }
+  16.33% { translate: 0.0% 0.0%; }
+  32.33% { translate: -2.8% 2.0%; }
+  38.33% { translate: -2.8% 2.0%; }
+  48.67% { translate: 0.4% 3.8%; }
+  55%    { translate: 0.4% 3.8%; }
+  65%    { translate: -2.6% 6.0%; }
+  71%    { translate: -2.6% 6.0%; }
+  100%   { translate: 1.6% 3.6%; }
+}
+
+@keyframes cr-tri-push-c {
+  0%     { transform: scale(1); }
+  16.33% { transform: scale(1); }
+  32.33% { transform: scale(0.940); }
+  38.33% { transform: scale(1); }
+  48.67% { transform: scale(1.000); }
+  55%    { transform: scale(1); }
+  65%    { transform: scale(1.000); }
+  71%    { transform: scale(1); }
+  100%   { transform: scale(1.060); }
+}
+
+.cr-tri-panel--a .cr-tri-img { animation: cr-tri-frame-a 15s step-end 0s infinite both,
+                                          cr-tri-pan-a 15s linear 0s infinite both,
+                                          cr-tri-push-a 15s linear 0s infinite both,
+                                          cr-tri-treat-a 15s step-end 0s infinite both; }
+.cr-tri-panel--b .cr-tri-img { animation: cr-tri-frame-b 15s step-end 0s infinite both,
+                                          cr-tri-pan-b 15s linear 0s infinite both,
+                                          cr-tri-push-b 15s linear 0s infinite both,
+                                          cr-tri-treat-b 15s step-end 0s infinite both; }
+.cr-tri-panel--c .cr-tri-img { animation: cr-tri-frame-c 15s step-end 0s infinite both,
+                                          cr-tri-pan-c 15s linear 0s infinite both,
+                                          cr-tri-push-c 15s linear 0s infinite both,
+                                          cr-tri-treat-c 15s step-end 0s infinite both; }
+
+/* Marks the cut, hardest through the triplets. Plain overlay, no blend mode:
+   screen forced the compositor to read the backdrop back every frame. */
 .cr-tri-flare {
   position: absolute; inset: 0; pointer-events: none;
   background: #f7e6c4; opacity: 0;
+  animation: cr-tri-cut 15s ease-out 0s infinite both;
 }
-.cr-tri-panel--a .cr-tri-flare { animation: cr-tri-cut 8s ease-out 1.70s infinite; }
-.cr-tri-panel--b .cr-tri-flare { animation: cr-tri-cut 8s ease-out 1.78s infinite; }
-.cr-tri-panel--c .cr-tri-flare { animation: cr-tri-cut 8s ease-out 1.86s infinite; }
 @keyframes cr-tri-cut {
-  0%,   7.4%  { opacity: 0;   }
-  8%          { opacity: .26; }
-  8.6%, 35.4% { opacity: 0;   }
-  36%         { opacity: .3;  }
-  36.6%, 61.4%{ opacity: 0;   }
-  62%         { opacity: .34; }
-  62.6%, 83.4%{ opacity: 0;   }
-  84%         { opacity: .38; }
-  84.6%, 100% { opacity: 0;   }
+  0%     { opacity: 0; }
+  0.03%  { opacity: .22; }
+  0.6%   { opacity: 0; }
+  16.3%  { opacity: 0; }
+  16.33% { opacity: .22; }
+  16.93% { opacity: 0; }
+  22.3%  { opacity: 0; }
+  22.33% { opacity: .22; }
+  22.93% { opacity: 0; }
+  32.3%  { opacity: 0; }
+  32.33% { opacity: .22; }
+  32.93% { opacity: 0; }
+  38.3%  { opacity: 0; }
+  38.33% { opacity: .22; }
+  38.93% { opacity: 0; }
+  48.64% { opacity: 0; }
+  48.67% { opacity: .22; }
+  49.27% { opacity: 0; }
+  54.97% { opacity: 0; }
+  55%    { opacity: .22; }
+  55.6%  { opacity: 0; }
+  64.97% { opacity: 0; }
+  65%    { opacity: .22; }
+  65.6%  { opacity: 0; }
+  70.97% { opacity: 0; }
+  71%    { opacity: .22; }
+  71.6%  { opacity: 0; }
+  84.64% { opacity: 0; }
+  84.67% { opacity: .22; }
+  85.27% { opacity: 0; }
+  90.3%  { opacity: 0; }
+  90.33% { opacity: .22; }
+  90.93% { opacity: 0; }
+  100%   { opacity: 0; }
 }
 
-/* Gradient rather than a big inset box-shadow: this repaints every time its
-   panel is resized by a cut, and a wide shadow blur is the expensive way to
-   draw the same falloff. */
 .cr-tri-panel-vig {
   position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse 92% 88% at 50% 48%,
-    transparent 38%, rgba(0,0,0,.55) 78%, rgba(0,0,0,.88) 100%);
+  background: radial-gradient(ellipse 98% 94% at 50% 46%,
+    transparent 52%, rgba(0,0,0,.3) 84%, rgba(0,0,0,.6) 100%);
 }
 
-/* Oversized and slid on transform. Scrolling background-position instead
-   repainted a full-screen dotted pattern on every single frame — the steady
-   drag on this style. The travel is a whole multiple of both tile sizes
-   (150/3, 150/5, 90/3, 90/5) so the loop stays seamless. */
 .cr-tri-dust {
   position: absolute; inset: -20%; z-index: 3; pointer-events: none;
   opacity: .10;
@@ -4322,17 +4682,20 @@
           drop-shadow(0 0 26px rgba(0,0,0,.55));
   animation: cr-ps-portrait-idle 4.4s ease-in-out .82s infinite;
 }
+/* Translate and rotate only, no scale. This image carries two drop-shadows,
+   and re-scaling a filtered layer forces it to be re-rastered every frame —
+   the same trap that made the montage stutter. */
 @keyframes cr-ps-portrait-idle {
-  0%    { transform: translate(0, 0) rotate(0deg) scale(1); }
-  18%   { transform: translate(-.7%, -1.4%) rotate(.5deg) scale(1.018); }
-  34%   { transform: translate(.5%, .6%) rotate(-.4deg) scale(1.004); }
+  0%    { transform: translate(0, 0) rotate(0deg); }
+  18%   { transform: translate(-.9%, -1.6%) rotate(.6deg); }
+  34%   { transform: translate(.6%, .8%) rotate(-.5deg); }
   /* sharp double-jolt — the beat that keeps it from settling */
-  50%   { transform: translate(0, 0) rotate(0deg) scale(1); }
-  52.5% { transform: translate(1.6%, -1%) rotate(-1.4deg) scale(1.035); }
-  55%   { transform: translate(-1.2%, .5%) rotate(1deg) scale(1.01); }
-  57.5% { transform: translate(0, 0) rotate(0deg) scale(1); }
-  74%   { transform: translate(.8%, -1.1%) rotate(.6deg) scale(1.02); }
-  100%  { transform: translate(0, 0) rotate(0deg) scale(1); }
+  50%   { transform: translate(0, 0) rotate(0deg); }
+  52.5% { transform: translate(2%, -1.3%) rotate(-1.6deg); }
+  55%   { transform: translate(-1.5%, .7%) rotate(1.2deg); }
+  57.5% { transform: translate(0, 0) rotate(0deg); }
+  74%   { transform: translate(1%, -1.4%) rotate(.7deg); }
+  100%  { transform: translate(0, 0) rotate(0deg); }
 }
 @keyframes cr-ps-portrait-in {
   0%   { opacity: 0; transform: translateX(-42%) rotate(-14deg) scale(1.28); }
