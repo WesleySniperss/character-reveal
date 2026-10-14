@@ -4050,16 +4050,12 @@
   100% { opacity: 0; }
 }
 
-/* A pool of shadow behind the figure, so it stands out against the fire
-   instead of drowning in it */
-.cr-baa-shade {
-  position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: radial-gradient(ellipse 26% 40% at 50% 46%, rgba(4,0,0,.55) 0%, rgba(4,0,0,.3) 50%, transparent 80%);
-}
-
 /* ─── The figure ──────────────────────────────────────────────────────────
    The edge mask sits on the image itself, its ellipse inscribed in the
-   image, so even a rectangular portrait melts into the fire on every side. */
+   image, so even a rectangular portrait melts into the fire on every side.
+   Nothing dark lies over it or pools behind it: a vignette over the frame
+   sank the top of the picture — the head — into black, and a shadow pool
+   behind it ringed the picture with a dark halo. */
 .cr-baa-portrait {
   position: absolute; top: 5%; bottom: 21%; left: 19%; right: 19%;
   z-index: 2; overflow: hidden;
@@ -4084,13 +4080,6 @@
   filter: saturate(.8) contrast(1.1) brightness(.9) sepia(.12);
   -webkit-mask-image: radial-gradient(ellipse 50% 52% at 50% 50%, #000 56%, rgba(0,0,0,.5) 80%, transparent 98%);
   mask-image:         radial-gradient(ellipse 50% 52% at 50% 50%, #000 56%, rgba(0,0,0,.5) 80%, transparent 98%);
-}
-
-.cr-baa-vignette {
-  position: absolute; inset: 0; z-index: 3; pointer-events: none;
-  background:
-    radial-gradient(ellipse 90% 86% at 50% 50%, transparent 55%, rgba(4,0,0,.6) 100%),
-    linear-gradient(to bottom, rgba(4,0,0,.55) 0%, transparent 26%);
 }
 
 /* ─── Embers rising out of the fire ───────────────────────────────────── */

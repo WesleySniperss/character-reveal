@@ -1910,9 +1910,7 @@ function crHtmlVtmBaali(img, name, cls, custom, showClan, clan) {
     <div class="cr-baa-bg"></div>
     <canvas class="cr-baa-fire"></canvas>
     <div class="cr-baa-flare"></div>
-    <div class="cr-baa-shade"></div>
     <div class="cr-baa-portrait">${img}</div>
-    <div class="cr-baa-vignette"></div>
     <div class="cr-baa-embers">${embers}</div>
     <div class="cr-baa-floor"></div>
     <div class="cr-baa-rift"></div>
