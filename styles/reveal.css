@@ -3301,6 +3301,10 @@
 .cr-crest--void   { filter: brightness(0) invert(1) sepia(1) saturate(2)   hue-rotate(220deg) opacity(0.55); }
 .cr-crest--bone   { filter: brightness(0) invert(1) sepia(1) saturate(1.2) hue-rotate(35deg)  opacity(0.60); }
 .cr-crest--flesh  { filter: brightness(0) invert(1) sepia(1) saturate(2.8) hue-rotate(-15deg) opacity(0.60); }
+/* sepia() barely tints pure white, so these two dim the white first — the
+   tint then comes out as real colour: molten orange, and old bronze */
+.cr-crest--hellfire { filter: brightness(0) invert(1) brightness(.6)  sepia(1) saturate(4)   hue-rotate(-28deg) opacity(0.82); }
+.cr-crest--mirage   { filter: brightness(0) invert(1) brightness(.55) sepia(1) saturate(1.7) hue-rotate(-8deg) brightness(1.05) opacity(0.70); }
 
 /* ═══════════════════════════════════════════════════════════════
    VTM — TREMERE
@@ -3956,8 +3960,302 @@
   color: rgba(162,108,75,.45); letter-spacing: .12em;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   VTM BAALI — infernalists: the whole frame burns behind the figure, and now
+   and then the top of the blaze rises into the shape of a crown
+   ═══════════════════════════════════════════════════════════════════════════ */
 
+#cr-overlay[data-style="vtm-baali"] { background: #060203; }
 
+/* The sky over the blaze: dark, but lit a dull red from below, so the
+   whole frame reads as burning — not just the band where the flames are */
+.cr-baa-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 110% 70% at 50% 100%, rgba(120,22,8,.38) 0%, rgba(70,10,6,.2) 45%, transparent 75%),
+    linear-gradient(to bottom, #090203 0%, #120404 45%, #1c0604 100%);
+}
+
+/* The blaze: a small canvas drawn by crBaaFire and stretched over the
+   screen. The browser's smoothing on that stretch is what turns the grid's
+   cells into soft fire. */
+.cr-baa-fire {
+  position: absolute; inset: 0; z-index: 1;
+  width: 100%; height: 100%; display: block;
+}
+
+/* A pool of shadow behind the figure, so it stands out against the fire
+   instead of drowning in it */
+.cr-baa-shade {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse 26% 40% at 50% 46%, rgba(4,0,0,.55) 0%, rgba(4,0,0,.3) 50%, transparent 80%);
+}
+
+/* ─── The figure ──────────────────────────────────────────────────────────
+   The edge mask sits on the image itself, its ellipse inscribed in the
+   image, so even a rectangular portrait melts into the fire on every side. */
+.cr-baa-portrait {
+  position: absolute; top: 5%; bottom: 21%; left: 19%; right: 19%;
+  z-index: 2; overflow: hidden;
+  display: flex; align-items: flex-start; justify-content: center;
+  animation: cr-fade-in 1.6s ease 1s both;
+}
+.cr-baa-portrait .cr-portrait-img {
+  width: auto; max-width: 100%; height: 100%;
+  object-fit: contain; object-position: center top;
+  filter: saturate(.8) contrast(1.1) brightness(.9) sepia(.12);
+  -webkit-mask-image: radial-gradient(ellipse 50% 52% at 50% 50%, #000 56%, rgba(0,0,0,.5) 80%, transparent 98%);
+  mask-image:         radial-gradient(ellipse 50% 52% at 50% 50%, #000 56%, rgba(0,0,0,.5) 80%, transparent 98%);
+}
+
+.cr-baa-vignette {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background:
+    radial-gradient(ellipse 90% 86% at 50% 50%, transparent 55%, rgba(4,0,0,.6) 100%),
+    linear-gradient(to bottom, rgba(4,0,0,.55) 0%, transparent 26%);
+}
+
+/* ─── Embers rising out of the fire ───────────────────────────────────── */
+.cr-baa-embers {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none; overflow: hidden;
+  animation: cr-fade-in 2s ease 1.4s both;
+}
+.cr-baa-ember {
+  position: absolute; top: 102%;
+  width: var(--sz); height: var(--sz); border-radius: 50%;
+  background: radial-gradient(circle, #ffe2a0 0%, #ff7a22 45%, rgba(200,30,10,0) 72%);
+  opacity: 0; will-change: transform, opacity;
+  animation: cr-baa-ember var(--d) linear var(--dl) infinite;
+}
+@keyframes cr-baa-ember {
+  0%   { opacity: 0; transform: translate(0, 0); }
+  8%   { opacity: var(--op); }
+  50%  { transform: translate(var(--sw), -56vh); }
+  88%  { opacity: calc(var(--op) * .55); }
+  100% { opacity: 0; transform: translate(calc(var(--sw) * -.5), -112vh); }
+}
+
+/* ─── Text ──────────────────────────────────────────────────────────────── */
+.cr-baa-text {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
+  height: 21%; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end; text-align: center;
+  padding: 0 clamp(24px,5vw,60px) clamp(18px,3.2vh,42px); gap: 4px;
+  background: linear-gradient(to top, rgba(8,1,1,.97) 52%, transparent 100%);
+  animation: cr-fade-in 1s ease 2.8s both;
+}
+.cr-baa-clan {
+  font-family: 'Cinzel', 'Forum', serif; font-size: clamp(.48rem,.76vw,.7rem);
+  letter-spacing: .6em; color: rgba(255,112,52,.86);
+  text-shadow: 0 0 14px rgba(255,70,20,.6), 0 1px 3px #000;
+}
+/* Red-hot iron: white at the top of the letters cooling to blood-red */
+.cr-baa-name {
+  font-family: 'Cinzel Decorative', 'Forum', serif; font-weight: 900;
+  font-size: clamp(1.8rem,4.4vw,4rem);
+  letter-spacing: .1em; line-height: 1.15;
+  background: linear-gradient(to bottom, #fff2c8 0%, #ffd27a 22%, #ff8a2a 48%, #d8320e 72%, #7a0e06 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 14px rgba(255,90,20,.55)) drop-shadow(0 2px 6px rgba(0,0,0,.95));
+  animation: cr-baa-name-in 1s cubic-bezier(.2,.8,.3,1) 2.9s both;
+}
+@keyframes cr-baa-name-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.cr-baa-sub {
+  font-family: 'IM Fell English', 'Lora', serif; font-style: italic;
+  font-size: clamp(.62rem,1vw,.88rem);
+  color: rgba(226,152,112,.56); letter-spacing: .12em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VTM RAVNOS — Fata Morgana: a wanderer on a night road. A far fire smoulders
+   on the horizon, smoke creeps over the ground, and pale illusions of the
+   figure peel away from it and sink back in.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+#cr-overlay[data-style="vtm-ravnos"] { background: #050508; }
+
+/* Night: near black overhead, warming only at the horizon (68%), where a
+   far-off fire smoulders behind the figure */
+.cr-rav-sky {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 44% 18% at 50% 68%, rgba(150,78,40,.34) 0%, rgba(92,44,24,.15) 45%, transparent 75%),
+    linear-gradient(to bottom, #050508 0%, #08080e 30%, #100d13 50%, #1b1316 60%, #2a1912 65.5%, #382015 68%);
+  animation: cr-fade-in 1s ease both;
+}
+/* The smoulder breathes slowly, like embers under ash */
+.cr-rav-sky::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 30% 10% at 50% 68%, rgba(196,104,52,.22) 0%, transparent 70%);
+  will-change: opacity;
+  animation: cr-rav-smoulder 7s ease-in-out infinite alternate;
+}
+@keyframes cr-rav-smoulder {
+  from { opacity: .35; }
+  to   { opacity: 1;   }
+}
+/* Stars: each layer is one 2px dot whose box-shadow list holds the sky */
+.cr-rav-stars {
+  position: absolute; left: 0; top: 0; z-index: 0;
+  width: 2px; height: 2px; border-radius: 50%;
+  will-change: opacity;
+  animation: cr-rav-twinkle 6s ease-in-out var(--dl) infinite alternate;
+}
+@keyframes cr-rav-twinkle {
+  from { opacity: .3; }
+  to   { opacity: .9; }
+}
+
+/* The clan's wheel standing dim behind the figure, half sunk below the
+   horizon — old bronze, barely there, turning very slowly. The ground in
+   front of it hides the lower half. */
+.cr-rav-wheel {
+  position: absolute; left: 50%; top: 68%; z-index: 1; pointer-events: none;
+  width: 124vmin; height: 124vmin; margin: -62vmin 0 0 -62vmin;
+  opacity: 0;
+  animation: cr-rav-wheel-rise 3s cubic-bezier(.2,.7,.2,1) .1s both;
+}
+.cr-rav-wheel img {
+  width: 100%; height: 100%; object-fit: contain; display: block;
+  /* colour-matrix filters only — cheap to keep on a turning layer. White is
+     dimmed before sepia, or the tint barely shows. */
+  filter: brightness(0) invert(1) brightness(.42) sepia(1) saturate(1.5) hue-rotate(-10deg);
+  will-change: transform;
+  animation: cr-tre-spin 240s linear infinite;
+}
+@keyframes cr-rav-wheel-rise {
+  from { opacity: 0;   transform: translateY(10vmin); }
+  to   { opacity: .12; transform: none; }
+}
+
+.cr-rav-ground {
+  position: absolute; left: 0; right: 0; top: 68%; bottom: 0; z-index: 2;
+  background: linear-gradient(to bottom, #311c13 0%, #1a100d 8%, #0b0809 30%, #070607 60%, #050405 100%);
+}
+/* No drawn line — the horizon is only where the glow meets the dark */
+.cr-rav-ground::before {
+  content: ''; position: absolute; left: 0; right: 0; top: -6px; height: 12px;
+  background: linear-gradient(90deg, transparent 8%, rgba(176,98,52,.14) 30%, rgba(204,120,64,.28) 50%, rgba(176,98,52,.14) 70%, transparent 92%);
+  filter: blur(4px);
+}
+/* Heat shimmer lying on the road where the fire is */
+.cr-rav-glim {
+  position: absolute; z-index: 3; height: .7vh; pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(214,150,100,.3) 0%, rgba(160,96,60,.1) 45%, transparent 72%);
+  will-change: transform, opacity;
+  animation: cr-rav-glim var(--d) ease-in-out var(--dl) infinite alternate;
+}
+@keyframes cr-rav-glim {
+  from { opacity: .2; transform: scaleX(.8);   }
+  to   { opacity: .6; transform: scaleX(1.12); }
+}
+
+/* Smoke creeping low over the ground: wide soft ellipses that only ever
+   translate. The front layer is thin and stays below the face. */
+.cr-rav-smokes {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: hidden;
+  animation: cr-fade-in 2s ease .1s both;
+}
+.cr-rav-smokes--front { z-index: 6; }
+.cr-rav-smoke {
+  position: absolute; width: var(--w); height: var(--h);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(142,126,116,.62) 0%, rgba(92,80,76,.28) 40%, transparent 70%);
+  opacity: var(--op);
+  will-change: transform;
+  animation: cr-rav-drift var(--d) ease-in-out var(--dl) infinite alternate;
+}
+@keyframes cr-rav-drift {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(var(--dx), var(--dy)); }
+}
+
+/* ─── The figure and its illusions ────────────────────────────────────────
+   Two pale copies of the token peel away from the figure once it has
+   appeared and drift apart, very slowly, for as long as the reveal stays up —
+   one way only, never back. The edge mask sits on the image itself, its
+   ellipse inscribed in the image, so even a rectangular portrait fades out
+   at its own edges. */
+.cr-rav-portrait, .cr-rav-echo {
+  position: absolute; top: 5%; bottom: 22%; left: 20%; right: 20%;
+  overflow: hidden;
+  display: flex; align-items: flex-start; justify-content: center;
+}
+.cr-rav-portrait .cr-portrait-img, .cr-rav-echo .cr-portrait-img {
+  width: auto; max-width: 100%; height: 100%;
+  object-fit: contain; object-position: center top;
+  -webkit-mask-image: radial-gradient(ellipse 50% 52% at 50% 48%, #000 56%, rgba(0,0,0,.5) 80%, transparent 98%);
+  mask-image:         radial-gradient(ellipse 50% 52% at 50% 48%, #000 56%, rgba(0,0,0,.5) 80%, transparent 98%);
+}
+.cr-rav-portrait { z-index: 5; animation: cr-fade-in 1.1s ease .3s both; }
+.cr-rav-portrait .cr-portrait-img {
+  filter: saturate(.72) contrast(1.06) brightness(.9) sepia(.08);
+}
+
+/* The copies peel off as the figure appears — a visible first parting, then
+   slower and slower — and keep drifting apart for most of half a minute, so
+   they are always still moving and never come back. --sp is how far they
+   have gone by the end; the two never quite keep pace with each other. */
+.cr-rav-echo { z-index: 4; --sp: 17vw; opacity: 0; will-change: transform, opacity; }
+.cr-rav-echo--l { animation: cr-rav-drift-l 24s cubic-bezier(.1,.7,.3,1) .8s both; }
+.cr-rav-echo--r { animation: cr-rav-drift-r 27s cubic-bezier(.1,.7,.3,1) 1s both; }
+/* Drained of colour with a touch of old sepia — smoke, not stained glass.
+   Colour matrices only, cheap on a moving layer. */
+.cr-rav-echo .cr-portrait-img { filter: grayscale(1) sepia(.3) brightness(.82) contrast(1.05); }
+
+@keyframes cr-rav-drift-l {
+  0%   { opacity: 0;   transform: translate(0, 0); }
+  5%   { opacity: .3;  }
+  100% { opacity: .14; transform: translate(calc(var(--sp) * -1), -.8vh); }
+}
+@keyframes cr-rav-drift-r {
+  0%   { opacity: 0;   transform: translate(0, 0); }
+  5%   { opacity: .3;  }
+  100% { opacity: .14; transform: translate(var(--sp), .6vh); }
+}
+
+.cr-rav-vignette {
+  position: absolute; inset: 0; z-index: 7; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 78% at 50% 44%, transparent 38%, rgba(3,2,5,.9) 100%),
+    linear-gradient(to bottom, rgba(3,3,6,.5) 0%, transparent 20%, transparent 72%, rgba(4,3,5,.75) 100%);
+}
+
+/* ─── Text ──────────────────────────────────────────────────────────────── */
+.cr-rav-text {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 10;
+  height: 22%; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end; text-align: center;
+  padding: 0 clamp(24px,5vw,60px) clamp(18px,3.2vh,42px); gap: 4px;
+  background: linear-gradient(to top, rgba(5,4,6,.97) 52%, transparent 100%);
+  animation: cr-fade-in .8s ease 1.1s both;
+}
+.cr-rav-clan {
+  font-family: 'Cinzel', 'Forum', serif; font-size: clamp(.44rem,.68vw,.62rem);
+  letter-spacing: .55em; color: rgba(178,148,112,.72);
+  text-shadow: 0 0 12px rgba(160,100,50,.35);
+}
+/* Old gold on parchment, lit by the far fire */
+.cr-rav-name {
+  font-family: 'Playfair Display', 'Lora', serif; font-weight: 700;
+  font-size: clamp(1.8rem,4.4vw,4.1rem);
+  letter-spacing: .04em; line-height: 1.1;
+  background: linear-gradient(to bottom, #efe4cc 0%, #d6c09a 50%, #9c8258 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 14px rgba(170,110,60,.3)) drop-shadow(0 2px 6px rgba(0,0,0,.95));
+  animation: cr-fade-in .9s ease 1.4s both;
+}
+.cr-rav-sub {
+  font-family: 'IM Fell English', 'Lora', serif; font-style: italic;
+  font-size: clamp(.6rem,1vw,.86rem);
+  color: rgba(170,152,132,.5); letter-spacing: .12em;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TRIPTYCH — Leone's finale: three panels holding the same face at widening

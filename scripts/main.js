@@ -56,6 +56,8 @@ const CR_STYLES = [
   { id: 'vtm-lasombra',  label: 'VTM Lasombra',  icon: 'fa-moon' },
   { id: 'vtm-hecata',    label: 'VTM Hecata',    icon: 'fa-skull' },
   { id: 'vtm-tzimisce',  label: 'VTM Tzimisce',  icon: 'fa-dna' },
+  { id: 'vtm-baali',     label: 'VTM Baali',     icon: 'fa-fire-flame-curved' },
+  { id: 'vtm-ravnos',    label: 'VTM Ravnos',    icon: 'fa-dice' },
 ];
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
@@ -502,6 +504,7 @@ async function crShowOverlay(data) {
       el.querySelectorAll('.cr-tre-eye-wrap').forEach(crTreBlink);
     }
     if (el.dataset.style === 'tarantino') crTaRun(el);
+    if (el.dataset.style === 'vtm-baali') crBaaFire(el);
   }));
 
   // Every listener tied to this overlay shares one AbortController, so a
@@ -637,6 +640,8 @@ function crBuildHTML(data) {
     case 'vtm-lasombra':   return crHtmlVtmLasombra(img, name, cls, custom, showClan, actorClan);
     case 'vtm-hecata':     return crHtmlVtmHecata(img, name, cls, custom, showClan, actorClan);
     case 'vtm-tzimisce':   return crHtmlVtmTzimisce(img, name, cls, custom, showClan, actorClan);
+    case 'vtm-baali':      return crHtmlVtmBaali(img, name, cls, custom, showClan, actorClan);
+    case 'vtm-ravnos':     return crHtmlVtmRavnos(img, name, cls, custom, showClan, actorClan);
     default:               return crHtmlMinimal(img, name, cls, custom, actorImg);
   }
 }
@@ -1883,3 +1888,288 @@ function crHtmlVtmTzimisce(img, name, cls, custom, showClan, clan) {
   `;
 }
 
+// ─── Style: VTM Baali ────────────────────────────────────────────────────────
+// Infernalists. The whole frame burns behind the figure, and now and then,
+// for a few seconds, the top of the blaze rises into something like a crown —
+// horns curling out at the edges, points climbing toward the middle — before
+// it breaks up into plain fire again. Embers drift up through it.
+function crHtmlVtmBaali(img, name, cls, custom, showClan, clan) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const clanLabel = showClan ? (clan || 'BAALI') : null;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const n2 = v => v.toFixed(2);
+
+  // Embers drifting up out of the fire across the whole frame.
+  const embers = Array.from({ length: 22 }, () => {
+    const d = rnd(9, 17);
+    return `<span class="cr-baa-ember" style="left:${n2(rnd(2, 98))}%;--sz:${n2(rnd(1.8, 4.2))}px;`
+      + `--sw:${n2(rnd(-6, 6))}vw;--op:${n2(rnd(.4, .9))};--d:${n2(d)}s;--dl:${n2(-rnd(0, d))}s"></span>`;
+  }).join('');
+
+  return `
+    <div class="cr-baa-bg"></div>
+    <canvas class="cr-baa-fire"></canvas>
+    <div class="cr-baa-shade"></div>
+    <div class="cr-baa-portrait">${img}</div>
+    <div class="cr-baa-vignette"></div>
+    <div class="cr-baa-embers">${embers}</div>
+    <div class="cr-baa-text">
+      ${showClan ? `<img class="cr-crest cr-crest--hellfire" src="modules/character-reveal/assets/Baali_symbol.png" alt="">` : ""}
+      ${clanLabel ? `<div class="cr-baa-clan">✦ ${clanLabel.toUpperCase()} ✦</div>` : ''}
+      ${name ? `<div class="cr-baa-name">${name}</div>` : ''}
+      ${sub  ? `<div class="cr-baa-sub">${sub}</div>` : ''}
+    </div>
+  `;
+}
+
+// The blaze is the classic "Doom fire" automaton: every step each cell hands
+// its heat to a random neighbour in the row above, losing a little on the
+// way. It runs on a grid 256 cells wide that the browser stretches over the
+// whole screen — one small array pass and one small texture upload per step,
+// far cheaper than animating full-screen CSS gradients.
+//
+// The heat lost per row is set column by column, and that is where the crown
+// lives: during a swell the columns under a crown's points lose heat slowly
+// and burn straight up instead of wandering sideways, the gaps between them
+// are fed less heat and sink, the horns near the edges lean outward — and
+// for a moment the top of the blaze is a crown's silhouette.
+const CR_BAA_FIRE_W      = 256;   // grid width; its height follows the screen
+const CR_BAA_FIRE_LEVELS = 48;    // heat levels, 0 = cold
+const CR_BAA_FIRE_STEP   = 25;    // ms per automaton step (40 steps/s)
+
+// Crown points, mirrored about the centre: [distance from centre as a
+// fraction of the width, relative height, spread]. The horns stand far
+// enough out to clear the figure on both sides, and far enough in that
+// their outward lean doesn't run them into the edge of the screen.
+const CR_BAA_CROWN_POINTS = [[0, 1, .045], [.17, .62, .035], [.29, .78, .035]];
+const CR_BAA_CROWN_HORNS  = [.4, .95, .04];
+
+// Heat → colour: smoke-dark tips, a crimson body, a hot core only at the root.
+// [heat 0–1, r, g, b, alpha]
+const CR_BAA_PALETTE_STOPS = [
+  [0,   0,   0,   0,   0  ],
+  [.05, 30,  3,   3,   .35],
+  [.14, 70,  8,   5,   .7 ],
+  [.26, 125, 16,  7,   .92],
+  [.4,  178, 34,  10,  1  ],
+  [.55, 218, 66,  16,  1  ],
+  [.7,  242, 112, 32,  1  ],
+  [.85, 252, 166, 68,  1  ],
+  [1,   255, 226, 160, 1  ],
+];
+
+// One packed colour per heat level. ImageData holds RGBA bytes, which a
+// little-endian Uint32Array reads as ABGR.
+function crBaaPalette(levels) {
+  const stops = CR_BAA_PALETTE_STOPS;
+  const out = new Uint32Array(levels + 1);
+  for (let i = 0; i <= levels; i++) {
+    const v = i / levels;
+    let k = 1;
+    while (k < stops.length - 1 && stops[k][0] < v) k++;
+    const a = stops[k - 1], b = stops[k];
+    const f = (v - a[0]) / (b[0] - a[0]);
+    const mix = j => Math.round(a[j] + (b[j] - a[j]) * f);
+    const alpha = Math.round((a[4] + (b[4] - a[4]) * f) * 255);
+    out[i] = ((alpha << 24) | (mix(3) << 16) | (mix(2) << 8) | mix(1)) >>> 0;
+  }
+  return out;
+}
+
+function crBaaFire(el) {
+  const cvs = el.querySelector('.cr-baa-fire');
+  const ctx = cvs?.getContext('2d');
+  if (!ctx) return;
+
+  const W = CR_BAA_FIRE_W, N = CR_BAA_FIRE_LEVELS;
+  const H = Math.max(96, Math.round(W * window.innerHeight / Math.max(1, window.innerWidth)));
+  cvs.width = W; cvs.height = H;
+  const heat  = new Uint8Array(W * H);
+  const frame = ctx.createImageData(W, H);
+  const px    = new Uint32Array(frame.data.buffer);
+  const pal   = crBaaPalette(N);
+
+  // xorshift32 — two draws per cell per step adds up; Math.random is slower.
+  let seed = (Math.random() * 0xffffffff) >>> 0 || 1;
+  const rand = () => {
+    seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5;
+    return (seed >>> 0) / 4294967296;
+  };
+
+  // Per column, fixed: how tall the crown wants it (prof, horns included;
+  // core, the points between the horns) and how the horns lean.
+  const bump = (ad, [c, a, s]) => a * Math.exp(-((ad - c) ** 2) / (2 * s * s));
+  const prof = new Float32Array(W), core = new Float32Array(W), horn = new Float32Array(W);
+  for (let x = 0; x < W; x++) {
+    const d = x / (W - 1) - .5, ad = Math.abs(d);
+    for (const pt of CR_BAA_CROWN_POINTS) core[x] = Math.max(core[x], bump(ad, pt));
+    const hb = bump(ad, CR_BAA_CROWN_HORNS);
+    prof[x] = Math.max(core[x], hb);
+    horn[x] = Math.sign(d) * .3 * hb;
+  }
+  const decay = new Float32Array(W), hop = new Float32Array(W), lean = new Float32Array(W);
+  const root  = new Uint8Array(W);
+  const ph1 = rand() * 6.3, ph2 = rand() * 6.3;
+
+  // The crown comes and goes: a swell every so often — rising over a couple
+  // of seconds, holding, sinking back into plain fire — then a long pause.
+  // The first one comes up with the blaze itself.
+  const RISE = 2.2, HOLD = 1.8, FALL = 2.6;
+  let crownAt = 1.4;
+
+  // Ignition. The root is lit over 1.2 s, but heat climbs only a row per
+  // step: at the normal 40 steps/s the flames "want" to stand taller sooner
+  // than heat can reach, every top hits that limit together and a dead-flat
+  // front crawls up the screen. So while it catches, the automaton runs
+  // three times as fast — heat outruns the growth and the tops are ragged
+  // from the first frame, a quick whoosh — then eases back to normal by 2 s.
+  const speed = t => t < 1.2 ? 3 : t < 2 ? 3 - 2.5 * (t - 1.2) : 1;
+  const smooth = x => x * x * (3 - 2 * x);
+  const crown = t => {
+    let p = t - crownAt;
+    if (p > RISE + HOLD + FALL) { crownAt = t + 5 + rand() * 6; p = t - crownAt; }
+    if (p < 0) return 0;
+    if (p < RISE) return smooth(p / RISE);
+    if (p < RISE + HOLD) return 1;
+    return 1 - smooth((p - RISE - HOLD) / FALL);
+  };
+
+  // Column shapes at time t. Outside a swell: a ragged, slowly shifting top
+  // line. In a swell the gaps sink, the points rise and stop wandering.
+  // Decay is the chance a cell loses one level per row, so a flame stands
+  // about N / decay rows; hop is the chance it shifts a column sideways.
+  function shape(t) {
+    const s = crown(t), lit = Math.min(1, t / 1.2);
+    const wind = .14 * (1 - s) * Math.sin(t * .37 + ph1);   // still while the crown stands
+    for (let x = 0; x < W; x++) {
+      const u = x / (W - 1);
+      const top = .66 + .07 * Math.sin(u * 11 + t * .6 + ph1) + .04 * Math.sin(u * 27 - t * 1.1 + ph2);
+      const h = H * (top * (1 - .36 * s) + .5 * s * prof[x]);
+      decay[x] = Math.min(1, N / Math.max(1, h));
+      hop[x]   = .62 * (1 - .6 * s * core[x]);
+      lean[x]  = s * horn[x] + wind;
+      // the root row: during a swell the gaps are fed less heat
+      root[x]  = Math.round(N * lit * (1 - .34 * s * (1 - prof[x])));
+    }
+  }
+
+  // Spread: rows top-down, so every cell moves up exactly one row per step,
+  // shifting a column left or right with the column's hop chance, the
+  // direction tipped by its lean.
+  function spread() {
+    heat.set(root, (H - 1) * W);
+    for (let y = 1; y < H; y++) {
+      const row = y * W, up = row - W;
+      for (let x = 0; x < W; x++) {
+        const v = heat[row + x];
+        if (v === 0) { heat[up + x] = 0; continue; }
+        const r = rand(), hp = hop[x], pl = hp * (.5 - .5 * lean[x]);
+        let nx = r < pl ? x - 1 : r < hp ? x + 1 : x;
+        if (nx < 0) nx = 0; else if (nx >= W) nx = W - 1;
+        heat[up + nx] = rand() < decay[x] ? v - 1 : v;
+      }
+    }
+  }
+
+  // On the way to colour the heat goes through a small blur — [1 2 1] across,
+  // [1 4 6 4 1] down, so tongues stay tall and narrow: the automaton's
+  // cell-by-cell speckle would otherwise be blown up by the stretch into
+  // TV-static grain. Done at grid resolution it costs a fraction of a ms.
+  const blurX = new Uint16Array(W * H);
+  function draw() {
+    for (let y = 0; y < H; y++) {
+      const row = y * W;
+      for (let x = 0; x < W; x++) {
+        const l = x > 0 ? x - 1 : 0, r = x < W - 1 ? x + 1 : W - 1;
+        blurX[row + x] = heat[row + l] + 2 * heat[row + x] + heat[row + r];
+      }
+    }
+    for (let y = 0; y < H; y++) {
+      const u1 = (y > 0 ? y - 1 : 0) * W, u2 = (y > 1 ? y - 2 : 0) * W;
+      const d1 = (y < H - 1 ? y + 1 : H - 1) * W, d2 = (y < H - 2 ? y + 2 : H - 1) * W;
+      const row = y * W;
+      for (let x = 0; x < W; x++) {
+        px[row + x] = pal[(blurX[u2 + x] + 4 * blurX[u1 + x] + 6 * blurX[row + x]
+                         + 4 * blurX[d1 + x] + blurX[d2 + x]) >> 6];
+      }
+    }
+    ctx.putImageData(frame, 0, 0);
+  }
+
+  // Fixed step rate whatever the monitor's refresh; stops with the overlay.
+  const t0 = performance.now();
+  let last = t0, acc = 0;
+  const tick = now => {
+    if (!el.isConnected) return;
+    acc += Math.min(now - last, 100);
+    last = now;
+    const t = (now - t0) / 1000, every = CR_BAA_FIRE_STEP / speed(t);
+    let stepped = false;
+    while (acc >= every) {
+      acc -= every;
+      shape(t);
+      spread();
+      stepped = true;
+    }
+    if (stepped) draw();
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+// ─── Style: VTM Ravnos ───────────────────────────────────────────────────────
+// Fata Morgana — a wanderer on a night road. Far off, the horizon smoulders;
+// smoke creeps low over the ground. Once the figure has appeared, two pale
+// apparitions of it peel away and drift apart, very slowly, like a mirage
+// coming loose. When the clan may be shown, its wheel stands dim behind the
+// figure, a sun that never quite set.
+function crHtmlVtmRavnos(img, name, cls, custom, showClan, clan) {
+  const sub = [cls, custom].filter(Boolean).join(' · ');
+  const clanLabel = showClan ? (clan || 'RAVNOS') : null;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const n1 = v => v.toFixed(1), n2 = v => v.toFixed(2);
+
+  // A thin scatter of stars: two layers, each a single box-shadow list painted
+  // once, fading in and out of step with each other.
+  const stars = [0, 1].map(i => {
+    const list = Array.from({ length: 22 }, () =>
+      `${n1(rnd(0, 100))}vw ${n1(rnd(0, 52))}vh 0 rgba(222,216,206,${n2(rnd(.15, .55))})`).join(',');
+    return `<div class="cr-rav-stars" style="box-shadow:${list};--dl:${n1(-i * 2.6)}s"></div>`;
+  }).join('');
+
+  // Heat shimmer lying on the road where the far fire is.
+  const glims = [[18, 69.4, 30], [52, 70.2, 34], [34, 72.4, 30]]
+    .map(([x, y, w]) => `<span class="cr-rav-glim" style="left:${x}%;top:${y}%;width:${w}%;`
+      + `--d:${n1(rnd(5, 8))}s;--dl:${n1(-rnd(0, 8))}s"></span>`).join('');
+
+  // Smoke creeping low over the ground — most of it behind the figure, a
+  // couple of thin wisps across its lower half, none up at the face.
+  const wisp = (front) => {
+    const d = rnd(28, 44);
+    return `<span class="cr-rav-smoke" style="left:${n1(rnd(-20, 80))}%;top:${n1(front ? rnd(64, 78) : rnd(54, 80))}%;`
+      + `--w:${n1(rnd(34, 58))}vw;--h:${n1(rnd(12, 20))}vh;--dx:${n1(rnd(-16, 16))}vw;--dy:${n1(rnd(-3, 2))}vh;`
+      + `--op:${n2(front ? rnd(.14, .24) : rnd(.38, .62))};--d:${n1(d)}s;--dl:${n1(-rnd(0, d))}s"></span>`;
+  };
+  const smokeBack  = Array.from({ length: 6 }, () => wisp(false)).join('');
+  const smokeFront = Array.from({ length: 2 }, () => wisp(true)).join('');
+
+  return `
+    <div class="cr-rav-sky"></div>
+    ${stars}
+    ${showClan ? `<div class="cr-rav-wheel"><img src="modules/character-reveal/assets/Ravnos_symbol.webp" alt=""></div>` : ''}
+    <div class="cr-rav-ground"></div>
+    ${glims}
+    <div class="cr-rav-smokes">${smokeBack}</div>
+    <div class="cr-rav-echo cr-rav-echo--l">${img}</div>
+    <div class="cr-rav-echo cr-rav-echo--r">${img}</div>
+    <div class="cr-rav-portrait">${img}</div>
+    <div class="cr-rav-smokes cr-rav-smokes--front">${smokeFront}</div>
+    <div class="cr-rav-vignette"></div>
+    <div class="cr-rav-text">
+      ${showClan ? `<img class="cr-crest cr-crest--mirage" src="modules/character-reveal/assets/Ravnos_symbol.webp" alt="">` : ""}
+      ${clanLabel ? `<div class="cr-rav-clan">— ${clanLabel.toUpperCase()} —</div>` : ''}
+      ${name ? `<div class="cr-rav-name">${name}</div>` : ''}
+      ${sub ? `<div class="cr-rav-sub">${sub}</div>` : ''}
+    </div>
+  `;
+}
