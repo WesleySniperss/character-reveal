@@ -1909,14 +1909,21 @@ function crHtmlVtmBaali(img, name, cls, custom, showClan, clan) {
   return `
     <div class="cr-baa-bg"></div>
     <canvas class="cr-baa-fire"></canvas>
+    <div class="cr-baa-flare"></div>
     <div class="cr-baa-shade"></div>
-    <div class="cr-baa-portrait">${img}</div>
+    <div class="cr-baa-portrait cr-baa-portrait--shadow">${img}</div>
+    <div class="cr-baa-portrait cr-baa-portrait--lit">${img}</div>
     <div class="cr-baa-vignette"></div>
     <div class="cr-baa-embers">${embers}</div>
+    <div class="cr-baa-floor"></div>
+    <div class="cr-baa-rift"></div>
     <div class="cr-baa-text">
       ${showClan ? `<img class="cr-crest cr-crest--hellfire" src="modules/character-reveal/assets/Baali_symbol.png" alt="">` : ""}
       ${clanLabel ? `<div class="cr-baa-clan">✦ ${clanLabel.toUpperCase()} ✦</div>` : ''}
-      ${name ? `<div class="cr-baa-name">${name}</div>` : ''}
+      ${name ? `<div class="cr-baa-name-wrap">
+        <span class="cr-baa-name-hot" aria-hidden="true">${name}</span>
+        <span class="cr-baa-name">${name}</span>
+      </div>` : ''}
       ${sub  ? `<div class="cr-baa-sub">${sub}</div>` : ''}
     </div>
   `;
@@ -1943,6 +1950,8 @@ const CR_BAA_FIRE_STEP   = 25;    // ms per automaton step (40 steps/s)
 // their outward lean doesn't run them into the edge of the screen.
 const CR_BAA_CROWN_POINTS = [[0, 1, .045], [.17, .62, .035], [.29, .78, .035]];
 const CR_BAA_CROWN_HORNS  = [.4, .95, .04];
+// The crown the reveal opens on swaps the centre point for this low one
+const CR_BAA_OPEN_CENTRE  = [0, .3, .06];
 
 // Heat → colour: smoke-dark tips, a crimson body, a hot core only at the root.
 // [heat 0–1, r, g, b, alpha]
@@ -1979,7 +1988,8 @@ function crBaaPalette(levels) {
 function crBaaFire(el) {
   const cvs = el.querySelector('.cr-baa-fire');
   const ctx = cvs?.getContext('2d');
-  if (!ctx) return;
+  // The whole entrance waits on .cr-baa-lit — without a canvas, play it anyway.
+  if (!ctx) { el.classList.add('cr-baa-lit'); return; }
 
   const W = CR_BAA_FIRE_W, N = CR_BAA_FIRE_LEVELS;
   const H = Math.max(96, Math.round(W * window.innerHeight / Math.max(1, window.innerWidth)));
@@ -1997,37 +2007,43 @@ function crBaaFire(el) {
   };
 
   // Per column, fixed: how tall the crown wants it (prof, horns included;
-  // core, the points between the horns) and how the horns lean.
+  // core, the points between the horns) and how the horns lean. The crown
+  // the reveal opens on has a low centre point (profOpen, coreOpen): before
+  // the figure is up, the full one is a lone tongue in the middle, taller
+  // than the figure will be; this way the flames dip there and it rises in
+  // the dip.
   const bump = (ad, [c, a, s]) => a * Math.exp(-((ad - c) ** 2) / (2 * s * s));
   const prof = new Float32Array(W), core = new Float32Array(W), horn = new Float32Array(W);
+  const profOpen = new Float32Array(W), coreOpen = new Float32Array(W);
   for (let x = 0; x < W; x++) {
     const d = x / (W - 1) - .5, ad = Math.abs(d);
-    for (const pt of CR_BAA_CROWN_POINTS) core[x] = Math.max(core[x], bump(ad, pt));
+    for (const pt of CR_BAA_CROWN_POINTS) {
+      const b = bump(ad, pt);
+      core[x] = Math.max(core[x], b);
+      coreOpen[x] = Math.max(coreOpen[x], pt[0] > 0 ? b : bump(ad, CR_BAA_OPEN_CENTRE));
+    }
     const hb = bump(ad, CR_BAA_CROWN_HORNS);
     prof[x] = Math.max(core[x], hb);
+    profOpen[x] = Math.max(coreOpen[x], hb);
     horn[x] = Math.sign(d) * .3 * hb;
   }
   const decay = new Float32Array(W), hop = new Float32Array(W), lean = new Float32Array(W);
   const root  = new Uint8Array(W);
   const ph1 = rand() * 6.3, ph2 = rand() * 6.3;
 
-  // The crown comes and goes: a swell every so often — rising over a couple
-  // of seconds, holding, sinking back into plain fire — then a long pause.
-  // The first one comes up with the blaze itself.
-  const RISE = 2.2, HOLD = 1.8, FALL = 2.6;
-  let crownAt = 1.4;
-
-  // Ignition. The root is lit over 1.2 s, but heat climbs only a row per
-  // step: at the normal 40 steps/s the flames "want" to stand taller sooner
-  // than heat can reach, every top hits that limit together and a dead-flat
-  // front crawls up the screen. So while it catches, the automaton runs
-  // three times as fast — heat outruns the growth and the tops are ragged
-  // from the first frame, a quick whoosh — then eases back to normal by 2 s.
-  const speed = t => t < 1.2 ? 3 : t < 2 ? 3 - 2.5 * (t - 1.2) : 1;
+  // The reveal opens on the crown, low in the middle: the blaze stands in it
+  // from the first frame and holds it while the figure and the name come
+  // up, then sinks into plain fire. After that a swell comes every so often
+  // — rising over a couple of seconds, holding, sinking back — then a long
+  // pause.
+  const RISE = 2.2, HOLD = 1.8, FALL = 2.6, OPEN_HOLD = 3.5;
+  let crownAt = OPEN_HOLD - RISE - HOLD;   // so the opening hold runs straight into a fall
+  let opening = true;                      // until that fall is over: the opening crown
   const smooth = x => x * x * (3 - 2 * x);
   const crown = t => {
+    if (t < OPEN_HOLD) return 1;
     let p = t - crownAt;
-    if (p > RISE + HOLD + FALL) { crownAt = t + 5 + rand() * 6; p = t - crownAt; }
+    if (p > RISE + HOLD + FALL) { crownAt = t + 5 + rand() * 6; p = t - crownAt; opening = false; }
     if (p < 0) return 0;
     if (p < RISE) return smooth(p / RISE);
     if (p < RISE + HOLD) return 1;
@@ -2039,17 +2055,18 @@ function crBaaFire(el) {
   // Decay is the chance a cell loses one level per row, so a flame stands
   // about N / decay rows; hop is the chance it shifts a column sideways.
   function shape(t) {
-    const s = crown(t), lit = Math.min(1, t / 1.2);
+    const s = crown(t);
+    const P = opening ? profOpen : prof, C = opening ? coreOpen : core;
     const wind = .14 * (1 - s) * Math.sin(t * .37 + ph1);   // still while the crown stands
     for (let x = 0; x < W; x++) {
       const u = x / (W - 1);
       const top = .66 + .07 * Math.sin(u * 11 + t * .6 + ph1) + .04 * Math.sin(u * 27 - t * 1.1 + ph2);
-      const h = H * (top * (1 - .36 * s) + .5 * s * prof[x]);
+      const h = H * (top * (1 - .36 * s) + .5 * s * P[x]);
       decay[x] = Math.min(1, N / Math.max(1, h));
-      hop[x]   = .62 * (1 - .6 * s * core[x]);
+      hop[x]   = .62 * (1 - .6 * s * C[x]);
       lean[x]  = s * horn[x] + wind;
       // the root row: during a swell the gaps are fed less heat
-      root[x]  = Math.round(N * lit * (1 - .34 * s * (1 - prof[x])));
+      root[x]  = Math.round(N * (1 - .34 * s * (1 - P[x])));
     }
   }
 
@@ -2096,17 +2113,31 @@ function crBaaFire(el) {
     ctx.putImageData(frame, 0, 0);
   }
 
-  // Fixed step rate whatever the monitor's refresh; stops with the overlay.
-  const t0 = performance.now();
-  let last = t0, acc = 0;
+  // Never show the fire being lit. Heat climbs only a row per step, so a
+  // blaze lit in view rises as a flat band; instead, while the canvas is
+  // still hidden, the automaton runs flat out at the opening shape — a couple
+  // of dozen steps a frame, a tenth of a second or so — until every flame
+  // stands at full height. Only then is the first frame drawn, the clock
+  // started, and .cr-baa-lit set — the cue for the whole entrance in CSS.
+  let warm = H, t0 = 0, last = 0, acc = 0;
+
+  // After that: a fixed step rate whatever the monitor's refresh; the loop
+  // stops with the overlay.
   const tick = now => {
     if (!el.isConnected) return;
+    if (warm > 0) {
+      shape(0);
+      for (let i = 0; i < 24 && warm > 0; i++, warm--) spread();
+      if (warm === 0) { t0 = last = now; draw(); el.classList.add('cr-baa-lit'); }
+      requestAnimationFrame(tick);
+      return;
+    }
     acc += Math.min(now - last, 100);
     last = now;
-    const t = (now - t0) / 1000, every = CR_BAA_FIRE_STEP / speed(t);
+    const t = (now - t0) / 1000;
     let stepped = false;
-    while (acc >= every) {
-      acc -= every;
+    while (acc >= CR_BAA_FIRE_STEP) {
+      acc -= CR_BAA_FIRE_STEP;
       shape(t);
       spread();
       stepped = true;
