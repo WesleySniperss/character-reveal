@@ -1911,8 +1911,7 @@ function crHtmlVtmBaali(img, name, cls, custom, showClan, clan) {
     <canvas class="cr-baa-fire"></canvas>
     <div class="cr-baa-flare"></div>
     <div class="cr-baa-shade"></div>
-    <div class="cr-baa-portrait cr-baa-portrait--shadow">${img}</div>
-    <div class="cr-baa-portrait cr-baa-portrait--lit">${img}</div>
+    <div class="cr-baa-portrait">${img}</div>
     <div class="cr-baa-vignette"></div>
     <div class="cr-baa-embers">${embers}</div>
     <div class="cr-baa-floor"></div>
@@ -1920,10 +1919,7 @@ function crHtmlVtmBaali(img, name, cls, custom, showClan, clan) {
     <div class="cr-baa-text">
       ${showClan ? `<img class="cr-crest cr-crest--hellfire" src="modules/character-reveal/assets/Baali_symbol.png" alt="">` : ""}
       ${clanLabel ? `<div class="cr-baa-clan">✦ ${clanLabel.toUpperCase()} ✦</div>` : ''}
-      ${name ? `<div class="cr-baa-name-wrap">
-        <span class="cr-baa-name-hot" aria-hidden="true">${name}</span>
-        <span class="cr-baa-name">${name}</span>
-      </div>` : ''}
+      ${name ? `<div class="cr-baa-name">${name}</div>` : ''}
       ${sub  ? `<div class="cr-baa-sub">${sub}</div>` : ''}
     </div>
   `;
